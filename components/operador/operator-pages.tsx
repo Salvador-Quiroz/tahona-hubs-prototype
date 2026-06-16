@@ -27,7 +27,7 @@ import { MetricCard } from "@/components/shared/metric-card";
 import { ProgressBar } from "@/components/shared/progress";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useTahonaStore } from "@/lib/store/tahona-store";
-import type { Casillero, Entrega, Producto, Suscripcion } from "@/lib/mock-data";
+import type { Casillero, CasilleroEstado, Entrega, Producto, Suscripcion } from "@/lib/mock-data";
 import { formatCurrency, shortDate } from "@/lib/utils";
 
 const today = "2026-06-15";
@@ -51,8 +51,8 @@ function PageShell({
             {title}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold text-tahona-coffee/62">
-            Vista operativa de Tahona Hubs: produccion, casilleros, entregas, cobros e
-            incidencias conectadas al mismo dataset.
+            Vista de piso para coordinar producción, carga, retiros, cobros e incidencias
+            con trazabilidad por hub.
           </p>
         </div>
       </div>
@@ -320,16 +320,71 @@ function LockerLoading() {
   const { hubs, casilleros, entregas, clientes, productos } = useTahonaStore();
   const [hubId, setHubId] = useState(hubs[0].id);
   const hubLockers = casilleros.filter((casillero) => casillero.hub_id === hubId);
+  const hub = hubs.find((item) => item.id === hubId) ?? hubs[0];
+  const queue = todaysDeliveries(entregas).filter((entrega) => entrega.hub_id === hubId);
+  const loaded = hubLockers.filter((locker) => locker.estado === "cargado").length;
+  const incidents = hubLockers.filter((locker) => locker.estado === "incidencia").length;
+  const occupied = hubLockers.filter((locker) => locker.estado !== "vacio").length;
   return (
     <PageShell eyebrow="Casilleros" title="Carga de casilleros">
-      <div className="mb-5 flex flex-wrap gap-2">
-        {hubs.map((hub) => (
-          <Button key={hub.id} variant={hubId === hub.id ? "default" : "outline"} onClick={() => setHubId(hub.id)}>
-            {hub.nombre}
-          </Button>
-        ))}
+      <div className="mb-6 grid gap-3 md:grid-cols-3">
+        {hubs.map((item) => {
+          const active = hubId === item.id;
+          const hubItems = casilleros.filter((locker) => locker.hub_id === item.id);
+          const hubOccupied = hubItems.filter((locker) => locker.estado !== "vacio").length;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setHubId(item.id)}
+              className={`rounded-lg border p-4 text-left shadow-soft transition-colors ${
+                active
+                  ? "border-tahona-coffee bg-tahona-coffee text-tahona-yellow"
+                  : "border-tahona-coffee/15 bg-tahona-masa text-tahona-coffee hover:bg-tahona-yellow"
+              }`}
+            >
+              <p className="text-xs font-black uppercase tracking-[0.16em] opacity-70">Hub</p>
+              <h2 className="mt-2 text-2xl font-black">{item.nombre.replace("Hub ", "")}</h2>
+              <p className="mt-2 text-sm font-semibold opacity-75">{hubOccupied}/{item.casilleros_total} casilleros con actividad</p>
+            </button>
+          );
+        })}
       </div>
-      <LockerGrid lockers={hubLockers} entregas={entregas} clientes={clientes} productos={productos} showDetails />
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+        <div>
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <MetricCard label="Ocupación" value={`${occupied}/${hub.casilleros_total}`} helper={hub.nombre} icon={Box} tone="gold" />
+            <MetricCard label="Cargados" value={String(loaded)} helper="Listos para retiro" icon={CheckCircle2} tone="green" />
+            <MetricCard label="Incidencias" value={String(incidents)} helper="Requieren revisión" icon={AlertTriangle} tone="warm" />
+          </div>
+          <LockerGrid lockers={hubLockers} entregas={entregas} clientes={clientes} productos={productos} showDetails />
+        </div>
+
+        <aside className="h-fit rounded-lg bg-tahona-coffee p-5 text-tahona-cream shadow-editorial xl:sticky xl:top-24">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">Cola de carga</p>
+          <h2 className="mt-3 text-3xl font-black">{queue.length} pedidos</h2>
+          <div className="mt-5 space-y-3">
+            {queue.slice(0, 8).map((entrega) => (
+              <Link
+                key={entrega.id}
+                href={`/operador/entregas/${entrega.id}`}
+                className="block rounded-md border border-tahona-yellow/20 bg-tahona-cream/8 p-4 transition-colors hover:bg-tahona-yellow hover:text-tahona-coffee"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black">{clientName(clientes, entrega.cliente_id)}</p>
+                    <p className="mt-1 text-xs font-semibold opacity-75">{entrega.slot} · Casillero {entrega.casillero_id.slice(-2)}</p>
+                  </div>
+                  <StatusBadge status={entrega.estado} />
+                </div>
+                <p className="mt-3 line-clamp-2 text-sm opacity-75">
+                  {entrega.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ")}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </aside>
+      </div>
     </PageShell>
   );
 }
@@ -338,20 +393,57 @@ function LockerStatus() {
   const { hubs, casilleros, entregas, clientes, productos } = useTahonaStore();
   return (
     <PageShell eyebrow="Tiempo real" title="Estado de casilleros">
+      <div className="mb-6 grid gap-3 md:grid-cols-4">
+        {[
+          ["Vacío", "Disponible para siguiente carga", "bg-tahona-cream"],
+          ["Cargado", "Listo para retiro", "bg-tahona-yellow"],
+          ["Retirado", "Bolsa entregada", "bg-tahona-nopal text-white"],
+          ["Incidencia", "Requiere operador", "bg-tahona-red text-white"]
+        ].map(([label, helper, className]) => (
+          <div key={label} className="rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-4">
+            <span className={`inline-flex h-8 w-8 rounded-md border border-tahona-coffee/15 ${className}`} />
+            <p className="mt-3 font-black text-tahona-coffee">{label}</p>
+            <p className="mt-1 text-xs font-semibold text-tahona-coffee/60">{helper}</p>
+          </div>
+        ))}
+      </div>
       <div className="space-y-8">
         {hubs.map((hub) => (
-          <div key={hub.id}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{hub.nombre}</h2>
-              <Badge variant="soft">{hub.casilleros_ocupados_actual}/24 ocupados</Badge>
+          <section key={hub.id} className="rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-4 shadow-soft">
+            <div className="mb-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">Red de retiro</p>
+                <h2 className="mt-1 text-2xl font-black text-tahona-coffee">{hub.nombre}</h2>
+              </div>
+              <div className="min-w-[220px] rounded-md bg-tahona-cream p-3">
+                <div className="flex justify-between text-sm font-black text-tahona-coffee">
+                  <span>Ocupación</span>
+                  <span>{hub.casilleros_ocupados_actual}/{hub.casilleros_total}</span>
+                </div>
+                <ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} className="mt-2" />
+              </div>
             </div>
             <LockerGrid lockers={casilleros.filter((casillero) => casillero.hub_id === hub.id)} entregas={entregas} clientes={clientes} productos={productos} />
-          </div>
+          </section>
         ))}
       </div>
     </PageShell>
   );
 }
+
+const lockerStateClass: Record<CasilleroEstado, string> = {
+  vacio: "border-tahona-coffee/15 bg-tahona-cream text-tahona-coffee/45",
+  cargado: "border-tahona-coffee/20 bg-tahona-yellow text-tahona-coffee",
+  retirado: "border-tahona-nopal bg-tahona-nopal text-white",
+  incidencia: "border-tahona-red bg-tahona-red text-white"
+};
+
+const lockerStateLabel: Record<CasilleroEstado, string> = {
+  vacio: "Vacío",
+  cargado: "Cargado",
+  retirado: "Retirado",
+  incidencia: "Incidencia"
+};
 
 function LockerGrid({
   lockers,
@@ -366,38 +458,50 @@ function LockerGrid({
   productos: Producto[];
   showDetails?: boolean;
 }) {
-  const color = {
-    vacio: "bg-muted",
-    cargado: "bg-tahona-maiz",
-    retirado: "bg-tahona-nopal text-white",
-    incidencia: "bg-secondary text-white"
-  };
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6">
       {lockers.map((locker) => {
         const entrega = entregas.find((item) => item.id === locker.pedido_actual);
         return (
-          <Card key={locker.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <span className={`rounded-md px-3 py-2 text-sm font-bold ${color[locker.estado]}`}>
-                  {locker.numero}
-                </span>
-                <StatusBadge status={locker.estado} />
+          <div
+            key={locker.id}
+            className={`min-h-[150px] rounded-lg border p-3 shadow-soft ${lockerStateClass[locker.estado]}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <span className="font-display text-4xl font-semibold leading-none">
+                {String(locker.numero).padStart(2, "0")}
+              </span>
+              <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-tahona-coffee">
+                {lockerStateLabel[locker.estado]}
+              </span>
+            </div>
+            {entrega ? (
+              <div className="mt-5 text-sm">
+                <p className="font-black leading-tight">{clientName(clientes, entrega.cliente_id)}</p>
+                <p className="mt-1 font-semibold opacity-75">{entrega.slot}</p>
+                {showDetails ? (
+                  <>
+                    <p className="mt-3 line-clamp-2 text-xs font-semibold opacity-75">
+                      {entrega.productos.map((item) => `${item.cantidad} ${productName(productos, item.producto_id)}`).join(", ")}
+                    </p>
+                    <Button asChild size="sm" className="mt-3 w-full">
+                      <Link href={`/operador/entregas/${entrega.id}`}>Actualizar</Link>
+                    </Button>
+                  </>
+                ) : null}
               </div>
-              {showDetails && entrega ? (
-                <div className="mt-4 text-sm">
-                  <p className="font-semibold">{clientName(clientes, entrega.cliente_id)}</p>
-                  <p className="mt-1 text-muted-foreground">
-                    {entrega.productos.map((item) => `${item.cantidad} ${productName(productos, item.producto_id)}`).join(", ")}
-                  </p>
-                  <Button asChild size="sm" className="mt-3">
-                    <Link href={`/operador/entregas/${entrega.id}`}>Marcar</Link>
-                  </Button>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
+            ) : (
+              <p className="mt-6 text-sm font-semibold opacity-70">
+                {locker.estado === "vacio"
+                  ? "Disponible"
+                  : locker.estado === "cargado"
+                    ? "Carga en validación"
+                    : locker.estado === "retirado"
+                      ? "Liberado por retiro"
+                      : "Revisión de cerradura"}
+              </p>
+            )}
+          </div>
         );
       })}
     </div>

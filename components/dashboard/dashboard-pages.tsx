@@ -34,10 +34,18 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-4 py-8 lg:px-8">
-      <div className="mb-8 max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>
-        <h1 className="mt-2 font-display text-5xl font-semibold leading-none text-balance">{title}</h1>
+    <div className="brand-paper px-4 py-8 lg:px-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 border-b-4 border-tahona-coffee pb-6 xl:flex-row xl:items-end">
+        <div className="max-w-4xl">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">{eyebrow}</p>
+          <h1 className="mt-2 font-display text-5xl font-semibold leading-none text-balance text-tahona-coffee">
+            {title}
+          </h1>
+        </div>
+        <div className="rounded-lg bg-tahona-coffee px-5 py-4 text-tahona-cream shadow-editorial">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-tahona-yellow">Corte</p>
+          <p className="mt-1 text-2xl font-black">Junio 2026</p>
+        </div>
       </div>
       {children}
     </div>
@@ -101,7 +109,7 @@ function SummaryPage() {
   const { activeClients, monthRevenue, delivered, retention, avgOccupation } = useExecutiveMetrics();
   const data = growthData();
   return (
-    <PageShell eyebrow="Resumen ejecutivo" title="Tahona Hubs: panadería con recurrencia, datos y operación escalable.">
+    <PageShell eyebrow="Resumen ejecutivo" title="Tahona Hubs: recurrencia, margen operativo y red escalable.">
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard label="Clientes activos" value={String(activeClients)} helper="+17% vs marzo" icon={Users} tone="warm" />
         <MetricCard label="Ingresos del mes" value={formatCurrency(monthRevenue)} helper="Cobros recurrentes" icon={Banknote} />
@@ -116,7 +124,7 @@ function SummaryPage() {
               <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} dot={false} />
+              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -127,7 +135,7 @@ function SummaryPage() {
               <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingresos" fill="#D4A574" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="ingresos" fill="#D4A574" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -153,7 +161,7 @@ function GrowthPage() {
               <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} />
+              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -163,7 +171,7 @@ function GrowthPage() {
               <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingresos" fill="#5F7652" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="ingresos" fill="#5F7652" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -203,7 +211,7 @@ function OperationsPage() {
         <ChartCard title="Incidencias por categoría">
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie data={incidentData} innerRadius={70} outerRadius={110} dataKey="value">
+              <Pie data={incidentData} innerRadius={70} outerRadius={110} dataKey="value" isAnimationActive={false}>
                 {incidentData.map((_, index) => (
                   <Cell key={index} fill={chartColors[index % chartColors.length]} />
                 ))}
@@ -260,7 +268,7 @@ function CustomersPage() {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#A0411F" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill="#A0411F" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -290,7 +298,7 @@ function ProductsPage() {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingreso" fill="#D4A574" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="ingreso" fill="#D4A574" radius={[6, 6, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>

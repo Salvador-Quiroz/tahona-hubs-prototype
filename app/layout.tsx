@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tahona Hubs | Pan recién horneado",
+  title: "Tahona Hubs | Pan artesanal para recoger",
   description:
-    "Prototipo de plataforma digital para suscripción y retiro de pan fresco en hubs Tahona.",
+    "Pan artesanal Tahona apartado por semana, con retiro en hubs y casilleros inteligentes.",
   manifest: "/manifest.json"
 };
 

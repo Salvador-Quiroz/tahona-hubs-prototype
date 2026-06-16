@@ -112,7 +112,7 @@ export function getClientes(): Cliente[] {
       id: `cl-${String(index).padStart(3, "0")}`,
       nombre,
       apellido,
-      email: `${nombre}.${apellido}.${index}@tahona.demo`
+      email: `${nombre}.${apellido}.${index}@cliente.tahona.mx`
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, ""),

@@ -22,7 +22,7 @@ const customerNav = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/catalogo", label: "Panes", icon: Wheat },
   { href: "/hubs", label: "Hubs", icon: MapPin },
-  { href: "/como-funciona", label: "Cómo funciona", icon: ShoppingBag }
+  { href: "/como-funciona", label: "Proceso", icon: ShoppingBag }
 ];
 
 const operatorNav = [
@@ -92,23 +92,36 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
             >
               Apartar mi pan
             </Link>
+            <Link
+              href="/operador"
+              className="rounded-md border border-tahona-coffee/15 px-3 py-2 text-sm font-bold text-tahona-coffee/65 transition-colors hover:bg-tahona-masa hover:text-tahona-coffee"
+            >
+              Operador
+            </Link>
+            <Link
+              href="/dashboard"
+              className="rounded-md border border-tahona-coffee/15 px-3 py-2 text-sm font-bold text-tahona-coffee/65 transition-colors hover:bg-tahona-masa hover:text-tahona-coffee"
+            >
+              Dueños
+            </Link>
           </nav>
           <Link
-            href="/operador"
-            className="hidden rounded-md border border-tahona-coffee/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-tahona-coffee/55 transition-colors hover:bg-tahona-masa hover:text-tahona-coffee md:inline-flex"
+            href="/dashboard"
+            className="hidden rounded-md border border-tahona-coffee/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-tahona-coffee/65 transition-colors hover:bg-tahona-masa hover:text-tahona-coffee sm:inline-flex lg:hidden"
           >
-            Acceso interno
+            Dueños
           </Link>
         </div>
       </header>
       {children}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-tahona-coffee/15 bg-tahona-pink md:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {[
             customerNav[0],
             customerNav[1],
             { href: "/suscribirme", label: "Apartar", icon: ShoppingBag },
-            { href: "/cuenta", label: "Cuenta", icon: LayoutDashboard }
+            { href: "/cuenta", label: "Cuenta", icon: LayoutDashboard },
+            { href: "/operador", label: "Panel", icon: Box }
           ].map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -177,7 +190,7 @@ function ToolShell({
             href="/"
             className="block rounded-md border border-tahona-yellow/25 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-tahona-yellow"
           >
-            Volver a demo
+            Ver tienda
           </Link>
         </div>
       </aside>
@@ -187,13 +200,32 @@ function ToolShell({
             {title}
           </Link>
           <div className="hidden text-sm font-semibold text-tahona-coffee/70 lg:block">
-            Prototipo conectado: cliente, operación y dirección
+            Tahona Hubs · operación, cliente y dirección
           </div>
           <div className="rounded-md border border-tahona-coffee/20 bg-tahona-masa px-3 py-1.5 text-sm font-semibold text-tahona-coffee">
             15 jun 2026
           </div>
         </div>
       </header>
+      <nav className="sticky top-[57px] z-20 flex gap-2 overflow-x-auto border-b border-tahona-coffee/15 bg-tahona-cream px-4 py-2 lg:hidden">
+        {nav.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-tahona-coffee/15 px-3 text-sm font-bold",
+                active ? "bg-tahona-coffee text-tahona-yellow" : "bg-tahona-masa text-tahona-coffee/70"
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
       <main className="lg:ml-72">{children}</main>
     </div>
   );
