@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -102,112 +102,59 @@ function ProductCard({ product }: { product: Producto }) {
 export function LandingPage() {
   const { productos, hubs } = useTahonaStore();
   const hero = productos[0];
-  const featured = productos.slice(0, 4);
-  const roleEntrances = [
-    {
-      href: "/suscribirme",
-      label: "App cliente",
-      title: "Suscribirse y retirar pan",
-      body: "Flujo completo: vitrina, hub asignado, horarios, pago y QR.",
-      icon: ShoppingBag
-    },
-    {
-      href: "/operador",
-      label: "Panel operador",
-      title: "Producir, cargar y resolver",
-      body: "Pedidos del dia, produccion por SKU, casilleros, cobros e incidencias.",
-      icon: Factory
-    },
-    {
-      href: "/dashboard",
-      label: "Dashboard dueños",
-      title: "Ver crecimiento y proyeccion",
-      body: "KPIs, ingresos, retencion, hubs, productos y modelo de expansion.",
-      icon: Crown
-    }
-  ];
+  const morning = productos.slice(0, 4);
+  const sweet = productos.filter((product) => product.categoria === "Dulce mexicano").slice(0, 3);
 
   return (
-    <main className="brand-paper">
-      <section className="relative min-h-[92vh] overflow-hidden bg-tahona-coffee text-tahona-cream">
+    <main className="bg-tahona-cream text-tahona-coffee">
+      <section className="relative min-h-[88vh] overflow-hidden bg-tahona-coffee text-tahona-cream">
         <Image
           src={hero.imagen_url}
-          alt="Hogaza de pan artesanal Tahona"
+          alt="Pan artesanal recien horneado de Tahona"
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-38"
+          className="object-cover opacity-48"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(74,43,24,0.96),rgba(74,43,24,0.78)_48%,rgba(74,43,24,0.34))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(74,43,24,0.92),rgba(74,43,24,0.72)_44%,rgba(74,43,24,0.22))]" />
         <div className="absolute inset-x-0 top-0 h-3 bg-tahona-yellow" />
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-tahona-coffee to-transparent" />
-        <Container className="relative flex min-h-[92vh] flex-col justify-center pb-16 pt-28">
-          <motion.div {...fadeUp} className="max-w-5xl">
-            <div className="mb-7 flex flex-wrap items-center gap-3">
-              <Badge className="border-tahona-yellow bg-tahona-yellow text-tahona-coffee">
-                Boutique de pan desde 1957
-              </Badge>
-              <Badge className="border-tahona-pink bg-tahona-pink text-tahona-coffee">
-                Demo inversionistas
-              </Badge>
-            </div>
-            <h1 className="font-display text-6xl font-semibold leading-[0.88] text-balance md:text-8xl lg:text-9xl">
-              Tahona Hubs
+        <Container className="relative flex min-h-[88vh] max-w-7xl flex-col justify-center pb-16 pt-28">
+          <motion.div {...fadeUp} className="max-w-3xl">
+            <Badge className="bg-tahona-yellow text-tahona-coffee">Tahona desde 1957</Badge>
+            <h1 className="mt-6 font-display text-6xl font-semibold leading-[0.92] text-balance md:text-8xl">
+              Pan recien hecho, listo cuando pasas por el.
             </h1>
-            <p className="mt-6 max-w-3xl text-xl leading-8 text-tahona-cream/88 md:text-2xl">
-              Una plataforma para vender suscripciones de pan recien horneado, operar casilleros
-              inteligentes y demostrar crecimiento recurrente con datos conectados.
+            <p className="mt-6 max-w-2xl text-xl leading-8 text-tahona-cream/86">
+              Elige tus piezas favoritas, aparta tu semana y recoge tu bolsa en un hub cercano.
+              Sin fila. Sin quedarte sin pan. Con el sabor de Tahona.
             </p>
-            <div className="mt-10 grid gap-3 lg:grid-cols-3">
-              {roleEntrances.map((entry) => {
-                const Icon = entry.icon;
-                return (
-                  <Link
-                    key={entry.href}
-                    href={entry.href}
-                    className="group min-h-40 rounded-lg border border-tahona-yellow/25 bg-tahona-cream/94 p-5 text-tahona-coffee shadow-editorial transition-transform duration-200 hover:-translate-y-1 hover:bg-tahona-yellow"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em]">
-                        <Icon className="h-4 w-4" aria-hidden />
-                        {entry.label}
-                      </span>
-                      <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                    </div>
-                    <h2 className="mt-5 text-2xl font-black leading-tight">{entry.title}</h2>
-                    <p className="mt-3 text-sm font-medium leading-6 text-tahona-coffee/70">
-                      {entry.body}
-                    </p>
-                  </Link>
-                );
-              })}
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button asChild size="lg" variant="accent">
+                <Link href="/suscribirme">
+                  Apartar mi pan <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-tahona-cream/45 text-tahona-cream hover:bg-tahona-cream/10">
+                <Link href="/catalogo">Ver panes de la semana</Link>
+              </Button>
             </div>
           </motion.div>
         </Container>
       </section>
 
-      <section className="bg-tahona-pink py-14">
+      <section className="bg-tahona-pink py-12">
         <Container className="max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <SectionTitle
-              eyebrow="Sistema completo"
-              title="No es una landing: es una red operativa conectada."
-              body="Cada vista comparte clientes, hubs, casilleros, entregas, cobros e incidencias. Lo que ve direccion se explica desde la operacion."
-            />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                ["160", "clientes activos"],
-                ["72", "casilleros trazables"],
-                ["1,008", "entregas historicas"]
-              ].map(([value, label]) => (
-                <div key={label} className="border-l-4 border-tahona-coffee bg-tahona-masa p-5">
-                  <p className="font-display text-5xl font-semibold text-tahona-coffee">{value}</p>
-                  <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-tahona-coffee/65">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ["Horneado por la mañana", "Produccion diaria por ventanas fijas para que el pan llegue fresco."],
+              ["Tu bolsa apartada", "El pedido semanal queda reservado antes de que se agote la vitrina."],
+              ["Retiro en ruta", "Casilleros inteligentes en hubs de Polanco, Condesa y Del Valle."]
+            ].map(([title, body]) => (
+              <div key={title} className="border-l-4 border-tahona-coffee bg-tahona-masa p-5">
+                <h2 className="text-xl font-black">{title}</h2>
+                <p className="mt-2 text-sm font-medium leading-6 text-tahona-coffee/68">{body}</p>
+              </div>
+            ))}
           </div>
         </Container>
       </section>
@@ -216,18 +163,16 @@ export function LandingPage() {
         <Container className="max-w-7xl">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <SectionTitle
-              eyebrow="Vitrina premium"
-              title="La marca vende oficio antes que tecnologia."
-              body="La inspiracion editorial se mantiene en catalogo y detalle: producto grande, texto minimo y fotografia como protagonista."
+              eyebrow="Panes de la semana"
+              title="La vitrina que quieres encontrar antes de que empiece el dia."
+              body="Masa madre, baguettes, hojaldres y pan dulce mexicano seleccionados para apartar por suscripcion."
             />
             <Button asChild variant="outline">
-              <Link href="/catalogo">
-                Catalogo completo <ArrowRight className="h-4 w-4" />
-              </Link>
+              <Link href="/catalogo">Ver catalogo completo</Link>
             </Button>
           </div>
           <div className="mt-10 grid gap-7 md:grid-cols-4">
-            {featured.map((product) => (
+            {morning.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -236,12 +181,29 @@ export function LandingPage() {
 
       <section className="bg-tahona-coffee py-16 text-tahona-cream">
         <Container className="max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <SectionTitle
-              eyebrow="Hubs CDMX"
-              title="La promesa se cumple en ubicaciones y horarios concretos."
-              body="Polanco, Condesa y Del Valle operan con ventanas fijas, capacidad visible y trazabilidad por casillero."
-            />
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <SectionTitle
+                eyebrow="Como funciona"
+                title="Aparta una vez. Recoge fresco cada semana."
+                body="El flujo esta pensado para personas que compran pan de calidad, pero no quieren depender de filas o disponibilidad al final del dia."
+              />
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {[
+                  ["1", "Elige tus panes"],
+                  ["2", "Selecciona dias y horarios"],
+                  ["3", "Confirmamos tu hub"],
+                  ["4", "Abres tu casillero con QR"]
+                ].map(([number, label]) => (
+                  <div key={number} className="flex items-center gap-4 border border-tahona-yellow/25 bg-tahona-cream/8 p-4">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-tahona-yellow text-lg font-black text-tahona-coffee">
+                      {number}
+                    </span>
+                    <span className="font-black">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <HubMap hubs={hubs} />
           </div>
         </Container>
@@ -249,28 +211,21 @@ export function LandingPage() {
 
       <section className="py-16">
         <Container className="max-w-7xl">
-          <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-            <SectionTitle
-              eyebrow="Flujos clave"
-              title="Tres historias claras para presentar."
-              body="Cliente, operacion y direccion tienen rutas visibles desde la primera pantalla."
-            />
-            <div className="grid gap-3 md:grid-cols-3">
-            {[
-              ["Cliente", "landing -> catalogo -> suscripcion -> cuenta -> QR", LockKeyhole],
-              ["Operacion", "dashboard -> produccion -> carga -> entrega -> cobros", Truck],
-              ["Direccion", "resumen -> hubs -> clientes -> proyecciones", BarChart3]
-            ].map(([title, body, Icon]) => (
-              <Card key={title as string} className="bg-tahona-masa">
-                <CardContent className="p-5">
-                  <Icon className="h-6 w-6 text-tahona-red" aria-hidden />
-                  <h3 className="mt-5 text-xl font-black">{title as string}</h3>
-                  <p className="mt-3 text-sm font-medium leading-6 text-tahona-coffee/68">
-                    {body as string}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="grid gap-5 sm:grid-cols-3">
+              {sweet.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            <div>
+              <SectionTitle
+                eyebrow="Tradicion mexicana"
+                title="Pan dulce con oficio, no antojos anonimos."
+                body="Tahona conserva nombres, formas, aromas y sabores de panaderia mexicana, pero los lleva a una experiencia mas puntual y reservable."
+              />
+              <Button asChild className="mt-7" size="lg">
+                <Link href="/suscribirme/productos">Armar mi bolsa semanal</Link>
+              </Button>
             </div>
           </div>
         </Container>
@@ -278,66 +233,94 @@ export function LandingPage() {
     </main>
   );
 }
-
 export function CatalogoPage() {
   const { productos } = useTahonaStore();
   const categorias = ["Todos", ...Array.from(new Set(productos.map((p) => p.categoria)))];
   const [categoria, setCategoria] = useState("Todos");
   const filtered = categoria === "Todos" ? productos : productos.filter((p) => p.categoria === categoria);
+  const heroProduct = filtered[0] ?? productos[0];
+
   return (
-    <main className="bg-tahona-masa">
-      <div className="sticky top-[65px] z-20 border-b bg-tahona-masa/90 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto">
-          {categorias.map((item) => (
-            <button
-              key={item}
-              onClick={() => setCategoria(item)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                categoria === item ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </div>
-      {filtered.length === 0 ? (
-        <Container className="py-16">
-          <EmptyState icon={Search} title="Sin piezas en esta categoría" body="Prueba otro filtro de la vitrina." />
-        </Container>
-      ) : (
-        filtered.map((product, index) => (
-          <motion.section
-            key={product.id}
-            {...fadeUp}
-            className="relative flex min-h-screen items-end overflow-hidden border-b bg-tahona-ink text-white"
-          >
-            <Image src={product.imagen_url} alt={product.nombre} fill sizes="100vw" className="object-cover opacity-70" />
-            <div className="absolute inset-0 bg-gradient-to-r from-tahona-ink via-tahona-ink/55 to-transparent" />
-            <Container className="relative pb-16 pt-28">
-              <div className="max-w-2xl">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-tahona-crust">
-                  {String(index + 1).padStart(2, "0")} / {product.categoria}
+    <main className="bg-tahona-cream text-tahona-coffee">
+      <section className="border-b border-tahona-coffee/15 bg-tahona-pink py-12">
+        <Container className="max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
+                Vitrina semanal
+              </p>
+              <h1 className="mt-3 font-display text-6xl font-semibold leading-none text-balance md:text-7xl">
+                Pan para apartar antes de que salga del horno.
+              </h1>
+              <p className="mt-5 max-w-xl text-lg font-medium leading-8 text-tahona-coffee/68">
+                Selecciona piezas para tu bolsa semanal. Cada producto muestra disponibilidad,
+                precio y el tipo de pan para que puedas decidir sin perderte.
+              </p>
+            </div>
+            <div className="relative min-h-[360px] overflow-hidden rounded-lg border border-tahona-coffee/15 bg-tahona-paper shadow-editorial">
+              <Image src={heroProduct.imagen_url} alt={heroProduct.nombre} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-tahona-coffee/90 to-transparent p-6 text-tahona-cream">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">
+                  Recomendado
                 </p>
-                <h1 className="mt-5 font-display text-6xl font-semibold leading-none text-balance md:text-8xl">
-                  {product.nombre}
-                </h1>
-                <p className="mt-6 max-w-xl text-lg text-white/85">{product.descripcion_premium}</p>
-                <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <span className="font-display text-3xl">{formatCurrency(product.precio_mxn)}</span>
-                  <Button asChild variant="accent">
-                    <Link href={`/catalogo/${product.slug}`}>Ver detalle</Link>
-                  </Button>
-                </div>
+                <h2 className="mt-2 font-display text-4xl font-semibold">{heroProduct.nombre}</h2>
+                <p className="mt-2 max-w-lg text-sm text-tahona-cream/78">{heroProduct.descripcion_corta}</p>
               </div>
-            </Container>
-          </motion.section>
-        ))
-      )}
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-10">
+        <Container className="max-w-7xl">
+          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+            {categorias.map((item) => (
+              <button
+                key={item}
+                onClick={() => setCategoria(item)}
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-black transition-colors ${
+                  categoria === item
+                    ? "border-tahona-coffee bg-tahona-coffee text-tahona-yellow"
+                    : "border-tahona-coffee/20 bg-tahona-masa text-tahona-coffee hover:bg-tahona-yellow"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+            <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            <aside className="h-fit rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-5 shadow-soft lg:sticky lg:top-24">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
+                Bolsa semanal
+              </p>
+              <h2 className="mt-3 text-2xl font-black">Empieza con 3 piezas</h2>
+              <p className="mt-3 text-sm font-medium leading-6 text-tahona-coffee/65">
+                Un pedido tipico combina una hogaza, dos piezas dulces y pan salado para la semana.
+              </p>
+              <div className="mt-5 space-y-3">
+                {productos.slice(0, 3).map((product) => (
+                  <div key={product.id} className="flex items-center justify-between border-b border-tahona-coffee/10 pb-3 text-sm">
+                    <span className="font-semibold">{product.nombre}</span>
+                    <span className="font-black">{formatCurrency(product.precio_mxn)}</span>
+                  </div>
+                ))}
+              </div>
+              <Button asChild className="mt-6 w-full" size="lg">
+                <Link href="/suscribirme/productos">Armar mi pedido</Link>
+              </Button>
+            </aside>
+          </div>
+        </Container>
+      </section>
     </main>
   );
 }
-
 export function ProductDetailPage({ slug }: { slug: string }) {
   const { productos } = useTahonaStore();
   const product = productos.find((item) => item.slug === slug);
@@ -581,39 +564,94 @@ function ProductsStep({
   selected: Record<string, number>;
   setSelected: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }) {
+  const visible = productos.slice(0, 8);
+  const selectedItems = productos.filter((product) => (selected[product.id] ?? 0) > 0);
+  const total = selectedItems.reduce(
+    (sum, product) => sum + product.precio_mxn * (selected[product.id] ?? 0),
+    0
+  );
+
   return (
     <div>
-      <SectionTitle eyebrow="Menú semanal" title="Elige las piezas que quieres recibir." />
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {productos.slice(0, 6).map((product) => (
-          <div key={product.id} className="flex gap-4 rounded-lg border bg-card p-3">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md">
-              <Image src={product.imagen_url} alt={product.nombre} fill sizes="96px" className="object-cover" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="font-semibold">{product.nombre}</h3>
-              <p className="text-sm text-muted-foreground">{formatCurrency(product.precio_mxn)}</p>
-              <div className="mt-3 flex items-center gap-2">
-                {[0, 1, 2, 3].map((qty) => (
-                  <button
-                    key={qty}
-                    onClick={() => setSelected((prev) => ({ ...prev, [product.id]: qty }))}
-                    className={`h-8 w-8 rounded-md border text-sm font-semibold ${
-                      selected[product.id] === qty ? "bg-primary text-primary-foreground" : "bg-background"
-                    }`}
-                  >
-                    {qty}
-                  </button>
-                ))}
+      <SectionTitle
+        eyebrow="Bolsa semanal"
+        title="Arma una selección que sí se sienta de panadería."
+        body="Elige cantidades por pieza. Puedes mezclar pan de mesa, pan dulce y hojaldres para tus ventanas de retiro."
+      />
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="grid gap-4 md:grid-cols-2">
+          {visible.map((product) => {
+            const qty = selected[product.id] ?? 0;
+            return (
+              <div key={product.id} className="grid grid-cols-[112px_1fr] gap-4 rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-3 shadow-soft">
+                <div className="relative h-32 overflow-hidden rounded-md bg-tahona-paper">
+                  <Image src={product.imagen_url} alt={product.nombre} fill sizes="112px" className="object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.14em] text-tahona-red">
+                        {product.categoria}
+                      </p>
+                      <h3 className="mt-1 font-display text-2xl font-semibold leading-tight text-tahona-coffee">
+                        {product.nombre}
+                      </h3>
+                    </div>
+                    <span className="font-black">{formatCurrency(product.precio_mxn)}</span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm font-medium text-tahona-coffee/62">
+                    {product.descripcion_corta}
+                  </p>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="inline-flex overflow-hidden rounded-md border border-tahona-coffee/20 bg-tahona-cream">
+                      <button
+                        onClick={() => setSelected((prev) => ({ ...prev, [product.id]: Math.max(0, qty - 1) }))}
+                        className="h-9 w-9 font-black hover:bg-tahona-pink"
+                      >
+                        -
+                      </button>
+                      <span className="flex h-9 w-10 items-center justify-center border-x border-tahona-coffee/20 font-black">
+                        {qty}
+                      </span>
+                      <button
+                        onClick={() => setSelected((prev) => ({ ...prev, [product.id]: Math.min(9, qty + 1) }))}
+                        className="h-9 w-9 font-black hover:bg-tahona-yellow"
+                      >
+                        +
+                      </button>
+                    </div>
+                    {qty > 0 ? <Badge className="bg-tahona-yellow text-tahona-coffee">En bolsa</Badge> : null}
+                  </div>
+                </div>
               </div>
-            </div>
+            );
+          })}
+        </div>
+        <aside className="h-fit rounded-lg border border-tahona-coffee/15 bg-tahona-coffee p-5 text-tahona-cream shadow-editorial lg:sticky lg:top-24">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">
+            Resumen
+          </p>
+          <h3 className="mt-3 text-2xl font-black">Tu bolsa</h3>
+          <div className="mt-5 space-y-3">
+            {selectedItems.map((product) => (
+              <div key={product.id} className="flex justify-between gap-4 border-b border-tahona-yellow/20 pb-3 text-sm">
+                <span>{selected[product.id]}x {product.nombre}</span>
+                <span className="font-black">{formatCurrency(product.precio_mxn * selected[product.id])}</span>
+              </div>
+            ))}
           </div>
-        ))}
+          <div className="mt-5 flex items-center justify-between text-lg font-black">
+            <span>Total semanal</span>
+            <span>{formatCurrency(total)}</span>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-tahona-cream/65">
+            Puedes ajustar esta bolsa antes del corte semanal. El cobro se confirma en el ultimo paso.
+          </p>
+        </aside>
       </div>
     </div>
   );
 }
-
 function ScheduleStep() {
   return (
     <div>
@@ -1036,3 +1074,6 @@ export function AuthPage({ mode }: { mode: "login" | "registro" }) {
     </main>
   );
 }
+
+
+

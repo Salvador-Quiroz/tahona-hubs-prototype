@@ -7,7 +7,6 @@ import {
   Box,
   ClipboardList,
   CreditCard,
-  Crown,
   Home,
   LayoutDashboard,
   MapPin,
@@ -21,9 +20,9 @@ import { cn } from "@/lib/utils";
 
 const customerNav = [
   { href: "/", label: "Inicio", icon: Home },
-  { href: "/catalogo", label: "Catálogo", icon: Wheat },
+  { href: "/catalogo", label: "Panes", icon: Wheat },
   { href: "/hubs", label: "Hubs", icon: MapPin },
-  { href: "/cuenta", label: "Cuenta", icon: ShoppingBag }
+  { href: "/como-funciona", label: "Cómo funciona", icon: ShoppingBag }
 ];
 
 const operatorNav = [
@@ -67,36 +66,6 @@ function TahonaWordmark({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function RoleAccess({ compact = false }: { compact?: boolean }) {
-  const roles = [
-    { href: "/cuenta", label: compact ? "Cliente" : "App cliente", icon: ShoppingBag },
-    { href: "/operador", label: compact ? "Operación" : "Panel operador", icon: LayoutDashboard },
-    { href: "/dashboard", label: compact ? "Dirección" : "Dashboard dueños", icon: Crown }
-  ];
-
-  return (
-    <>
-      {roles.map((item) => {
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={
-              compact
-                ? "flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold text-tahona-coffee/70"
-                : "inline-flex items-center gap-2 rounded-md border border-tahona-coffee/20 bg-tahona-masa px-3 py-2 text-sm font-bold text-tahona-coffee transition-colors hover:bg-tahona-yellow"
-            }
-          >
-            <Icon className={compact ? "h-5 w-5" : "h-4 w-4"} aria-hidden />
-            {item.label}
-          </Link>
-        );
-      })}
-    </>
-  );
-}
-
 export function ClienteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
@@ -104,7 +73,7 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-tahona-coffee/15 bg-tahona-pink/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <TahonaWordmark />
-          <nav className="hidden items-center gap-1 xl:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {customerNav.map((item) => (
               <Link
                 key={item.href}
@@ -121,12 +90,15 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
               href="/suscribirme"
               className="ml-2 rounded-md bg-tahona-coffee px-4 py-2 text-sm font-bold text-tahona-yellow shadow-soft"
             >
-              Suscribirme
+              Apartar mi pan
             </Link>
           </nav>
-          <div className="hidden items-center gap-2 md:flex">
-            <RoleAccess />
-          </div>
+          <Link
+            href="/operador"
+            className="hidden rounded-md border border-tahona-coffee/15 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-tahona-coffee/55 transition-colors hover:bg-tahona-masa hover:text-tahona-coffee md:inline-flex"
+          >
+            Acceso interno
+          </Link>
         </div>
       </header>
       {children}
@@ -135,8 +107,8 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
           {[
             customerNav[0],
             customerNav[1],
-            { href: "/operador", label: "Operación", icon: LayoutDashboard },
-            { href: "/dashboard", label: "Dueños", icon: Crown }
+            { href: "/suscribirme", label: "Apartar", icon: ShoppingBag },
+            { href: "/cuenta", label: "Cuenta", icon: LayoutDashboard }
           ].map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
