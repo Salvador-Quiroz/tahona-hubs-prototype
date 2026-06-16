@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -31,6 +31,7 @@ import type { Casillero, Entrega, Producto, Suscripcion } from "@/lib/mock-data"
 import { formatCurrency, shortDate } from "@/lib/utils";
 
 const today = "2026-06-15";
+const operatorSlots = ["7:00 AM", "1:30 PM", "7:30 PM"];
 
 function PageShell({
   eyebrow,
@@ -42,11 +43,17 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-4 py-8 lg:px-8">
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div className="brand-paper px-4 py-8 lg:px-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 border-b-4 border-tahona-coffee pb-6 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>
-          <h1 className="mt-2 font-display text-5xl font-semibold leading-none">{title}</h1>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">{eyebrow}</p>
+          <h1 className="mt-2 font-display text-5xl font-semibold leading-none text-tahona-coffee">
+            {title}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm font-semibold text-tahona-coffee/62">
+            Vista operativa de Tahona Hubs: produccion, casilleros, entregas, cobros e
+            incidencias conectadas al mismo dataset.
+          </p>
         </div>
       </div>
       {children}
@@ -122,45 +129,64 @@ function TodayDashboard() {
   const todayRevenue = cobros
     .filter((item) => item.fecha === today && item.estado === "cobrado")
     .reduce((sum, item) => sum + item.monto, 0);
+
   return (
-    <PageShell eyebrow="Operación" title="Dashboard del día">
+    <PageShell eyebrow="Operación" title="Sala de control del día">
       <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Pedidos a producir" value={String(todayItems.length)} helper="Ventanas de hoy" icon={ClipboardList} tone="warm" />
-        <MetricCard label="Entregados" value={String(delivered)} helper={`${pending} listos en casillero`} icon={CheckCircle2} tone="green" />
-        <MetricCard label="Incidencias activas" value={String(activeIncidents)} helper="Prioridad operacional" icon={AlertTriangle} tone="gold" />
+        <MetricCard label="Pedidos programados" value={String(todayItems.length)} helper="3 ventanas de retiro" icon={ClipboardList} tone="warm" />
+        <MetricCard label="Listos para retirar" value={String(pending)} helper={`${delivered} ya entregados`} icon={CheckCircle2} tone="green" />
+        <MetricCard label="Incidencias abiertas" value={String(activeIncidents)} helper="Resolver antes de 24 h" icon={AlertTriangle} tone="gold" />
         <MetricCard label="Cobrado hoy" value={formatCurrency(todayRevenue)} helper="Corte automático" icon={Banknote} />
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.75fr]">
-        <Card>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Próximos slots</h2>
-            <div className="mt-5 space-y-4">
-              {["7:00 AM", "1:30 PM", "7:30 PM"].map((slot) => {
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
+                  Ritmo de entrega
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-tahona-coffee">Slots activos</h2>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/operador/pedidos">Ver pedidos</Link>
+              </Button>
+            </div>
+            <div className="mt-6 space-y-4">
+              {operatorSlots.map((slot) => {
                 const count = todayItems.filter((item) => item.slot === slot).length;
+                const ready = todayItems.filter((item) => item.slot === slot && item.estado === "listo").length;
                 return (
-                  <div key={slot}>
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span>{slot}</span>
-                      <span>{count} pedidos</span>
+                  <div key={slot} className="rounded-lg border border-tahona-coffee/15 bg-tahona-cream p-4">
+                    <div className="flex items-center justify-between gap-4 text-sm font-black text-tahona-coffee">
+                      <span className="text-xl">{slot}</span>
+                      <span>{count} pedidos · {ready} listos</span>
                     </div>
-                    <ProgressBar value={(count / 18) * 100} className="mt-2" />
+                    <ProgressBar value={(count / 18) * 100} className="mt-3" />
                   </div>
                 );
               })}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-tahona-coffee/20 bg-tahona-coffee text-tahona-cream shadow-editorial">
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Alertas</h2>
-            <div className="mt-4 space-y-3">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">
+              Prioridad de piso
+            </p>
+            <h2 className="mt-2 text-2xl font-black">Carga por hub</h2>
+            <div className="mt-5 space-y-3">
               {hubs.map((hub) => (
-                <div key={hub.id} className="rounded-md border bg-background p-3">
-                  <p className="font-semibold">{hub.nombre}</p>
-                  <p className="text-sm text-muted-foreground">
+                <Link
+                  key={hub.id}
+                  href="/operador/carga"
+                  className="block rounded-md border border-tahona-yellow/25 bg-tahona-cream/8 p-4 transition-colors hover:bg-tahona-yellow hover:text-tahona-coffee"
+                >
+                  <p className="font-black">{hub.nombre}</p>
+                  <p className="mt-1 text-sm opacity-75">
                     {hub.casilleros_ocupados_actual}/{hub.casilleros_total} casilleros ocupados
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           </CardContent>
@@ -169,53 +195,82 @@ function TodayDashboard() {
     </PageShell>
   );
 }
-
 function ProductionToday() {
   const { entregas, productos, hubs } = useTahonaStore();
+  const todayItems = todaysDeliveries(entregas);
   const rows = useMemo(() => {
     return productos.map((producto) => {
-      const byHub = hubs.map((hub) => {
-        const total = todaysDeliveries(entregas)
-          .filter((entrega) => entrega.hub_id === hub.id)
-          .flatMap((entrega) => entrega.productos)
-          .filter((item) => item.producto_id === producto.id)
-          .reduce((sum, item) => sum + item.cantidad, 0);
-        return { hub, total };
-      });
-      return { producto, byHub, total: byHub.reduce((sum, item) => sum + item.total, 0) };
+      const slotTotals = hubs.flatMap((hub) =>
+        operatorSlots.map((slot) => {
+          const total = todayItems
+            .filter((entrega) => entrega.hub_id === hub.id && entrega.slot === slot)
+            .flatMap((entrega) => entrega.productos)
+            .filter((item) => item.producto_id === producto.id)
+            .reduce((sum, item) => sum + item.cantidad, 0);
+          return { key: `${hub.id}-${slot}`, hub, slot, total };
+        })
+      );
+      return { producto, slotTotals, total: slotTotals.reduce((sum, item) => sum + item.total, 0) };
     });
-  }, [entregas, hubs, productos]);
+  }, [hubs, productos, todayItems]);
+  const totalPieces = rows.reduce((sum, row) => sum + row.total, 0);
+
   return (
-    <PageShell eyebrow="Producción" title="Producción del día">
-      <Card>
+    <PageShell eyebrow="Producción" title="Matriz de producción del día">
+      <div className="mb-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-stretch">
+        <Card className="bg-tahona-yellow text-tahona-coffee">
+          <CardContent className="p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em]">Piezas totales</p>
+            <p className="mt-3 text-4xl font-black">{totalPieces}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-tahona-pink text-tahona-coffee">
+          <CardContent className="p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em]">SKU activos</p>
+            <p className="mt-3 text-4xl font-black">{rows.filter((row) => row.total > 0).length}</p>
+          </CardContent>
+        </Card>
+        <Button className="h-full min-h-24 px-6" variant="secondary">
+          <Download className="h-4 w-4" /> Exportar hoja de horno
+        </Button>
+      </div>
+      <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
         <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead className="border-b bg-muted/60 text-left">
+          <table className="w-full min-w-[1180px] text-sm">
+            <thead className="border-b border-tahona-coffee/15 bg-tahona-coffee text-left text-tahona-cream">
               <tr>
-                <th className="p-4">SKU</th>
-                {hubs.map((hub) => (
-                  <th key={hub.id} className="p-4">{hub.nombre}</th>
-                ))}
+                <th className="sticky left-0 z-10 bg-tahona-coffee p-4">SKU</th>
+                {hubs.flatMap((hub) =>
+                  operatorSlots.map((slot) => (
+                    <th key={`${hub.id}-${slot}`} className="p-4">
+                      <span className="block font-black">{hub.nombre.replace("Hub ", "")}</span>
+                      <span className="text-xs opacity-70">{slot}</span>
+                    </th>
+                  ))
+                )}
                 <th className="p-4">Total</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.producto.id} className="border-b last:border-0">
-                  <td className="p-4 font-semibold">{row.producto.nombre}</td>
-                  {row.byHub.map((item) => (
-                    <td key={item.hub.id} className="p-4">{item.total}</td>
+                <tr key={row.producto.id} className="border-b border-tahona-coffee/10 last:border-0">
+                  <td className="sticky left-0 bg-tahona-masa p-4 font-black text-tahona-coffee">
+                    {row.producto.nombre}
+                  </td>
+                  {row.slotTotals.map((item) => (
+                    <td key={item.key} className="p-4">
+                      <span className={item.total > 0 ? "font-black text-tahona-coffee" : "text-tahona-coffee/30"}>
+                        {item.total}
+                      </span>
+                    </td>
                   ))}
-                  <td className="p-4 font-bold">{row.total}</td>
+                  <td className="p-4 text-lg font-black text-tahona-red">{row.total}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </CardContent>
       </Card>
-      <Button className="mt-5" variant="secondary">
-        <Download className="h-4 w-4" /> Exportar a impresora
-      </Button>
     </PageShell>
   );
 }
@@ -455,20 +510,109 @@ function SubscriptionDetail({ id }: { id: string }) {
 }
 
 function OrdersToday() {
-  const { entregas, clientes } = useTahonaStore();
+  const { entregas, clientes, productos, hubs } = useTahonaStore();
   const todayItems = todaysDeliveries(entregas);
+  const totalProducts = todayItems
+    .flatMap((item) => item.productos)
+    .reduce((sum, item) => sum + item.cantidad, 0);
   return (
     <PageShell eyebrow="Pedidos" title="Pedidos del día">
+      <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <Card className="bg-tahona-coffee text-tahona-cream shadow-editorial">
+          <CardContent className="p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-tahona-yellow">
+              Cola de hoy
+            </p>
+            <p className="mt-3 text-4xl font-black">{todayItems.length}</p>
+            <p className="mt-1 text-sm opacity-75">pedidos asignados a casillero</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-tahona-yellow text-tahona-coffee">
+          <CardContent className="p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em]">Piezas a empacar</p>
+            <p className="mt-3 text-4xl font-black">{totalProducts}</p>
+            <p className="mt-1 text-sm font-semibold opacity-75">sumadas desde suscripciones</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-tahona-pink text-tahona-coffee">
+          <CardContent className="p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em]">Hubs activos</p>
+            <p className="mt-3 text-4xl font-black">{hubs.length}</p>
+            <p className="mt-1 text-sm font-semibold opacity-75">Polanco, Condesa y Del Valle</p>
+          </CardContent>
+        </Card>
+      </div>
       <div className="space-y-6">
         {["7:00 AM", "1:30 PM", "7:30 PM"].map((slot) => (
-          <MiniHistory
+          <OrderSlot
             key={slot}
-            title={slot}
-            items={todayItems.filter((item) => item.slot === slot).map((item) => `${clientName(clientes, item.cliente_id)} · casillero ${item.casillero_id.slice(-2)} · ${item.estado}`)}
+            slot={slot}
+            items={todayItems.filter((item) => item.slot === slot)}
+            clientes={clientes}
+            productos={productos}
+            hubs={hubs}
           />
         ))}
       </div>
     </PageShell>
+  );
+}
+
+function OrderSlot({
+  slot,
+  items,
+  clientes,
+  productos,
+  hubs
+}: {
+  slot: string;
+  items: Entrega[];
+  clientes: ReturnType<typeof useTahonaStore.getState>["clientes"];
+  productos: Producto[];
+  hubs: ReturnType<typeof useTahonaStore.getState>["hubs"];
+}) {
+  return (
+    <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
+      <CardContent className="p-0">
+        <div className="flex flex-col justify-between gap-3 border-b border-tahona-coffee/15 bg-tahona-pink px-5 py-4 md:flex-row md:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
+              Ventana de retiro
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-tahona-coffee">{slot}</h2>
+          </div>
+          <Badge className="bg-tahona-coffee text-tahona-yellow">{items.length} pedidos</Badge>
+        </div>
+        <div className="divide-y divide-tahona-coffee/10">
+          {items.map((item, index) => {
+            const hub = hubs.find((entry) => entry.id === item.hub_id);
+            return (
+              <div key={item.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[72px_1.1fr_1fr_0.9fr_auto] lg:items-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-tahona-coffee text-lg font-black text-tahona-yellow">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div>
+                  <p className="font-black text-tahona-coffee">{clientName(clientes, item.cliente_id)}</p>
+                  <p className="text-sm font-semibold text-tahona-coffee/60">{hub?.nombre ?? item.hub_id}</p>
+                </div>
+                <div className="text-sm font-medium text-tahona-coffee/72">
+                  {item.productos
+                    .map((product) => `${product.cantidad}x ${productName(productos, product.producto_id)}`)
+                    .join(", ")}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">Casillero {item.casillero_id.slice(-2)}</Badge>
+                  <StatusBadge status={item.estado} />
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/operador/entregas/${item.id}`}>Actualizar</Link>
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -698,3 +842,4 @@ function SimpleTable({ headers, rows }: { headers: string[]; rows: Array<Array<R
     </Card>
   );
 }
+

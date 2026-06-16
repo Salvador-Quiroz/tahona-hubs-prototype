@@ -6,11 +6,16 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  ArrowUpRight,
+  BarChart3,
   Check,
   Clock,
   CreditCard,
+  Crown,
+  Factory,
   HelpCircle,
   Home,
+  LockKeyhole,
   MapPin,
   PackageCheck,
   Pause,
@@ -20,6 +25,7 @@ import {
   ShoppingBag,
   Sparkles,
   TimerReset,
+  Truck,
   User,
   Wallet,
   Wheat
@@ -59,11 +65,11 @@ function SectionTitle({
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">{eyebrow}</p>
       <h2 className="mt-3 font-display text-4xl font-semibold leading-tight text-balance md:text-5xl">
         {title}
       </h2>
-      {body ? <p className="mt-4 text-muted-foreground md:text-lg">{body}</p> : null}
+      {body ? <p className="mt-4 text-current/70 md:text-lg">{body}</p> : null}
     </div>
   );
 }
@@ -71,7 +77,7 @@ function SectionTitle({
 function ProductCard({ product }: { product: Producto }) {
   return (
     <Link href={`/catalogo/${product.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-tahona-coffee/15 bg-tahona-paper shadow-soft">
         <Image
           src={product.imagen_url}
           alt={product.nombre}
@@ -80,12 +86,14 @@ function ProductCard({ product }: { product: Producto }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="mt-4 flex items-start justify-between gap-4">
+      <div className="mt-4 flex items-start justify-between gap-4 border-l-4 border-tahona-yellow pl-4">
         <div>
-          <h3 className="font-display text-2xl font-semibold">{product.nombre}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{product.descripcion_corta}</p>
+          <h3 className="font-display text-2xl font-semibold text-tahona-coffee">{product.nombre}</h3>
+          <p className="mt-1 text-sm font-medium text-tahona-coffee/65">{product.descripcion_corta}</p>
         </div>
-        <span className="text-sm font-semibold">{formatCurrency(product.precio_mxn)}</span>
+        <span className="rounded-full bg-tahona-pink px-3 py-1 text-sm font-black text-tahona-coffee">
+          {formatCurrency(product.precio_mxn)}
+        </span>
       </div>
     </Link>
   );
@@ -95,76 +103,127 @@ export function LandingPage() {
   const { productos, hubs } = useTahonaStore();
   const hero = productos[0];
   const featured = productos.slice(0, 4);
+  const roleEntrances = [
+    {
+      href: "/suscribirme",
+      label: "App cliente",
+      title: "Suscribirse y retirar pan",
+      body: "Flujo completo: vitrina, hub asignado, horarios, pago y QR.",
+      icon: ShoppingBag
+    },
+    {
+      href: "/operador",
+      label: "Panel operador",
+      title: "Producir, cargar y resolver",
+      body: "Pedidos del dia, produccion por SKU, casilleros, cobros e incidencias.",
+      icon: Factory
+    },
+    {
+      href: "/dashboard",
+      label: "Dashboard dueños",
+      title: "Ver crecimiento y proyeccion",
+      body: "KPIs, ingresos, retencion, hubs, productos y modelo de expansion.",
+      icon: Crown
+    }
+  ];
+
   return (
-    <main>
-      <section className="relative min-h-[86vh] overflow-hidden bg-tahona-ink text-white">
+    <main className="brand-paper">
+      <section className="relative min-h-[92vh] overflow-hidden bg-tahona-coffee text-tahona-cream">
         <Image
           src={hero.imagen_url}
           alt="Hogaza de pan artesanal Tahona"
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-55"
+          className="object-cover opacity-38"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-tahona-ink/30 via-tahona-ink/55 to-tahona-ink" />
-        <Container className="relative flex min-h-[86vh] flex-col justify-end pb-14 pt-28">
-          <motion.div {...fadeUp} className="max-w-3xl">
-            <Badge className="bg-tahona-crust text-tahona-ink">Desde 1957</Badge>
-            <h1 className="mt-5 font-display text-6xl font-semibold leading-[0.95] text-balance md:text-8xl">
-              Pan recién horneado, esperándote en tu hub.
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(74,43,24,0.96),rgba(74,43,24,0.78)_48%,rgba(74,43,24,0.34))]" />
+        <div className="absolute inset-x-0 top-0 h-3 bg-tahona-yellow" />
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-tahona-coffee to-transparent" />
+        <Container className="relative flex min-h-[92vh] flex-col justify-center pb-16 pt-28">
+          <motion.div {...fadeUp} className="max-w-5xl">
+            <div className="mb-7 flex flex-wrap items-center gap-3">
+              <Badge className="border-tahona-yellow bg-tahona-yellow text-tahona-coffee">
+                Boutique de pan desde 1957
+              </Badge>
+              <Badge className="border-tahona-pink bg-tahona-pink text-tahona-coffee">
+                Demo inversionistas
+              </Badge>
+            </div>
+            <h1 className="font-display text-6xl font-semibold leading-[0.88] text-balance md:text-8xl lg:text-9xl">
+              Tahona Hubs
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-white/85 md:text-xl">
-              Suscríbete a tus panes favoritos de Tahona, elige horario fijo y retira tu bolsa
-              caliente en casilleros inteligentes de CDMX.
+            <p className="mt-6 max-w-3xl text-xl leading-8 text-tahona-cream/88 md:text-2xl">
+              Una plataforma para vender suscripciones de pan recien horneado, operar casilleros
+              inteligentes y demostrar crecimiento recurrente con datos conectados.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="accent">
-                <Link href="/suscribirme">
-                  Suscribirme <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">
-                <Link href="/catalogo">Ver vitrina</Link>
-              </Button>
+            <div className="mt-10 grid gap-3 lg:grid-cols-3">
+              {roleEntrances.map((entry) => {
+                const Icon = entry.icon;
+                return (
+                  <Link
+                    key={entry.href}
+                    href={entry.href}
+                    className="group min-h-40 rounded-lg border border-tahona-yellow/25 bg-tahona-cream/94 p-5 text-tahona-coffee shadow-editorial transition-transform duration-200 hover:-translate-y-1 hover:bg-tahona-yellow"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em]">
+                        <Icon className="h-4 w-4" aria-hidden />
+                        {entry.label}
+                      </span>
+                      <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                    </div>
+                    <h2 className="mt-5 text-2xl font-black leading-tight">{entry.title}</h2>
+                    <p className="mt-3 text-sm font-medium leading-6 text-tahona-coffee/70">
+                      {entry.body}
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
         </Container>
       </section>
 
-      <section className="bg-tahona-cream py-16">
-        <Container>
-          <SectionTitle
-            eyebrow="Cómo funciona"
-            title="Un ritual semanal con operación precisa."
-            body="La experiencia conserva el oficio de panadería y elimina la fila, la incertidumbre y la planeación de último minuto."
-          />
-          <div className="mt-10 grid gap-4 md:grid-cols-4">
-            {[
-              ["Te suscribes", User],
-              ["Elegimos tus panes", Wheat],
-              ["Llegan a tu hub", MapPin],
-              ["Abres tu casillero", QrCode]
-            ].map(([label, Icon], index) => (
-              <Card key={label as string}>
-                <CardContent className="p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-md bg-secondary text-white">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </div>
-                  <p className="mt-5 text-sm font-semibold text-muted-foreground">Paso {index + 1}</p>
-                  <h3 className="mt-1 text-xl font-semibold">{label as string}</h3>
-                </CardContent>
-              </Card>
-            ))}
+      <section className="bg-tahona-pink py-14">
+        <Container className="max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <SectionTitle
+              eyebrow="Sistema completo"
+              title="No es una landing: es una red operativa conectada."
+              body="Cada vista comparte clientes, hubs, casilleros, entregas, cobros e incidencias. Lo que ve direccion se explica desde la operacion."
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["160", "clientes activos"],
+                ["72", "casilleros trazables"],
+                ["1,008", "entregas historicas"]
+              ].map(([value, label]) => (
+                <div key={label} className="border-l-4 border-tahona-coffee bg-tahona-masa p-5">
+                  <p className="font-display text-5xl font-semibold text-tahona-coffee">{value}</p>
+                  <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-tahona-coffee/65">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </Container>
       </section>
 
       <section className="py-16">
-        <Container>
+        <Container className="max-w-7xl">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <SectionTitle eyebrow="Vitrina" title="Piezas que justifican la vuelta." />
+            <SectionTitle
+              eyebrow="Vitrina premium"
+              title="La marca vende oficio antes que tecnologia."
+              body="La inspiracion editorial se mantiene en catalogo y detalle: producto grande, texto minimo y fotografia como protagonista."
+            />
             <Button asChild variant="outline">
-              <Link href="/catalogo">Catálogo completo</Link>
+              <Link href="/catalogo">
+                Catalogo completo <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
           <div className="mt-10 grid gap-7 md:grid-cols-4">
@@ -175,12 +234,12 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section className="bg-tahona-ink py-16 text-white">
-        <Container>
+      <section className="bg-tahona-coffee py-16 text-tahona-cream">
+        <Container className="max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
             <SectionTitle
               eyebrow="Hubs CDMX"
-              title="Tres puntos de retiro para empezar a escalar."
+              title="La promesa se cumple en ubicaciones y horarios concretos."
               body="Polanco, Condesa y Del Valle operan con ventanas fijas, capacidad visible y trazabilidad por casillero."
             />
             <HubMap hubs={hubs} />
@@ -189,22 +248,30 @@ export function LandingPage() {
       </section>
 
       <section className="py-16">
-        <Container>
-          <div className="grid gap-4 md:grid-cols-3">
+        <Container className="max-w-7xl">
+          <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+            <SectionTitle
+              eyebrow="Flujos clave"
+              title="Tres historias claras para presentar."
+              body="Cliente, operacion y direccion tienen rutas visibles desde la primera pantalla."
+            />
+            <div className="grid gap-3 md:grid-cols-3">
             {[
-              "Llegué a mi hub a las 7:10 y mi pan seguía tibio. Cambió mi rutina de desayuno.",
-              "La app deja clarísimo qué viene en la bolsa y el casillero abre sin fricción.",
-              "Se siente como Tahona, pero con operación de producto digital serio."
-            ].map((quote, index) => (
-              <Card key={quote}>
-                <CardContent className="p-6">
-                  <p className="font-display text-2xl leading-snug">“{quote}”</p>
-                  <p className="mt-5 text-sm font-semibold text-muted-foreground">
-                    Cliente piloto {index + 1}
+              ["Cliente", "landing -> catalogo -> suscripcion -> cuenta -> QR", LockKeyhole],
+              ["Operacion", "dashboard -> produccion -> carga -> entrega -> cobros", Truck],
+              ["Direccion", "resumen -> hubs -> clientes -> proyecciones", BarChart3]
+            ].map(([title, body, Icon]) => (
+              <Card key={title as string} className="bg-tahona-masa">
+                <CardContent className="p-5">
+                  <Icon className="h-6 w-6 text-tahona-red" aria-hidden />
+                  <h3 className="mt-5 text-xl font-black">{title as string}</h3>
+                  <p className="mt-3 text-sm font-medium leading-6 text-tahona-coffee/68">
+                    {body as string}
                   </p>
                 </CardContent>
               </Card>
             ))}
+            </div>
           </div>
         </Container>
       </section>

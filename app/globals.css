@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 48 33% 97%;
-    --foreground: 25 15% 11%;
-    --card: 42 36% 98%;
-    --card-foreground: 25 15% 11%;
-    --popover: 42 36% 98%;
-    --popover-foreground: 25 15% 11%;
-    --primary: 25 15% 11%;
-    --primary-foreground: 42 52% 93%;
-    --secondary: 18 67% 37%;
-    --secondary-foreground: 42 52% 93%;
-    --muted: 34 34% 88%;
-    --muted-foreground: 24 13% 39%;
-    --accent: 34 53% 64%;
-    --accent-foreground: 25 15% 11%;
-    --destructive: 2 72% 44%;
-    --destructive-foreground: 42 52% 93%;
-    --border: 32 29% 79%;
-    --input: 32 29% 79%;
-    --ring: 18 67% 37%;
+    --background: 48 49% 92%;
+    --foreground: 27 43% 17%;
+    --card: 44 55% 94%;
+    --card-foreground: 27 43% 17%;
+    --popover: 44 55% 94%;
+    --popover-foreground: 27 43% 17%;
+    --primary: 27 43% 17%;
+    --primary-foreground: 44 65% 91%;
+    --secondary: 44 77% 70%;
+    --secondary-foreground: 27 43% 17%;
+    --muted: 39 36% 84%;
+    --muted-foreground: 28 21% 34%;
+    --accent: 344 48% 89%;
+    --accent-foreground: 27 43% 17%;
+    --destructive: 3 68% 39%;
+    --destructive-foreground: 44 65% 91%;
+    --border: 33 28% 74%;
+    --input: 33 28% 74%;
+    --ring: 27 43% 17%;
     --radius: 0.5rem;
   }
 
@@ -36,6 +36,9 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    background:
+      linear-gradient(180deg, rgba(246, 231, 236, 0.55), rgba(241, 226, 176, 0.18) 34%, rgba(247, 241, 226, 1)),
+      #f7f1e2;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -57,8 +60,26 @@
 
   .grain {
     background-image:
-      linear-gradient(rgba(31, 26, 23, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(31, 26, 23, 0.025) 1px, transparent 1px);
+      linear-gradient(rgba(74, 43, 24, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74, 43, 24, 0.035) 1px, transparent 1px);
     background-size: 28px 28px;
+  }
+
+  .brand-paper {
+    background-color: #f7f1e2;
+    background-image:
+      linear-gradient(90deg, rgba(74, 43, 24, 0.055) 1px, transparent 1px),
+      linear-gradient(rgba(74, 43, 24, 0.045) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .brand-rule {
+    background: repeating-linear-gradient(
+      90deg,
+      #4a2b18 0,
+      #4a2b18 32px,
+      transparent 32px,
+      transparent 42px
+    );
   }
 }

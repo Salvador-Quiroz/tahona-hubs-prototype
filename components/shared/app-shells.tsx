@@ -7,6 +7,7 @@ import {
   Box,
   ClipboardList,
   CreditCard,
+  Crown,
   Home,
   LayoutDashboard,
   MapPin,
@@ -49,14 +50,16 @@ const dashboardNav = [
 function TahonaWordmark({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="group flex items-center gap-3" aria-label="Tahona inicio">
-      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-tahona-ink text-lg font-black text-tahona-crust">
+      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-tahona-coffee text-lg font-black text-tahona-yellow shadow-soft">
         T
       </span>
       {!compact ? (
         <span>
-          <span className="block text-lg font-black leading-none tracking-normal">TAHONA</span>
-          <span className="block font-display text-sm italic leading-none text-muted-foreground">
-            donde se hace el pan
+          <span className="block text-xl font-black leading-none tracking-normal text-tahona-coffee">
+            TAHONA
+          </span>
+          <span className="block font-display text-sm italic leading-none text-tahona-coffee/70">
+            boutique de pan
           </span>
         </span>
       ) : null}
@@ -64,21 +67,51 @@ function TahonaWordmark({ compact = false }: { compact?: boolean }) {
   );
 }
 
+function RoleAccess({ compact = false }: { compact?: boolean }) {
+  const roles = [
+    { href: "/cuenta", label: compact ? "Cliente" : "App cliente", icon: ShoppingBag },
+    { href: "/operador", label: compact ? "Operación" : "Panel operador", icon: LayoutDashboard },
+    { href: "/dashboard", label: compact ? "Dirección" : "Dashboard dueños", icon: Crown }
+  ];
+
+  return (
+    <>
+      {roles.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={
+              compact
+                ? "flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold text-tahona-coffee/70"
+                : "inline-flex items-center gap-2 rounded-md border border-tahona-coffee/20 bg-tahona-masa px-3 py-2 text-sm font-bold text-tahona-coffee transition-colors hover:bg-tahona-yellow"
+            }
+          >
+            <Icon className={compact ? "h-5 w-5" : "h-4 w-4"} aria-hidden />
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export function ClienteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
-    <div className="min-h-screen bg-tahona-masa pb-20 md:pb-0">
-      <header className="sticky top-0 z-40 border-b bg-tahona-masa/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-tahona-cream pb-20 md:pb-0">
+      <header className="sticky top-0 z-40 border-b border-tahona-coffee/15 bg-tahona-pink/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <TahonaWordmark />
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 xl:flex">
             {customerNav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm font-semibold transition-colors hover:bg-muted",
-                  pathname === item.href && "bg-muted text-secondary"
+                  "rounded-md px-3 py-2 text-sm font-bold text-tahona-coffee/75 transition-colors hover:bg-tahona-masa",
+                  pathname === item.href && "bg-tahona-masa text-tahona-coffee"
                 )}
               >
                 {item.label}
@@ -86,17 +119,25 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
             ))}
             <Link
               href="/suscribirme"
-              className="ml-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="ml-2 rounded-md bg-tahona-coffee px-4 py-2 text-sm font-bold text-tahona-yellow shadow-soft"
             >
               Suscribirme
             </Link>
           </nav>
+          <div className="hidden items-center gap-2 md:flex">
+            <RoleAccess />
+          </div>
         </div>
       </header>
       {children}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-tahona-coffee/15 bg-tahona-pink md:hidden">
         <div className="grid grid-cols-4">
-          {customerNav.map((item) => {
+          {[
+            customerNav[0],
+            customerNav[1],
+            { href: "/operador", label: "Operación", icon: LayoutDashboard },
+            { href: "/dashboard", label: "Dueños", icon: Crown }
+          ].map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
@@ -105,7 +146,7 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={cn(
                   "flex h-16 flex-col items-center justify-center gap-1 text-xs font-semibold",
-                  active ? "text-secondary" : "text-muted-foreground"
+                  active ? "text-tahona-coffee" : "text-tahona-coffee/55"
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />
@@ -132,11 +173,11 @@ function ToolShell({
 }) {
   const pathname = usePathname();
   return (
-    <div className="min-h-screen bg-tahona-masa">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r bg-tahona-ink text-white lg:block">
-        <div className="border-b border-white/10 p-5">
+    <div className="min-h-screen bg-tahona-cream">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-tahona-coffee/20 bg-tahona-coffee text-tahona-cream lg:block">
+        <div className="border-b border-tahona-coffee/20 bg-tahona-pink p-5">
           <TahonaWordmark />
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-tahona-crust">
+          <p className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-tahona-coffee/70">
             {title}
           </p>
         </div>
@@ -149,8 +190,8 @@ function ToolShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white",
-                  active && "bg-white/12 text-white"
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-tahona-cream/75 transition-colors hover:bg-tahona-yellow/15 hover:text-tahona-yellow",
+                  active && "bg-tahona-yellow text-tahona-coffee"
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />
@@ -159,16 +200,24 @@ function ToolShell({
             );
           })}
         </nav>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-tahona-yellow/20 p-4">
+          <Link
+            href="/"
+            className="block rounded-md border border-tahona-yellow/25 px-3 py-2 text-center text-xs font-bold uppercase tracking-[0.16em] text-tahona-yellow"
+          >
+            Volver a demo
+          </Link>
+        </div>
       </aside>
-      <header className="sticky top-0 z-20 border-b bg-tahona-masa/95 backdrop-blur lg:ml-72">
+      <header className="sticky top-0 z-20 border-b border-tahona-coffee/15 bg-tahona-pink/95 backdrop-blur lg:ml-72">
         <div className="flex items-center justify-between px-4 py-3 lg:px-8">
-          <Link href={homeHref} className="font-display text-2xl font-semibold lg:hidden">
+          <Link href={homeHref} className="font-display text-2xl font-semibold text-tahona-coffee lg:hidden">
             {title}
           </Link>
-          <div className="hidden text-sm text-muted-foreground lg:block">
-            Demo ejecutiva conectada a datos mockeados
+          <div className="hidden text-sm font-semibold text-tahona-coffee/70 lg:block">
+            Prototipo conectado: cliente, operación y dirección
           </div>
-          <div className="rounded-md border bg-card px-3 py-1.5 text-sm font-semibold">
+          <div className="rounded-md border border-tahona-coffee/20 bg-tahona-masa px-3 py-1.5 text-sm font-semibold text-tahona-coffee">
             15 jun 2026
           </div>
         </div>

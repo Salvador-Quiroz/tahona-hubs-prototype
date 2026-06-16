@@ -41,16 +41,22 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))"
         },
         tahona: {
-          ink: "#1F1A17",
-          terracotta: "#A0411F",
-          crust: "#D4A574",
-          cream: "#F5EFE6",
-          masa: "#FAFAF7",
-          cacao: "#4B2E1F",
-          maiz: "#E7C654",
-          nopal: "#5F7652",
-          cantera: "#D9C8B4",
-          rose: "#F2D9DE"
+          ink: "#4A2B18",
+          coffee: "#4A2B18",
+          cacao: "#2B1A10",
+          yellow: "#F1DA79",
+          maiz: "#F1DA79",
+          maize: "#F1DA79",
+          cream: "#F7F1E2",
+          masa: "#FFF8EA",
+          pink: "#F3DCE4",
+          rose: "#F3DCE4",
+          paper: "#E9D9B7",
+          nopal: "#60704E",
+          red: "#9F3A2D",
+          terracotta: "#9F3A2D",
+          crust: "#C78A46",
+          cantera: "#D7C4A7"
         }
       },
       borderRadius: {
@@ -59,8 +65,9 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)"
       },
       boxShadow: {
-        soft: "0 18px 60px rgba(31, 26, 23, 0.10)",
-        lift: "0 16px 32px rgba(31, 26, 23, 0.14)"
+        soft: "0 18px 60px rgba(74, 43, 24, 0.10)",
+        lift: "0 16px 32px rgba(74, 43, 24, 0.16)",
+        editorial: "0 34px 90px rgba(74, 43, 24, 0.22)"
       },
       fontFamily: {
         display: ["Cormorant Garamond", "Georgia", "serif"],
