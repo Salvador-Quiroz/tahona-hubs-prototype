@@ -2,17 +2,21 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-
 const buttonVariants = cva(
-  "inline-flex min-w-max items-center justify-center gap-2 whitespace-nowrap rounded-[12px] font-sans text-sm font-semibold transition-all duration-base ease-out-soft focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.92]",
+  "inline-flex min-w-max items-center justify-center gap-2 whitespace-nowrap rounded-[12px] font-sans text-sm font-semibold transition-[transform,box-shadow,background-color,border-color] duration-[160ms] ease-out-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper)] disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]",
   {
     variants: {
       variant: {
-        default: "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[var(--brand-press)] hover:shadow-[var(--shadow-md)]",
-        secondary: "bg-[var(--paper-sunken)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[var(--crust-soft)] hover:shadow-[var(--shadow-md)]",
-        outline: "border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:bg-[var(--paper)] hover:shadow-[var(--shadow-md)]",
-        ghost: "text-[var(--ink)] hover:bg-[var(--paper-sunken)]",
-        accent: "bg-[var(--accent)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[#f6bf39] hover:shadow-[var(--shadow-md)]"
+        default:
+          "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:-translate-y-[1px] hover:bg-[var(--brand-press)] hover:shadow-[var(--shadow-md)]",
+        secondary:
+          "bg-[var(--paper-sunken)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-[1px] hover:bg-[var(--crust-soft)] hover:shadow-[var(--shadow-md)]",
+        outline:
+          "border border-[var(--line-strong)] bg-[var(--paper-raised)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-[1px] hover:border-[var(--brand)] hover:text-[var(--brand)] hover:shadow-[var(--shadow-md)]",
+        ghost:
+          "text-[var(--ink)] hover:bg-[var(--paper-sunken)] hover:text-[var(--brand)]",
+        accent:
+          "bg-[var(--accent)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-[1px] hover:bg-[var(--accent-edge)] hover:shadow-[var(--shadow-md)]"
       },
       size: {
         default: "h-11 px-sm",
@@ -27,14 +31,12 @@ const buttonVariants = cva(
     }
   }
 );
-
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
 }
-
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, children, disabled, ...props }, ref) => {
     if (asChild) {
@@ -49,7 +51,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         </Slot>
       );
     }
-
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
@@ -70,5 +71,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 Button.displayName = "Button";
-
 export { Button, buttonVariants };
