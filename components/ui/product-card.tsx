@@ -51,9 +51,8 @@ export function ProductCard({
             alt={name}
             fill
             sizes="(max-width: 768px) 50vw, 320px"
-            className="object-cover transition-transform duration-[420ms] ease-out-soft group-hover:scale-[1.05]"
+            className="object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ink)]/25 via-transparent to-transparent opacity-0 transition-opacity duration-[220ms] group-hover:opacity-100" />
           <span className="absolute left-3 top-3 rounded-full border border-[var(--brand)]/15 bg-[var(--paper-raised)]/90 px-2.5 py-1 font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.09em] text-[var(--brand)] shadow-[var(--shadow-sm)] backdrop-blur-[10px]">
             {category}
           </span>
