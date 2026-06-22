@@ -2,12 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-article[style*="opacity:0"],
-article[style*="opacity: 0"],
-[style*="translateY(12px)"] {
-  opacity: 1 !important;
-  transform: none !important;
-}
+
 
 @layer base {
   :root {
@@ -390,4 +385,10 @@ article[style*="opacity: 0"],
       transform: translateY(-12px);
     }
   }
+  article[style*="opacity:0"],
+  article[style*="opacity: 0"],
+  [style*="translateY(12px)"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
 }
