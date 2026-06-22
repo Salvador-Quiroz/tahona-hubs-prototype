@@ -366,10 +366,10 @@ export function LandingPage() {
         <Container className="relative flex min-h-[86svh] flex-col justify-between py-12 md:py-16">
           <div className="max-w-4xl pt-lg">
             <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              Desde 1957.
+              TAHONA · Desde 1957
             </p>
             <h1 className="mt-4 max-w-[12ch] font-serif text-[clamp(3.5rem,11vw,8.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-[var(--ink)]">
-              TAHONA
+              Pan fresco, sin fila.
             </h1>
             <p className="mt-6 max-w-2xl font-serif text-display font-medium text-[var(--brand)] text-balance">
               Pan recién hecho, apartado sin hacer fila.
