@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --paper: #fbf8f3;
+    --paper: #f5efe4;
     --paper-raised: #ffffff;
-    --paper-sunken: #f4efe6;
+    --paper-sunken: #ece3d3;
 
     --ink: #1c1815;
     --ink-soft: #4a433c;
@@ -42,7 +42,7 @@
     --bg: var(--paper);
     --surface: var(--paper-raised);
     --surface-2: var(--paper-sunken);
-    --surface-3: #eee7dc;
+    --surface-3: #e6dcc9;
     --panel-bg: #f5f7fb;
     --panel-surface: #ffffff;
     --border: var(--line);
@@ -297,18 +297,7 @@
   .skeleton-shimmer {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(90deg, var(--paper-sunken) 25%, #ece5d8 50%, var(--paper-sunken) 75%);
-    background-size: 200% 100%;
-    animation: shimmer-bg 1.4s infinite;
-  }
-
-  .skeleton-shimmer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-110%) skewX(-14deg);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.68), transparent);
-    animation: shimmer 1.4s var(--ease-out-soft) infinite;
+    background: var(--paper-sunken);
   }
 
   @keyframes enter-soft {
