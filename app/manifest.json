@@ -1,11 +1,11 @@
 {
   "name": "Tahona Hubs",
   "short_name": "Tahona",
-  "description": "Pan recién horneado en casilleros inteligentes.",
+  "description": "Pan artesanal Tahona apartado por semana, con retiro en hubs y casilleros inteligentes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5EFE6",
-  "theme_color": "#1F1A17",
+  "background_color": "#FAFBFC",
+  "theme_color": "#2040D0",
   "icons": [
     {
       "src": "/icon.svg",

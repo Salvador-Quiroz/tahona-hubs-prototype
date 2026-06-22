@@ -76,7 +76,7 @@ export const productos: Producto[] = [
     precio_mxn: 92,
     tiempo_horneado_min: 26,
     calorias: 390,
-    imagen_url: img("photo-1605348107427-6a5cbd9c158e"),
+    imagen_url: img("photo-1608198093002-ad4e005484ec"),
     disponibilidad: ["viernes", "sábado", "domingo"]
   },
   {
@@ -136,7 +136,7 @@ export const productos: Producto[] = [
     precio_mxn: 118,
     tiempo_horneado_min: 35,
     calorias: 285,
-    imagen_url: img("photo-1600626333392-63e3f3c7f350"),
+    imagen_url: img("photo-1523294587484-bae6cc870010"),
     disponibilidad: ["miércoles", "viernes", "sábado"]
   },
   {

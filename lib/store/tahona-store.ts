@@ -25,6 +25,10 @@ type TahonaState = {
   cobros: Cobro[];
   incidencias: Incidencia[];
   currentClientId: string;
+  cart: Record<string, number>;
+  addToCart: (productId: string) => void;
+  removeFromCart: (productId: string) => void;
+  setCartQuantity: (productId: string, quantity: number) => void;
   markDelivery: (id: string, estado: EntregaEstado) => void;
   pauseSubscription: (id: string, weeks: number) => void;
   reactivateSubscription: (id: string) => void;
@@ -50,6 +54,35 @@ function cobroAfterRetry(cobro: Cobro): Cobro {
 export const useTahonaStore = create<TahonaState>((set) => ({
   ...data,
   currentClientId: "cl-001",
+  cart: {},
+  addToCart: (productId) =>
+    set((state) => ({
+      cart: {
+        ...state.cart,
+        [productId]: (state.cart[productId] ?? 0) + 1
+      }
+    })),
+  removeFromCart: (productId) =>
+    set((state) => {
+      const nextQuantity = Math.max(0, (state.cart[productId] ?? 0) - 1);
+      const nextCart = { ...state.cart };
+      if (nextQuantity === 0) {
+        delete nextCart[productId];
+      } else {
+        nextCart[productId] = nextQuantity;
+      }
+      return { cart: nextCart };
+    }),
+  setCartQuantity: (productId, quantity) =>
+    set((state) => {
+      const nextCart = { ...state.cart };
+      if (quantity <= 0) {
+        delete nextCart[productId];
+      } else {
+        nextCart[productId] = quantity;
+      }
+      return { cart: nextCart };
+    }),
   markDelivery: (id, estado) =>
     set((state) => ({
       entregas: state.entregas.map((entrega) =>

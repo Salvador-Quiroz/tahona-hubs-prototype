@@ -1,949 +1,445 @@
-﻿"use client";
+"use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Banknote,
-  Box,
+  Boxes,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
   CreditCard,
   Download,
+  MapPin,
   Package,
   RefreshCw,
-  Search,
   Settings,
+  ShieldCheck,
+  Timer,
   Users,
   Wheat
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Field } from "@/components/ui/field";
+import { KpiCard } from "@/components/ui/kpi-card";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Textarea } from "@/components/ui/textarea";
-import { MetricCard } from "@/components/shared/metric-card";
 import { ProgressBar } from "@/components/shared/progress";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { useTahonaStore } from "@/lib/store/tahona-store";
-import type { Casillero, CasilleroEstado, Entrega, Producto, Suscripcion } from "@/lib/mock-data";
-import { formatCurrency, shortDate } from "@/lib/utils";
+import type { Casillero, Cobro, Entrega, Hub, Incidencia, Producto, Suscripcion } from "@/lib/mock-data";
+import { cn, formatCurrency, shortDate } from "@/lib/utils";
+
+type OperatorView =
+  | "hoy"
+  | "produccion"
+  | "produccion-semanal"
+  | "carga"
+  | "casilleros"
+  | "entrega"
+  | "suscripciones"
+  | "suscripcion"
+  | "pedidos"
+  | "pedidos-extra"
+  | "cobros"
+  | "reintentos"
+  | "conciliacion"
+  | "catalogo"
+  | "hubs"
+  | "equipo"
+  | "incidencias"
+  | "configuracion";
 
 const today = "2026-06-15";
-const operatorSlots = ["7:00 AM", "1:30 PM", "7:30 PM"];
+
+export function OperatorPage({ view, id }: { view: OperatorView; id?: string }) {
+  if (view === "hoy") return <TodayOperations />;
+  if (view === "produccion" || view === "produccion-semanal") return <ProductionView weekly={view === "produccion-semanal"} />;
+  if (view === "carga" || view === "casilleros") return <LockerView mode={view} />;
+  if (view === "entrega") return <DeliveryDetail id={id} />;
+  if (view === "suscripciones" || view === "suscripcion") return <SubscriptionsView id={id} />;
+  if (view === "pedidos" || view === "pedidos-extra") return <OrdersView extra={view === "pedidos-extra"} />;
+  if (view === "cobros" || view === "reintentos" || view === "conciliacion") return <MoneyView mode={view} />;
+  if (view === "catalogo") return <CatalogAdmin />;
+  if (view === "hubs") return <HubsAdmin />;
+  if (view === "incidencias") return <IncidentsView />;
+  return <SettingsView mode={view} />;
+}
 
 function PageShell({
   eyebrow,
   title,
+  description,
+  actions,
   children
 }: {
   eyebrow: string;
   title: string;
-  children: React.ReactNode;
+  description: string;
+  actions?: ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <div className="brand-paper px-4 py-8 lg:px-8">
-      <div className="mb-8 flex flex-col justify-between gap-4 border-b-4 border-tahona-coffee pb-6 md:flex-row md:items-end">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">{eyebrow}</p>
-          <h1 className="mt-2 font-display text-5xl font-semibold leading-none text-tahona-coffee">
-            {title}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm font-semibold text-tahona-coffee/62">
-            Vista de piso para coordinar producción, carga, retiros, cobros e incidencias
-            con trazabilidad por hub.
-          </p>
-        </div>
+    <main className="min-h-screen bg-transparent px-sm py-md text-foreground lg:px-md">
+      <div className="mx-auto max-w-[1540px]">
+        <header className="mb-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-md shadow-md backdrop-blur">
+          <div className="flex flex-col justify-between gap-md xl:flex-row xl:items-end">
+            <div className="max-w-4xl">
+              <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
+              <h1 className="mt-2 text-h1 font-semibold tracking-[-0.015em] text-foreground">{title}</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
+            </div>
+            <div className="flex flex-wrap gap-xs">
+              {actions ?? (
+                <>
+                  <Button asChild variant="outline"><Link href="/operador/pedidos">Pedidos</Link></Button>
+                  <Button asChild><Link href="/operador/carga">Abrir carga</Link></Button>
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+        {children}
       </div>
-      {children}
-    </div>
+    </main>
   );
-}
-
-function productName(productos: Producto[], id: string) {
-  return productos.find((product) => product.id === id)?.nombre ?? "Producto";
 }
 
 function clientName(clientes: ReturnType<typeof useTahonaStore.getState>["clientes"], id: string) {
   const client = clientes.find((item) => item.id === id);
-  return client ? `${client.nombre} ${client.apellido}` : "Cliente";
+  return client ? `${client.nombre} ${client.apellido}` : id;
 }
 
-function todaysDeliveries(entregas: Entrega[]) {
-  return entregas.filter((entrega) => entrega.fecha === today);
+function productName(productos: Producto[], id: string) {
+  return productos.find((item) => item.id === id)?.nombre ?? id;
 }
 
-export function OperatorPage({
-  view,
-  id
-}: {
-  view:
-    | "hoy"
-    | "produccion"
-    | "produccion-semanal"
-    | "carga"
-    | "casilleros"
-    | "entrega"
-    | "suscripciones"
-    | "suscripcion"
-    | "pedidos"
-    | "pedidos-extra"
-    | "cobros"
-    | "reintentos"
-    | "conciliacion"
-    | "catalogo"
-    | "hubs"
-    | "equipo"
-    | "incidencias"
-    | "configuracion";
-  id?: string;
-}) {
-  const store = useTahonaStore();
-  if (view === "hoy") return <TodayDashboard />;
-  if (view === "produccion") return <ProductionToday />;
-  if (view === "produccion-semanal") return <WeeklyProduction />;
-  if (view === "carga") return <LockerLoading />;
-  if (view === "casilleros") return <LockerStatus />;
-  if (view === "entrega") return <DeliveryDetail id={id ?? store.entregas[0].id} />;
-  if (view === "suscripciones") return <SubscriptionsTable />;
-  if (view === "suscripcion") return <SubscriptionDetail id={id ?? "sub-cl-001"} />;
-  if (view === "pedidos") return <OrdersToday />;
-  if (view === "pedidos-extra") return <ExtraOrders />;
-  if (view === "cobros") return <ChargesToday />;
-  if (view === "reintentos") return <RetryCharges />;
-  if (view === "conciliacion") return <Reconciliation />;
-  if (view === "catalogo") return <CatalogAdmin />;
-  if (view === "hubs") return <HubsAdmin />;
-  if (view === "equipo") return <TeamAdmin />;
-  if (view === "incidencias") return <Incidents />;
-  return <BusinessSettings />;
+function hubName(hubs: Hub[], id: string) {
+  return hubs.find((item) => item.id === id)?.nombre ?? id;
 }
 
-function TodayDashboard() {
-  const { entregas, incidencias, cobros, hubs } = useTahonaStore();
-  const todayItems = todaysDeliveries(entregas);
-  const delivered = todayItems.filter((item) => item.estado === "entregado").length;
-  const pending = todayItems.filter((item) => item.estado === "listo").length;
-  const activeIncidents = incidencias.filter((item) => item.estado !== "resuelta").length;
-  const todayRevenue = cobros
-    .filter((item) => item.fecha === today && item.estado === "cobrado")
-    .reduce((sum, item) => sum + item.monto, 0);
+function entregaTotal(productos: Producto[], entrega: Entrega) {
+  return entrega.productos.reduce((sum, item) => sum + (productos.find((product) => product.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad, 0);
+}
+
+function deliveryTone(status: Entrega["estado"]) {
+  if (status === "incidencia" || status === "no_entregado") return "danger";
+  if (status === "listo") return "warning";
+  return "success";
+}
+
+function chargeTone(status: Cobro["estado"]) {
+  if (status === "fallido") return "danger";
+  if (status === "pendiente") return "warning";
+  return "success";
+}
+
+function TodayOperations() {
+  const { entregas, incidencias, cobros, casilleros, hubs, clientes, productos } = useTahonaStore();
+  const todayDeliveries = entregas.filter((item) => item.fecha === today);
+  const ready = todayDeliveries.filter((item) => item.estado === "listo").length;
+  const incidents = incidencias.filter((item) => item.estado !== "resuelta");
+  const failedCharges = cobros.filter((item) => item.estado === "fallido");
+  const failedAmount = failedCharges.reduce((sum, item) => sum + item.monto, 0);
+  const occupied = casilleros.filter((item) => item.estado === "cargado" || item.estado === "incidencia").length;
+  const totalLockers = hubs.reduce((sum, hub) => sum + hub.casilleros_total, 0);
+
+  const columns: Array<DataTableColumn<Entrega>> = [
+    { key: "slot", header: "Slot", render: (row) => <span className="font-mono font-semibold">{row.slot}</span> },
+    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
+    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
+    { key: "productos", header: "Pedido", render: (row) => row.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ") },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={deliveryTone(row.estado)} label={row.estado.replaceAll("_", " ")} /> },
+    { key: "accion", header: "", align: "right", render: (row) => <Button asChild size="sm" variant="outline"><Link href={`/operador/entregas/${row.id}`}>Abrir</Link></Button> }
+  ];
 
   return (
-    <PageShell eyebrow="Operación" title="Sala de control del día">
-      <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Pedidos programados" value={String(todayItems.length)} helper="3 ventanas de retiro" icon={ClipboardList} tone="warm" />
-        <MetricCard label="Listos para retirar" value={String(pending)} helper={`${delivered} ya entregados`} icon={CheckCircle2} tone="green" />
-        <MetricCard label="Incidencias abiertas" value={String(activeIncidents)} helper="Resolver antes de 24 h" icon={AlertTriangle} tone="gold" />
-        <MetricCard label="Cobrado hoy" value={formatCurrency(todayRevenue)} helper="Corte automático" icon={Banknote} />
+    <PageShell
+      eyebrow="Operación diaria"
+      title="Control de retiros, carga y excepciones."
+      description="Vista de piso para saber qué mover ahora: pedidos listos, casilleros ocupados, incidencias y cobros que bloquean experiencia."
+    >
+      <div className="grid gap-sm md:grid-cols-4">
+        <KpiCard label="Pedidos de hoy" value={todayDeliveries.length} helper={`${ready} listos para retirar`} icon={ClipboardList} />
+        <KpiCard label="Casilleros activos" value={occupied} helper={`${totalLockers - occupied} disponibles en red`} target={`${totalLockers} totales`} icon={Boxes} />
+        <KpiCard label="Incidencias abiertas" value={incidents.length} delta={incidents.length > 0 ? "requiere acción" : "sin riesgo"} deltaTone={incidents.length > 0 ? "down" : "up"} icon={AlertTriangle} />
+        <KpiCard label="Cobros fallidos" value={failedCharges.length} helper={`${formatCurrency(failedAmount)} bloquean acceso`} icon={CreditCard} />
       </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
-                  Ritmo de entrega
-                </p>
-                <h2 className="mt-2 text-2xl font-black text-tahona-coffee">Slots activos</h2>
-              </div>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/operador/pedidos">Ver pedidos</Link>
-              </Button>
-            </div>
-            <div className="mt-6 space-y-4">
-              {operatorSlots.map((slot) => {
-                const count = todayItems.filter((item) => item.slot === slot).length;
-                const ready = todayItems.filter((item) => item.slot === slot && item.estado === "listo").length;
-                return (
-                  <div key={slot} className="rounded-lg border border-tahona-coffee/15 bg-tahona-cream p-4">
-                    <div className="flex items-center justify-between gap-4 text-sm font-black text-tahona-coffee">
-                      <span className="text-xl">{slot}</span>
-                      <span>{count} pedidos · {ready} listos</span>
-                    </div>
-                    <ProgressBar value={(count / 18) * 100} className="mt-3" />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
+      <div className="mt-md grid gap-md xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="shadow-sm">
+          <CardHeader><CardTitle>Cola de retiros de hoy</CardTitle></CardHeader>
+          <CardContent><DataTable rows={todayDeliveries.slice(0, 14)} columns={columns} getRowId={(row) => row.id} /></CardContent>
         </Card>
-        <Card className="border-tahona-coffee/20 bg-tahona-coffee text-tahona-cream shadow-editorial">
-          <CardContent className="p-6">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">
-              Prioridad de piso
-            </p>
-            <h2 className="mt-2 text-2xl font-black">Carga por hub</h2>
-            <div className="mt-5 space-y-3">
-              {hubs.map((hub) => (
-                <Link
-                  key={hub.id}
-                  href="/operador/carga"
-                  className="block rounded-md border border-tahona-yellow/25 bg-tahona-cream/8 p-4 transition-colors hover:bg-tahona-yellow hover:text-tahona-coffee"
-                >
-                  <p className="font-black">{hub.nombre}</p>
-                  <p className="mt-1 text-sm opacity-75">
-                    {hub.casilleros_ocupados_actual}/{hub.casilleros_total} casilleros ocupados
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <RiskQueue incidents={incidents} charges={failedCharges} />
       </div>
-    </PageShell>
-  );
-}
-function ProductionToday() {
-  const { entregas, productos, hubs } = useTahonaStore();
-  const todayItems = todaysDeliveries(entregas);
-  const rows = useMemo(() => {
-    return productos.map((producto) => {
-      const slotTotals = hubs.flatMap((hub) =>
-        operatorSlots.map((slot) => {
-          const total = todayItems
-            .filter((entrega) => entrega.hub_id === hub.id && entrega.slot === slot)
-            .flatMap((entrega) => entrega.productos)
-            .filter((item) => item.producto_id === producto.id)
-            .reduce((sum, item) => sum + item.cantidad, 0);
-          return { key: `${hub.id}-${slot}`, hub, slot, total };
-        })
-      );
-      return { producto, slotTotals, total: slotTotals.reduce((sum, item) => sum + item.total, 0) };
-    });
-  }, [hubs, productos, todayItems]);
-  const totalPieces = rows.reduce((sum, row) => sum + row.total, 0);
-
-  return (
-    <PageShell eyebrow="Producción" title="Matriz de producción del día">
-      <div className="mb-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-stretch">
-        <Card className="bg-tahona-yellow text-tahona-coffee">
-          <CardContent className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em]">Piezas totales</p>
-            <p className="mt-3 text-4xl font-black">{totalPieces}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-tahona-pink text-tahona-coffee">
-          <CardContent className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em]">SKU activos</p>
-            <p className="mt-3 text-4xl font-black">{rows.filter((row) => row.total > 0).length}</p>
-          </CardContent>
-        </Card>
-        <Button className="h-full min-h-24 px-6" variant="secondary">
-          <Download className="h-4 w-4" /> Exportar hoja de horno
-        </Button>
-      </div>
-      <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
-        <CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[1180px] text-sm">
-            <thead className="border-b border-tahona-coffee/15 bg-tahona-coffee text-left text-tahona-cream">
-              <tr>
-                <th className="sticky left-0 z-10 bg-tahona-coffee p-4">SKU</th>
-                {hubs.flatMap((hub) =>
-                  operatorSlots.map((slot) => (
-                    <th key={`${hub.id}-${slot}`} className="p-4">
-                      <span className="block font-black">{hub.nombre.replace("Hub ", "")}</span>
-                      <span className="text-xs opacity-70">{slot}</span>
-                    </th>
-                  ))
-                )}
-                <th className="p-4">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.producto.id} className="border-b border-tahona-coffee/10 last:border-0">
-                  <td className="sticky left-0 bg-tahona-masa p-4 font-black text-tahona-coffee">
-                    {row.producto.nombre}
-                  </td>
-                  {row.slotTotals.map((item) => (
-                    <td key={item.key} className="p-4">
-                      <span className={item.total > 0 ? "font-black text-tahona-coffee" : "text-tahona-coffee/30"}>
-                        {item.total}
-                      </span>
-                    </td>
-                  ))}
-                  <td className="p-4 text-lg font-black text-tahona-red">{row.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+      <HubCapacity hubs={hubs} casilleros={casilleros} />
     </PageShell>
   );
 }
 
-function WeeklyProduction() {
-  const data = [
-    ["Lun", 184],
-    ["Mar", 212],
-    ["Mié", 198],
-    ["Jue", 225],
-    ["Vie", 264],
-    ["Sáb", 318],
-    ["Dom", 276]
-  ] as const;
+function RiskQueue({ incidents, charges }: { incidents: Incidencia[]; charges: Cobro[] }) {
   return (
-    <PageShell eyebrow="Planeación" title="Producción semanal">
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Tendencia por día</h2>
-            <div className="mt-8 flex h-72 items-end gap-4">
-              {data.map(([day, value]) => (
-                <div key={day} className="flex flex-1 flex-col items-center gap-3">
-                  <div className="w-full rounded-t-md bg-secondary" style={{ height: `${(value / 340) * 100}%` }} />
-                  <span className="text-sm font-semibold">{day}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Notas de planeación</h2>
-            <div className="mt-5 space-y-3 text-sm text-muted-foreground">
-              <p>Viernes y sábado concentran demanda de hojaldres y pan dulce.</p>
-              <p>Polanco requiere 12% más baguette que Del Valle en la ventana de 7:30 PM.</p>
-              <p>Recomendación: producir 6% de colchón solo en bolillo y telera.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </PageShell>
-  );
-}
-
-function LockerLoading() {
-  const { hubs, casilleros, entregas, clientes, productos } = useTahonaStore();
-  const [hubId, setHubId] = useState(hubs[0].id);
-  const hubLockers = casilleros.filter((casillero) => casillero.hub_id === hubId);
-  const hub = hubs.find((item) => item.id === hubId) ?? hubs[0];
-  const queue = todaysDeliveries(entregas).filter((entrega) => entrega.hub_id === hubId);
-  const loaded = hubLockers.filter((locker) => locker.estado === "cargado").length;
-  const incidents = hubLockers.filter((locker) => locker.estado === "incidencia").length;
-  const occupied = hubLockers.filter((locker) => locker.estado !== "vacio").length;
-  return (
-    <PageShell eyebrow="Casilleros" title="Carga de casilleros">
-      <div className="mb-6 grid gap-3 md:grid-cols-3">
-        {hubs.map((item) => {
-          const active = hubId === item.id;
-          const hubItems = casilleros.filter((locker) => locker.hub_id === item.id);
-          const hubOccupied = hubItems.filter((locker) => locker.estado !== "vacio").length;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setHubId(item.id)}
-              className={`rounded-lg border p-4 text-left shadow-soft transition-colors ${
-                active
-                  ? "border-tahona-coffee bg-tahona-coffee text-tahona-yellow"
-                  : "border-tahona-coffee/15 bg-tahona-masa text-tahona-coffee hover:bg-tahona-yellow"
-              }`}
-            >
-              <p className="text-xs font-black uppercase tracking-[0.16em] opacity-70">Hub</p>
-              <h2 className="mt-2 text-2xl font-black">{item.nombre.replace("Hub ", "")}</h2>
-              <p className="mt-2 text-sm font-semibold opacity-75">{hubOccupied}/{item.casilleros_total} casilleros con actividad</p>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div>
-          <div className="mb-4 grid gap-3 md:grid-cols-3">
-            <MetricCard label="Ocupación" value={`${occupied}/${hub.casilleros_total}`} helper={hub.nombre} icon={Box} tone="gold" />
-            <MetricCard label="Cargados" value={String(loaded)} helper="Listos para retiro" icon={CheckCircle2} tone="green" />
-            <MetricCard label="Incidencias" value={String(incidents)} helper="Requieren revisión" icon={AlertTriangle} tone="warm" />
-          </div>
-          <LockerGrid lockers={hubLockers} entregas={entregas} clientes={clientes} productos={productos} showDetails />
-        </div>
-
-        <aside className="h-fit rounded-lg bg-tahona-coffee p-5 text-tahona-cream shadow-editorial xl:sticky xl:top-24">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-yellow">Cola de carga</p>
-          <h2 className="mt-3 text-3xl font-black">{queue.length} pedidos</h2>
-          <div className="mt-5 space-y-3">
-            {queue.slice(0, 8).map((entrega) => (
-              <Link
-                key={entrega.id}
-                href={`/operador/entregas/${entrega.id}`}
-                className="block rounded-md border border-tahona-yellow/20 bg-tahona-cream/8 p-4 transition-colors hover:bg-tahona-yellow hover:text-tahona-coffee"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black">{clientName(clientes, entrega.cliente_id)}</p>
-                    <p className="mt-1 text-xs font-semibold opacity-75">{entrega.slot} · Casillero {entrega.casillero_id.slice(-2)}</p>
-                  </div>
-                  <StatusBadge status={entrega.estado} />
-                </div>
-                <p className="mt-3 line-clamp-2 text-sm opacity-75">
-                  {entrega.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ")}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </aside>
-      </div>
-    </PageShell>
-  );
-}
-
-function LockerStatus() {
-  const { hubs, casilleros, entregas, clientes, productos } = useTahonaStore();
-  return (
-    <PageShell eyebrow="Tiempo real" title="Estado de casilleros">
-      <div className="mb-6 grid gap-3 md:grid-cols-4">
-        {[
-          ["Vacío", "Disponible para siguiente carga", "bg-tahona-cream"],
-          ["Cargado", "Listo para retiro", "bg-tahona-yellow"],
-          ["Retirado", "Bolsa entregada", "bg-tahona-nopal text-white"],
-          ["Incidencia", "Requiere operador", "bg-tahona-red text-white"]
-        ].map(([label, helper, className]) => (
-          <div key={label} className="rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-4">
-            <span className={`inline-flex h-8 w-8 rounded-md border border-tahona-coffee/15 ${className}`} />
-            <p className="mt-3 font-black text-tahona-coffee">{label}</p>
-            <p className="mt-1 text-xs font-semibold text-tahona-coffee/60">{helper}</p>
+    <Card className="shadow-sm">
+      <CardHeader><CardTitle>Prioridades</CardTitle></CardHeader>
+      <CardContent className="space-y-xs">
+        {incidents.slice(0, 5).map((incident) => (
+          <div key={incident.id} className="rounded-md border border-danger/20 bg-danger-bg p-sm">
+            <div className="flex items-center justify-between gap-sm"><StatusPill tone="danger" label={incident.estado.replaceAll("_", " ")} /><span className="text-xs text-muted-foreground">{shortDate(incident.fecha)}</span></div>
+            <p className="mt-2 text-sm leading-6">{incident.descripcion}</p>
+            <Button asChild size="sm" variant="outline" className="mt-sm bg-card"><Link href="/operador/incidencias">Resolver</Link></Button>
           </div>
         ))}
-      </div>
-      <div className="space-y-8">
-        {hubs.map((hub) => (
-          <section key={hub.id} className="rounded-lg border border-tahona-coffee/15 bg-tahona-masa p-4 shadow-soft">
-            <div className="mb-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">Red de retiro</p>
-                <h2 className="mt-1 text-2xl font-black text-tahona-coffee">{hub.nombre}</h2>
-              </div>
-              <div className="min-w-[220px] rounded-md bg-tahona-cream p-3">
-                <div className="flex justify-between text-sm font-black text-tahona-coffee">
-                  <span>Ocupación</span>
-                  <span>{hub.casilleros_ocupados_actual}/{hub.casilleros_total}</span>
-                </div>
-                <ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} className="mt-2" />
-              </div>
-            </div>
-            <LockerGrid lockers={casilleros.filter((casillero) => casillero.hub_id === hub.id)} entregas={entregas} clientes={clientes} productos={productos} />
-          </section>
+        {charges.slice(0, 2).map((charge) => (
+          <div key={charge.id} className="rounded-md border border-warning/30 bg-warning-bg p-sm">
+            <p className="text-sm font-semibold">Cobro fallido · {formatCurrency(charge.monto)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{charge.reintentos} reintentos · {shortDate(charge.fecha)}</p>
+          </div>
         ))}
-      </div>
-    </PageShell>
+      </CardContent>
+    </Card>
   );
 }
 
-const lockerStateClass: Record<CasilleroEstado, string> = {
-  vacio: "border-tahona-coffee/15 bg-tahona-cream text-tahona-coffee/45",
-  cargado: "border-tahona-coffee/20 bg-tahona-yellow text-tahona-coffee",
-  retirado: "border-tahona-nopal bg-tahona-nopal text-white",
-  incidencia: "border-tahona-red bg-tahona-red text-white"
-};
-
-const lockerStateLabel: Record<CasilleroEstado, string> = {
-  vacio: "Vacío",
-  cargado: "Cargado",
-  retirado: "Retirado",
-  incidencia: "Incidencia"
-};
-
-function LockerGrid({
-  lockers,
-  entregas,
-  clientes,
-  productos,
-  showDetails = false
-}: {
-  lockers: Casillero[];
-  entregas: Entrega[];
-  clientes: ReturnType<typeof useTahonaStore.getState>["clientes"];
-  productos: Producto[];
-  showDetails?: boolean;
-}) {
+function HubCapacity({ hubs, casilleros }: { hubs: Hub[]; casilleros: Casillero[] }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-6">
-      {lockers.map((locker) => {
-        const entrega = entregas.find((item) => item.id === locker.pedido_actual);
+    <div className="mt-md grid gap-sm md:grid-cols-3">
+      {hubs.map((hub) => {
+        const hubLockers = casilleros.filter((item) => item.hub_id === hub.id);
+        const loaded = hubLockers.filter((item) => item.estado === "cargado").length;
+        const issues = hubLockers.filter((item) => item.estado === "incidencia").length;
+        const occupation = Math.round((loaded / hub.casilleros_total) * 100);
         return (
-          <div
-            key={locker.id}
-            className={`min-h-[150px] rounded-lg border p-3 shadow-soft ${lockerStateClass[locker.estado]}`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <span className="font-display text-4xl font-semibold leading-none">
-                {String(locker.numero).padStart(2, "0")}
-              </span>
-              <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-tahona-coffee">
-                {lockerStateLabel[locker.estado]}
-              </span>
-            </div>
-            {entrega ? (
-              <div className="mt-5 text-sm">
-                <p className="font-black leading-tight">{clientName(clientes, entrega.cliente_id)}</p>
-                <p className="mt-1 font-semibold opacity-75">{entrega.slot}</p>
-                {showDetails ? (
-                  <>
-                    <p className="mt-3 line-clamp-2 text-xs font-semibold opacity-75">
-                      {entrega.productos.map((item) => `${item.cantidad} ${productName(productos, item.producto_id)}`).join(", ")}
-                    </p>
-                    <Button asChild size="sm" className="mt-3 w-full">
-                      <Link href={`/operador/entregas/${entrega.id}`}>Actualizar</Link>
-                    </Button>
-                  </>
-                ) : null}
+          <Card key={hub.id} className="shadow-none">
+            <CardContent className="p-md">
+              <div className="flex items-start justify-between gap-sm">
+                <div><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3></div>
+                {issues > 0 ? <StatusPill tone="danger" label={`${issues} alerta`} /> : <StatusPill tone="success" label="estable" />}
               </div>
-            ) : (
-              <p className="mt-6 text-sm font-semibold opacity-70">
-                {locker.estado === "vacio"
-                  ? "Disponible"
-                  : locker.estado === "cargado"
-                    ? "Carga en validación"
-                    : locker.estado === "retirado"
-                      ? "Liberado por retiro"
-                      : "Revisión de cerradura"}
-              </p>
-            )}
-          </div>
+              <div className="mt-sm"><div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Cargados</span><span>{loaded}/{hub.casilleros_total}</span></div><ProgressBar value={occupation} /></div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>
   );
 }
 
-function DeliveryDetail({ id }: { id: string }) {
-  const { entregas, clientes, productos, markDelivery } = useTahonaStore();
+function ProductionView({ weekly }: { weekly: boolean }) {
+  const { entregas, productos, hubs } = useTahonaStore();
+  const relevant = weekly ? entregas.slice(0, 126) : entregas.filter((item) => item.fecha === today);
+  const rows = productos.map((product) => {
+    const units = relevant.flatMap((delivery) => delivery.productos).filter((item) => item.producto_id === product.id).reduce((sum, item) => sum + item.cantidad, 0);
+    return { product, units, revenue: units * product.precio_mxn };
+  }).filter((row) => row.units > 0).sort((a, b) => b.units - a.units);
+  const columns: Array<DataTableColumn<(typeof rows)[number]>> = [
+    { key: "sku", header: "Producto", render: (row) => <div><p className="font-semibold">{row.product.nombre}</p><p className="text-xs text-muted-foreground">{row.product.categoria}</p></div> },
+    { key: "units", header: "Unidades", align: "right", render: (row) => row.units },
+    { key: "revenue", header: "Venta", align: "right", render: (row) => formatCurrency(row.revenue) },
+    { key: "time", header: "Horneado", align: "right", render: (row) => `${row.product.tiempo_horneado_min} min` }
+  ];
+
+  return (
+    <PageShell
+      eyebrow={weekly ? "Producción semanal" : "Producción diaria"}
+      title={weekly ? "Plan de producción por demanda acumulada." : "Producción requerida para los pedidos de hoy."}
+      description="La cocina necesita volumen, tiempo y prioridad, no tarjetas decorativas. Esta vista ordena demanda por SKU y capacidad."
+      actions={<Button variant="outline"><Download className="h-4 w-4" /> Exportar plan</Button>}
+    >
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="SKUs activos" value={rows.length} icon={Wheat} helper="Con demanda confirmada" />
+        <KpiCard label="Unidades" value={rows.reduce((sum, row) => sum + row.units, 0)} icon={Package} helper={weekly ? "Semana móvil" : "Hoy"} />
+        <KpiCard label="Hubs destino" value={hubs.length} icon={MapPin} helper="Carga distribuida" />
+      </div>
+      <Card className="mt-md shadow-sm"><CardHeader><CardTitle>Plan por SKU</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.product.id} /></CardContent></Card>
+    </PageShell>
+  );
+}
+
+function LockerView({ mode }: { mode: "carga" | "casilleros" }) {
+  const { casilleros, hubs, entregas, clientes } = useTahonaStore();
+  const active = casilleros.filter((item) => item.estado !== "vacio");
+  const incidents = casilleros.filter((item) => item.estado === "incidencia");
+  return (
+    <PageShell
+      eyebrow={mode === "carga" ? "Carga de casilleros" : "Estado de red"}
+      title={mode === "carga" ? "Asignación de pedidos a casilleros." : "Mapa operativo de casilleros."}
+      description="Vista de capacidad física: cada locker tiene estado, pedido y acción. El color solo señala riesgo."
+      actions={<Button asChild><Link href="/operador/pedidos">Ver pedidos</Link></Button>}
+    >
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Casilleros activos" value={active.length} icon={Boxes} helper="Cargados, retirados o en incidencia" />
+        <KpiCard label="Incidencias" value={incidents.length} icon={AlertTriangle} delta={incidents.length ? "resolver" : "sin bloqueo"} deltaTone={incidents.length ? "down" : "up"} />
+        <KpiCard label="Hubs" value={hubs.length} icon={MapPin} helper="Red operativa" />
+      </div>
+      <div className="mt-md grid gap-md lg:grid-cols-3">
+        {hubs.map((hub) => {
+          const hubLockers = casilleros.filter((locker) => locker.hub_id === hub.id);
+          return (
+            <Card key={hub.id} className="shadow-sm">
+              <CardHeader><CardTitle>{hub.nombre}</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-6 gap-2">
+                  {hubLockers.map((locker) => {
+                    const entrega = locker.pedido_actual ? entregas.find((item) => item.id === locker.pedido_actual) : null;
+                    const tone = locker.estado === "incidencia" ? "bg-danger text-white" : locker.estado === "cargado" ? "bg-primary text-white" : locker.estado === "retirado" ? "bg-success text-white" : "bg-muted text-muted-foreground";
+                    return (
+                      <Link key={locker.id} href={entrega ? `/operador/entregas/${entrega.id}` : "/operador/casilleros"} className={cn("flex aspect-square items-center justify-center rounded-md text-xs font-semibold", tone)} title={entrega ? clientName(clientes, entrega.cliente_id) : locker.estado}>
+                        {locker.numero}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </PageShell>
+  );
+}
+
+function OrdersView({ extra }: { extra: boolean }) {
+  const { entregas, clientes, hubs, productos } = useTahonaStore();
+  const rows = extra ? entregas.filter((item) => item.estado === "no_entregado" || item.estado === "incidencia").slice(0, 30) : entregas.filter((item) => item.fecha === today);
+  const columns: Array<DataTableColumn<Entrega>> = [
+    { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
+    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
+    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
+    { key: "pedido", header: "Pedido", render: (row) => row.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ") },
+    { key: "total", header: "Total", align: "right", render: (row) => formatCurrency(entregaTotal(productos, row)) },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={deliveryTone(row.estado)} label={row.estado.replaceAll("_", " ")} /> }
+  ];
+  return (
+    <PageShell eyebrow={extra ? "Pedidos extra" : "Pedidos"} title={extra ? "Pedidos fuera de flujo regular." : "Pedidos programados y trazables."} description="Listado operativo con cliente, hub, estado y monto para resolver sin cambiar de contexto.">
+      <Card className="shadow-sm"><CardHeader><CardTitle>{extra ? "Excepciones" : "Pedidos de hoy"}</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
+    </PageShell>
+  );
+}
+
+function DeliveryDetail({ id }: { id?: string }) {
+  const { entregas, clientes, hubs, productos, markDelivery } = useTahonaStore();
   const entrega = entregas.find((item) => item.id === id) ?? entregas[0];
+  const hub = hubs.find((item) => item.id === entrega.hub_id) ?? hubs[0];
   return (
-    <PageShell eyebrow="Entrega individual" title={entrega.id}>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col justify-between gap-4 md:flex-row">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">Cliente</p>
-              <h2 className="mt-1 text-3xl font-semibold">{clientName(clientes, entrega.cliente_id)}</h2>
-              <p className="mt-3 text-muted-foreground">{shortDate(entrega.fecha)} · {entrega.slot} · casillero {entrega.casillero_id.slice(-2)}</p>
-            </div>
-            <StatusBadge status={entrega.estado} />
-          </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {entrega.productos.map((item) => (
-              <div key={item.producto_id} className="rounded-md border bg-background p-3">
-                <p className="font-semibold">{productName(productos, item.producto_id)}</p>
-                <p className="text-sm text-muted-foreground">Cantidad {item.cantidad}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button onClick={() => markDelivery(entrega.id, "entregado")}>Entregado</Button>
-            <Button variant="outline" onClick={() => markDelivery(entrega.id, "no_entregado")}>No entregado</Button>
-            <Button variant="secondary" onClick={() => markDelivery(entrega.id, "incidencia")}>Incidencia</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </PageShell>
-  );
-}
-
-function SubscriptionsTable() {
-  const { suscripciones, clientes, hubs } = useTahonaStore();
-  const [query, setQuery] = useState("");
-  const visible = suscripciones
-    .filter((subscription) => clientName(clientes, subscription.cliente_id).toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 18);
-  return (
-    <PageShell eyebrow="Clientes" title="Suscripciones">
-      <div className="mb-5 grid gap-3 md:grid-cols-[1fr_220px_160px]">
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente" />
-        <select className="rounded-md border bg-background px-3 text-sm">
-          <option>Todos los hubs</option>
-          {hubs.map((hub) => <option key={hub.id}>{hub.nombre}</option>)}
-        </select>
-        <Button variant="outline"><Search className="h-4 w-4" /> Filtrar</Button>
-      </div>
-      <SimpleTable
-        headers={["Cliente", "Estado", "Próxima entrega", "Acciones"]}
-        rows={visible.map((subscription) => [
-          clientName(clientes, subscription.cliente_id),
-          <StatusBadge key="s" status={subscription.estado} />,
-          shortDate(subscription.proxima_entrega),
-          <Button key="b" asChild size="sm" variant="outline"><Link href={`/operador/suscripciones/${subscription.id}`}>Abrir</Link></Button>
-        ])}
-      />
-    </PageShell>
-  );
-}
-
-function SubscriptionDetail({ id }: { id: string }) {
-  const { suscripciones, clientes, entregas, cobros, productos, pauseSubscription, reactivateSubscription } = useTahonaStore();
-  const subscription = suscripciones.find((item) => item.id === id) ?? suscripciones[0];
-  const client = clientes.find((item) => item.id === subscription.cliente_id) ?? clientes[0];
-  return (
-    <PageShell eyebrow="Ficha de cliente" title={`${client.nombre} ${client.apellido}`}>
-      <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <Card>
-          <CardContent className="p-6">
-            <StatusBadge status={subscription.estado} />
-            <p className="mt-5 text-sm text-muted-foreground">{client.email}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{client.telefono}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{client.direccion}, {client.colonia}</p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => pauseSubscription(subscription.id, 2)}>Pausar</Button>
-              <Button size="sm" variant="outline" onClick={() => reactivateSubscription(subscription.id)}>Reactivar</Button>
-              <Button size="sm" variant="secondary">Contactar</Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold">Pedido semanal</h2>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {subscription.productos.map((item) => (
-                <div key={item.producto_id} className="rounded-md border bg-background p-3">
-                  <p className="font-semibold">{productName(productos, item.producto_id)}</p>
-                  <p className="text-sm text-muted-foreground">Cantidad {item.cantidad}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <MiniHistory title="Entregas" items={entregas.filter((item) => item.cliente_id === client.id).slice(0, 5).map((item) => `${shortDate(item.fecha)} · ${item.estado}`)} />
-        <MiniHistory title="Pagos" items={cobros.filter((item) => item.cliente_id === client.id).slice(0, 5).map((item) => `${shortDate(item.fecha)} · ${formatCurrency(item.monto)} · ${item.estado}`)} />
+    <PageShell eyebrow="Detalle de entrega" title={`Entrega ${entrega.id}`} description="Estado de pedido, casillero, cliente y acciones de piso para cerrar la entrega.">
+      <div className="grid gap-md lg:grid-cols-[420px_1fr]">
+        <Card className="shadow-sm"><CardHeader><CardTitle>Pase operativo</CardTitle></CardHeader><CardContent className="space-y-sm"><StatusPill tone={deliveryTone(entrega.estado)} label={entrega.estado.replaceAll("_", " ")} /><p className="text-sm text-muted-foreground">{clientName(clientes, entrega.cliente_id)} · {hub.nombre} · {entrega.slot}</p><p className="font-mono text-h2 font-semibold">{entrega.qr_code.slice(-12)}</p><div className="flex gap-xs"><Button onClick={() => markDelivery(entrega.id, "entregado")}>Marcar entregado</Button><Button variant="outline" onClick={() => markDelivery(entrega.id, "incidencia")}>Incidencia</Button></div></CardContent></Card>
+        <Card className="shadow-sm"><CardHeader><CardTitle>Productos</CardTitle></CardHeader><CardContent className="grid gap-xs">{entrega.productos.map((item) => <div key={item.producto_id} className="flex justify-between rounded-md border border-border p-sm"><span>{item.cantidad}x {productName(productos, item.producto_id)}</span><span className="font-mono">{formatCurrency((productos.find((product) => product.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}</span></div>)}</CardContent></Card>
       </div>
     </PageShell>
   );
 }
 
-function OrdersToday() {
-  const { entregas, clientes, productos, hubs } = useTahonaStore();
-  const todayItems = todaysDeliveries(entregas);
-  const totalProducts = todayItems
-    .flatMap((item) => item.productos)
-    .reduce((sum, item) => sum + item.cantidad, 0);
+function SubscriptionsView({ id }: { id?: string }) {
+  const { suscripciones, clientes, productos } = useTahonaStore();
+  const selected = id ? suscripciones.find((item) => item.id === id || item.cliente_id === id) : null;
+  if (selected) {
+    return (
+      <PageShell eyebrow="Suscripción" title={clientName(clientes, selected.cliente_id)} description="Configuración de pedido semanal, próximos slots e historial de cambios.">
+        <SubscriptionCard subscription={selected} productos={productos} />
+      </PageShell>
+    );
+  }
+  const columns: Array<DataTableColumn<Suscripcion>> = [
+    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "activa" ? "success" : row.estado === "pausada" ? "warning" : "danger"} label={row.estado} /> },
+    { key: "productos", header: "Productos", render: (row) => row.productos.length },
+    { key: "proxima", header: "Próxima", render: (row) => shortDate(row.proxima_entrega) },
+    { key: "accion", header: "", align: "right", render: (row) => <Button asChild size="sm" variant="outline"><Link href={`/operador/suscripciones/${row.id}`}>Abrir</Link></Button> }
+  ];
   return (
-    <PageShell eyebrow="Pedidos" title="Pedidos del día">
-      <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <Card className="bg-tahona-coffee text-tahona-cream shadow-editorial">
-          <CardContent className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-tahona-yellow">
-              Cola de hoy
-            </p>
-            <p className="mt-3 text-4xl font-black">{todayItems.length}</p>
-            <p className="mt-1 text-sm opacity-75">pedidos asignados a casillero</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-tahona-yellow text-tahona-coffee">
-          <CardContent className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em]">Piezas a empacar</p>
-            <p className="mt-3 text-4xl font-black">{totalProducts}</p>
-            <p className="mt-1 text-sm font-semibold opacity-75">sumadas desde suscripciones</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-tahona-pink text-tahona-coffee">
-          <CardContent className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em]">Hubs activos</p>
-            <p className="mt-3 text-4xl font-black">{hubs.length}</p>
-            <p className="mt-1 text-sm font-semibold opacity-75">Polanco, Condesa y Del Valle</p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="space-y-6">
-        {["7:00 AM", "1:30 PM", "7:30 PM"].map((slot) => (
-          <OrderSlot
-            key={slot}
-            slot={slot}
-            items={todayItems.filter((item) => item.slot === slot)}
-            clientes={clientes}
-            productos={productos}
-            hubs={hubs}
-          />
-        ))}
-      </div>
+    <PageShell eyebrow="Suscripciones" title="Base recurrente bajo control." description="Clientes activos, pausas y cambios de bolsa semanal en una tabla operativa.">
+      <Card className="shadow-sm"><CardHeader><CardTitle>Suscripciones</CardTitle></CardHeader><CardContent><DataTable rows={suscripciones.slice(0, 80)} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
     </PageShell>
   );
 }
 
-function OrderSlot({
-  slot,
-  items,
-  clientes,
-  productos,
-  hubs
-}: {
-  slot: string;
-  items: Entrega[];
-  clientes: ReturnType<typeof useTahonaStore.getState>["clientes"];
-  productos: Producto[];
-  hubs: ReturnType<typeof useTahonaStore.getState>["hubs"];
-}) {
+function SubscriptionCard({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
   return (
-    <Card className="overflow-hidden border-tahona-coffee/20 bg-tahona-masa shadow-soft">
-      <CardContent className="p-0">
-        <div className="flex flex-col justify-between gap-3 border-b border-tahona-coffee/15 bg-tahona-pink px-5 py-4 md:flex-row md:items-center">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">
-              Ventana de retiro
-            </p>
-            <h2 className="mt-1 text-2xl font-black text-tahona-coffee">{slot}</h2>
-          </div>
-          <Badge className="bg-tahona-coffee text-tahona-yellow">{items.length} pedidos</Badge>
-        </div>
-        <div className="divide-y divide-tahona-coffee/10">
-          {items.map((item, index) => {
-            const hub = hubs.find((entry) => entry.id === item.hub_id);
-            return (
-              <div key={item.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[72px_1.1fr_1fr_0.9fr_auto] lg:items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-md bg-tahona-coffee text-lg font-black text-tahona-yellow">
-                  {String(index + 1).padStart(2, "0")}
-                </div>
-                <div>
-                  <p className="font-black text-tahona-coffee">{clientName(clientes, item.cliente_id)}</p>
-                  <p className="text-sm font-semibold text-tahona-coffee/60">{hub?.nombre ?? item.hub_id}</p>
-                </div>
-                <div className="text-sm font-medium text-tahona-coffee/72">
-                  {item.productos
-                    .map((product) => `${product.cantidad}x ${productName(productos, product.producto_id)}`)
-                    .join(", ")}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">Casillero {item.casillero_id.slice(-2)}</Badge>
-                  <StatusBadge status={item.estado} />
-                </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/operador/entregas/${item.id}`}>Actualizar</Link>
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+    <Card className="max-w-4xl shadow-sm">
+      <CardHeader><CardTitle>Bolsa y ventanas</CardTitle></CardHeader>
+      <CardContent className="grid gap-md md:grid-cols-2">
+        <div className="space-y-xs">{subscription.productos.map((item) => <div key={item.producto_id} className="flex justify-between rounded-md border border-border p-sm"><span>{item.cantidad}x {productName(productos, item.producto_id)}</span><span className="font-mono">{formatCurrency((productos.find((product) => product.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}</span></div>)}</div>
+        <div className="space-y-xs">{subscription.slots_elegidos.map((slot) => <StatusPill key={`${slot.dia}-${slot.slot}`} tone="info" label={`${slot.dia} · ${slot.slot}`} />)}<StatusPill tone={subscription.estado === "activa" ? "success" : "warning"} label={subscription.estado} /></div>
       </CardContent>
     </Card>
   );
 }
 
-function ExtraOrders() {
-  const rows = [
-    ["extra-001", "Regina Mijares", "Hub Condesa", "Croissant x2", "Antes de cutoff"],
-    ["extra-002", "Tomás Robles", "Hub Polanco", "Baguette x1", "Capacidad confirmada"],
-    ["extra-003", "Lucía Aguirre", "Hub Del Valle", "Focaccia x1", "Pago pendiente"]
-  ];
-  return (
-    <PageShell eyebrow="Pedidos" title="Pedidos extra">
-      <SimpleTable headers={["ID", "Cliente", "Hub", "Producto", "Estado"]} rows={rows} />
-    </PageShell>
-  );
-}
-
-function ChargesToday() {
-  const { cobros } = useTahonaStore();
-  const dayCharges = cobros.filter((item) => item.fecha === today || item.fecha === "2026-06-14");
-  const total = dayCharges.reduce((sum, item) => sum + item.monto, 0);
-  return (
-    <PageShell eyebrow="Cobros" title="Cobros del día">
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Total procesado" value={formatCurrency(total)} icon={CreditCard} />
-        <MetricCard label="Pendientes" value={String(dayCharges.filter((item) => item.estado === "pendiente").length)} icon={RefreshCw} tone="gold" />
-        <MetricCard label="Fallidos" value={String(dayCharges.filter((item) => item.estado === "fallido").length)} icon={AlertTriangle} tone="warm" />
-      </div>
-      <div className="mt-6 grid gap-3">
-        {dayCharges.slice(0, 12).map((cobro) => (
-          <div key={cobro.id} className="flex items-center justify-between rounded-lg border bg-card p-4">
-            <div>
-              <p className="font-semibold">{formatCurrency(cobro.monto)}</p>
-              <p className="text-sm text-muted-foreground">{cobro.metodo}</p>
-            </div>
-            <StatusBadge status={cobro.estado} />
-          </div>
-        ))}
-      </div>
-    </PageShell>
-  );
-}
-
-function RetryCharges() {
+function MoneyView({ mode }: { mode: "cobros" | "reintentos" | "conciliacion" }) {
   const { cobros, clientes, retryCharge } = useTahonaStore();
-  const retryQueue = cobros.filter((item) => item.estado !== "cobrado").slice(0, 20);
+  const rows = mode === "reintentos" ? cobros.filter((item) => item.estado !== "cobrado") : cobros.slice(0, 120);
+  const collected = cobros.filter((item) => item.estado === "cobrado").reduce((sum, item) => sum + item.monto, 0);
+  const pending = cobros.filter((item) => item.estado !== "cobrado").reduce((sum, item) => sum + item.monto, 0);
+  const columns: Array<DataTableColumn<Cobro>> = [
+    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
+    { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
+    { key: "metodo", header: "Método", render: (row) => row.metodo },
+    { key: "monto", header: "Monto", align: "right", render: (row) => formatCurrency(row.monto) },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={chargeTone(row.estado)} label={row.estado} /> },
+    { key: "accion", header: "", align: "right", render: (row) => row.estado === "fallido" ? <Button size="sm" variant="outline" onClick={() => retryCharge(row.id)}><RefreshCw className="h-4 w-4" /> Reintentar</Button> : null }
+  ];
   return (
-    <PageShell eyebrow="Cobros" title="Reintentos de cobro">
-      <div className="space-y-3">
-        {retryQueue.map((cobro) => (
-          <div key={cobro.id} className="flex flex-col justify-between gap-3 rounded-lg border bg-card p-4 md:flex-row md:items-center">
-            <div>
-              <p className="font-semibold">{clientName(clientes, cobro.cliente_id)} · {formatCurrency(cobro.monto)}</p>
-              <p className="text-sm text-muted-foreground">{cobro.reintentos} reintento(s)</p>
-            </div>
-            <Button size="sm" onClick={() => retryCharge(cobro.id)}>Reintentar</Button>
-          </div>
-        ))}
+    <PageShell eyebrow="Cobros" title={mode === "conciliacion" ? "Conciliación de ingresos." : "Cobros, reintentos y riesgo de pago."} description="El dinero debe leerse con estado, reintento y monto pendiente. Sin adornos.">
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Cobrado" value={collected} formatter={formatCurrency} icon={Banknote} />
+        <KpiCard label="Pendiente/riesgo" value={pending} formatter={formatCurrency} icon={AlertTriangle} />
+        <KpiCard label="Transacciones" value={rows.length} icon={CreditCard} />
       </div>
+      <Card className="mt-md shadow-sm"><CardHeader><CardTitle>{mode === "reintentos" ? "Cola de reintentos" : "Movimientos"}</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
     </PageShell>
   );
 }
 
-function Reconciliation() {
-  const rows = [
-    ["Lote 07:00", formatCurrency(18420), formatCurrency(18420), "Cuadrado"],
-    ["Lote 13:30", formatCurrency(21680), formatCurrency(21440), "Diferencia $240"],
-    ["Lote 19:30", formatCurrency(19890), formatCurrency(19890), "Cuadrado"]
+function IncidentsView() {
+  const { incidencias, clientes, hubs, resolveIncident } = useTahonaStore();
+  const rows = incidencias.filter((item) => item.estado !== "resuelta");
+  const columns: Array<DataTableColumn<Incidencia>> = [
+    { key: "tipo", header: "Tipo", render: (row) => row.tipo.replaceAll("_", " ") },
+    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
+    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "abierta" ? "danger" : "warning"} label={row.estado.replaceAll("_", " ")} /> },
+    { key: "accion", header: "", align: "right", render: (row) => <Button size="sm" variant="outline" onClick={() => resolveIncident(row.id)}>Resolver</Button> }
   ];
   return (
-    <PageShell eyebrow="Cobros" title="Conciliación">
-      <SimpleTable headers={["Lote", "Tahona", "Procesador", "Estado"]} rows={rows} />
+    <PageShell eyebrow="Incidencias" title="Excepciones con dueño y acción." description="La vista prioriza casos que afectan retiro, producto o cobro. Cada fila debe poder cerrarse.">
+      <Card className="shadow-sm"><CardHeader><CardTitle>Abiertas</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} /></CardContent></Card>
     </PageShell>
   );
 }
 
 function CatalogAdmin() {
   const { productos } = useTahonaStore();
-  return (
-    <PageShell eyebrow="Admin" title="Catálogo">
-      <div className="mb-5 flex justify-end">
-        <Button><Wheat className="h-4 w-4" /> Crear producto</Button>
-      </div>
-      <SimpleTable
-        headers={["Producto", "Categoría", "Precio", "Disponibilidad", "Acciones"]}
-        rows={productos.map((product) => [
-          product.nombre,
-          product.categoria,
-          formatCurrency(product.precio_mxn),
-          product.disponibilidad.slice(0, 3).join(", "),
-          <Button key="edit" size="sm" variant="outline">Editar</Button>
-        ])}
-      />
-    </PageShell>
-  );
+  const columns: Array<DataTableColumn<Producto>> = [
+    { key: "producto", header: "Producto", render: (row) => <div><p className="font-semibold">{row.nombre}</p><p className="text-xs text-muted-foreground">{row.categoria}</p></div> },
+    { key: "precio", header: "Precio", align: "right", render: (row) => formatCurrency(row.precio_mxn) },
+    { key: "tiempo", header: "Horno", align: "right", render: (row) => `${row.tiempo_horneado_min} min` },
+    { key: "dias", header: "Disponibilidad", render: (row) => `${row.disponibilidad.length} días` }
+  ];
+  return <PageShell eyebrow="Catálogo operativo" title="SKUs, precios y disponibilidad." description="Administración sobria para mantener vitrina y producción alineadas."><Card className="shadow-sm"><CardContent className="p-md"><DataTable rows={productos} columns={columns} getRowId={(row) => row.id} /></CardContent></Card></PageShell>;
 }
 
 function HubsAdmin() {
   const { hubs } = useTahonaStore();
   return (
-    <PageShell eyebrow="Admin" title="Hubs y casilleros">
-      <div className="grid gap-5 md:grid-cols-3">
-        {hubs.map((hub) => (
-          <Card key={hub.id}>
-            <CardContent className="p-5">
-              <h2 className="text-xl font-semibold">{hub.nombre}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{hub.direccion}</p>
-              <ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} className="mt-5" />
-              <p className="mt-3 text-sm font-semibold">{hub.casilleros_ocupados_actual}/{hub.casilleros_total} casilleros ocupados</p>
-              <Button className="mt-5 w-full" variant="outline">Editar hub</Button>
-            </CardContent>
-          </Card>
-        ))}
+    <PageShell eyebrow="Hubs" title="Capacidad y responsables por hub." description="Lectura de red con ocupación, gerente y clientes activos.">
+      <div className="grid gap-sm md:grid-cols-3">
+        {hubs.map((hub) => <Card key={hub.id} className="shadow-sm"><CardContent className="p-md"><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3><p className="mt-2 text-sm text-muted-foreground">{hub.direccion}</p><div className="mt-sm"><ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} /></div><p className="mt-sm text-sm text-muted-foreground">{hub.gerente} · {hub.clientes_activos} clientes</p></CardContent></Card>)}
       </div>
     </PageShell>
   );
 }
 
-function TeamAdmin() {
-  const rows = [
-    ["Lucía Mijares", "Gerente de hub", "Polanco", "Activo"],
-    ["Rodrigo Salcedo", "Gerente de hub", "Condesa", "Activo"],
-    ["Mariana Obregón", "Gerente de hub", "Del Valle", "Activo"],
-    ["Claudia Rangel", "Admin", "Operación", "Activo"]
-  ];
+function SettingsView({ mode }: { mode: "equipo" | "configuracion" }) {
   return (
-    <PageShell eyebrow="Admin" title="Equipo">
-      <div className="mb-5 flex justify-end">
-        <Button><Users className="h-4 w-4" /> Invitar usuario</Button>
-      </div>
-      <SimpleTable headers={["Nombre", "Rol", "Base", "Estado"]} rows={rows} />
-    </PageShell>
-  );
-}
-
-function Incidents() {
-  const { incidencias, clientes, resolveIncident } = useTahonaStore();
-  return (
-    <PageShell eyebrow="Operación" title="Incidencias">
-      <div className="space-y-3">
-        {incidencias.slice(0, 24).map((incidencia) => (
-          <Card key={incidencia.id}>
-            <CardContent className="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{incidencia.tipo.replaceAll("_", " ")}</Badge>
-                  <StatusBadge status={incidencia.estado} />
-                </div>
-                <p className="mt-2 font-semibold">{clientName(clientes, incidencia.cliente_id)}</p>
-                <p className="text-sm text-muted-foreground">{incidencia.descripcion}</p>
-              </div>
-              <Button size="sm" onClick={() => resolveIncident(incidencia.id)}>Resolver</Button>
-            </CardContent>
-          </Card>
-        ))}
+    <PageShell eyebrow={mode === "equipo" ? "Equipo" : "Configuración"} title={mode === "equipo" ? "Roles y turnos operativos." : "Parámetros de operación."} description="Pantalla administrativa sobria, enfocada en permisos, horarios y reglas de negocio.">
+      <div className="grid gap-md lg:grid-cols-2">
+        <Card className="shadow-sm"><CardHeader><CardTitle>{mode === "equipo" ? "Usuarios" : "Reglas"}</CardTitle></CardHeader><CardContent className="space-y-xs"><Field label="Responsable" defaultValue="Lucía Mijares" /><Field label="Turno activo" defaultValue="Matutino" /><Field label="Correo de alertas" defaultValue="operacion@tahona.mx" /></CardContent></Card>
+        <Card className="shadow-sm"><CardHeader><CardTitle>Notas internas</CardTitle></CardHeader><CardContent><Textarea defaultValue="Mantener inventario de bolsas y revisar incidencias de casillero antes del cierre." /></CardContent></Card>
       </div>
     </PageShell>
   );
 }
-
-function BusinessSettings() {
-  const settings = [
-    ["Cutoff diario", "22:00"],
-    ["Pedido extra mínimo", "$120 MXN"],
-    ["Granularidad de cambios", "Semanal"],
-    ["Corte de cobro", "Lunes 06:00"],
-    ["Reintentos", "3 intentos / 48 horas"],
-    ["Incidencias", "Resolver antes de 24 horas"]
-  ];
-  return (
-    <PageShell eyebrow="Admin" title="Configuración del negocio">
-      <div className="grid gap-4 md:grid-cols-2">
-        {settings.map(([label, value]) => (
-          <Card key={label}>
-            <CardContent className="p-5">
-              <p className="text-sm font-semibold text-muted-foreground">{label}</p>
-              <Input defaultValue={value} className="mt-3" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Textarea className="mt-5" defaultValue="Política de incidencias: contacto inmediato al cliente, registro de causa raíz y compensación cuando aplique." />
-      <Button className="mt-5"><Settings className="h-4 w-4" /> Guardar parámetros</Button>
-    </PageShell>
-  );
-}
-
-function MiniHistory({ title, items }: { title: string; items: string[] }) {
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <div className="mt-4 space-y-2">
-          {items.map((item, index) => (
-            <div key={`${item}-${index}`} className="rounded-md border bg-background p-3 text-sm">
-              {item}
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SimpleTable({ headers, rows }: { headers: string[]; rows: Array<Array<React.ReactNode>> }) {
-  return (
-    <Card>
-      <CardContent className="overflow-x-auto p-0">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="border-b bg-muted/60 text-left">
-            <tr>
-              {headers.map((header) => (
-                <th key={header} className="p-4 font-semibold">{header}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="border-b last:border-0">
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="p-4">{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent>
-    </Card>
-  );
-}
-

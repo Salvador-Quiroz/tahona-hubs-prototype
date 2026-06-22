@@ -1,71 +1,54 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
+  ComposedChart,
+  Legend,
   Line,
-  LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis
 } from "recharts";
-import { Banknote, MapPin, Package, TrendingUp, Users, Wheat } from "lucide-react";
+import {
+  AlertTriangle,
+  Banknote,
+  Boxes,
+  CreditCard,
+  MapPin,
+  Package,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Wheat
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { KpiCard } from "@/components/ui/kpi-card";
+import { StatusPill } from "@/components/ui/status-pill";
 import { HubMap } from "@/components/shared/hub-map";
-import { MetricCard } from "@/components/shared/metric-card";
 import { ProgressBar } from "@/components/shared/progress";
 import { useTahonaStore } from "@/lib/store/tahona-store";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import type { Cliente, Entrega, Hub, Incidencia, Producto } from "@/lib/mock-data";
+import { formatCurrency, formatPercent, shortDate } from "@/lib/utils";
 
-function PageShell({
-  eyebrow,
-  title,
-  children
-}: {
-  eyebrow: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="brand-paper px-4 py-8 lg:px-8">
-      <div className="mb-8 flex flex-col justify-between gap-4 border-b-4 border-tahona-coffee pb-6 xl:flex-row xl:items-end">
-        <div className="max-w-4xl">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-tahona-red">{eyebrow}</p>
-          <h1 className="mt-2 font-display text-5xl font-semibold leading-none text-balance text-tahona-coffee">
-            {title}
-          </h1>
-        </div>
-        <div className="rounded-lg bg-tahona-coffee px-5 py-4 text-tahona-cream shadow-editorial">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-tahona-yellow">Corte</p>
-          <p className="mt-1 text-2xl font-black">Junio 2026</p>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
+type DashboardView = "resumen" | "crecimiento" | "operacion" | "clientes" | "productos" | "hubs" | "proyecciones";
 
-const chartColors = ["#A0411F", "#D4A574", "#5F7652", "#4B2E1F", "#E7C654"];
+const BRAND = "var(--brand)";
+const ACCENT = "var(--accent)";
+const TEXT = "var(--text)";
+const SUCCESS = "var(--success)";
+const DANGER = "var(--danger)";
+const GRID = "var(--border)";
+const today = "2026-06-15";
 
-export function ExecutiveDashboardPage({
-  view
-}: {
-  view:
-    | "resumen"
-    | "crecimiento"
-    | "operacion"
-    | "clientes"
-    | "productos"
-    | "hubs"
-    | "proyecciones";
-}) {
+export function ExecutiveDashboardPage({ view }: { view: DashboardView }) {
   if (view === "crecimiento") return <GrowthPage />;
   if (view === "operacion") return <OperationsPage />;
   if (view === "clientes") return <CustomersPage />;
@@ -75,350 +58,465 @@ export function ExecutiveDashboardPage({
   return <SummaryPage />;
 }
 
-function useExecutiveMetrics() {
-  const { clientes, cobros, entregas, hubs } = useTahonaStore();
-  return useMemo(() => {
-    const activeClients = clientes.filter((item) => item.estado === "activo").length;
-    const monthRevenue = cobros
-      .filter((item) => item.estado === "cobrado")
-      .slice(0, 160)
-      .reduce((sum, item) => sum + item.monto, 0);
-    const delivered = entregas.filter((item) => item.estado === "entregado").length;
-    const retention = activeClients / clientes.filter((item) => item.estado !== "cancelado").length;
-    const avgOccupation =
-      hubs.reduce((sum, hub) => sum + hub.casilleros_ocupados_actual / hub.casilleros_total, 0) /
-      hubs.length;
-    return { activeClients, monthRevenue, delivered, retention, avgOccupation };
-  }, [clientes, cobros, entregas, hubs]);
+function PageShell({
+  eyebrow,
+  title,
+  description,
+  meta,
+  children
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  meta?: ReactNode;
+  children: ReactNode;
+}) {
+  const resolvedDescription =
+    eyebrow === "Resumen ejecutivo"
+      ? "Crecimiento, ingresos, retencion y operacion con contexto para decidir capacidad, riesgo y expansion."
+      : description;
+
+  return (
+    <main className="min-h-screen bg-transparent px-sm py-md text-foreground lg:px-md">
+      <div className="mx-auto max-w-[1540px]">
+        <header className="mb-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-md shadow-md backdrop-blur">
+          <div className="flex flex-col justify-between gap-md xl:flex-row xl:items-end">
+            <div className="max-w-4xl">
+              <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
+              <h1 className="mt-2 text-h1 font-semibold tracking-[-0.015em]">{title}</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{resolvedDescription}</p>
+            </div>
+            <div className="grid min-w-[280px] grid-cols-2 gap-2">
+              {meta ?? (
+                <>
+                  <Signal label="Corte" value="Jun 2026" />
+                  <Signal label="Modelo" value="3 hubs" />
+                  <Signal label="Frecuencia" value="Semanal" />
+                  <Signal label="Estado" value="Piloto" />
+                </>
+              )}
+            </div>
+          </div>
+        </header>
+        {children}
+      </div>
+    </main>
+  );
 }
 
-function growthData() {
+function Signal({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border bg-surface-2/75 px-xs py-2 shadow-xs">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function ChartCard({ title, eyebrow, action, children }: { title: string; eyebrow: string; action?: ReactNode; children: ReactNode }) {
+  return (
+    <Card className="min-w-0 shadow-sm">
+      <CardHeader className="flex-row items-start justify-between gap-sm">
+        <div>
+          <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
+          <CardTitle className="mt-1">{title}</CardTitle>
+        </div>
+        {action}
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+function useExecutiveMetrics() {
+  const { clientes, cobros, entregas, hubs, incidencias } = useTahonaStore();
+  const activeClients = clientes.filter((item) => item.estado === "activo").length;
+  const retainedClients = clientes.filter((item) => item.estado !== "cancelado").length;
+  const pausedClients = clientes.filter((item) => item.estado === "pausado").length;
+  const collected = cobros.filter((item) => item.estado === "cobrado");
+  const atRisk = cobros.filter((item) => item.estado !== "cobrado");
+  const revenue = collected.reduce((sum, item) => sum + item.monto, 0);
+  const riskRevenue = atRisk.reduce((sum, item) => sum + item.monto, 0);
+  const todayDeliveries = entregas.filter((item) => item.fecha === today);
+  const readyToday = todayDeliveries.filter((item) => item.estado === "listo").length;
+  const delivered = entregas.filter((item) => item.estado === "entregado").length;
+  const operationalRisk = incidencias.filter((item) => item.estado !== "resuelta").length;
+  const retention = activeClients / retainedClients;
+  const occupation = hubs.reduce((sum, hub) => sum + hub.casilleros_ocupados_actual / hub.casilleros_total, 0) / hubs.length;
+  const onTime = entregas.filter((item) => item.estado === "entregado" || item.estado === "listo").length / entregas.length;
+  return { activeClients, retainedClients, pausedClients, revenue, riskRevenue, todayDeliveries, readyToday, delivered, operationalRisk, retention, occupation, onTime };
+}
+
+function growthSeries() {
   return [
-    { mes: "Nov", clientes: 48, ingresos: 82000, churn: 0.09 },
-    { mes: "Dic", clientes: 67, ingresos: 116000, churn: 0.08 },
-    { mes: "Ene", clientes: 92, ingresos: 154000, churn: 0.07 },
-    { mes: "Feb", clientes: 118, ingresos: 198000, churn: 0.065 },
-    { mes: "Mar", clientes: 137, ingresos: 234000, churn: 0.058 },
-    { mes: "Abr", clientes: 151, ingresos: 264000, churn: 0.052 },
-    { mes: "May", clientes: 160, ingresos: 292000, churn: 0.047 },
-    { mes: "Jun", clientes: 160, ingresos: 306000, churn: 0.044 }
+    { mes: "Nov", clientes: 48, ingresos: 82000, margen: 0.49, churn: 0.09 },
+    { mes: "Dic", clientes: 67, ingresos: 116000, margen: 0.52, churn: 0.08 },
+    { mes: "Ene", clientes: 92, ingresos: 154000, margen: 0.56, churn: 0.07 },
+    { mes: "Feb", clientes: 118, ingresos: 198000, margen: 0.58, churn: 0.065 },
+    { mes: "Mar", clientes: 137, ingresos: 234000, margen: 0.6, churn: 0.058 },
+    { mes: "Abr", clientes: 151, ingresos: 264000, margen: 0.62, churn: 0.052 },
+    { mes: "May", clientes: 160, ingresos: 292000, margen: 0.64, churn: 0.047 },
+    { mes: "Jun", clientes: 160, ingresos: 306000, margen: 0.65, churn: 0.044 }
   ];
 }
 
-function SummaryPage() {
-  const { activeClients, monthRevenue, delivered, retention, avgOccupation } = useExecutiveMetrics();
-  const data = growthData();
+function retentionCohorts() {
+  return [
+    { cohort: "Ene", clientes: 32, retention: [1, 0.91, 0.86, 0.81, 0.78, 0.75] },
+    { cohort: "Feb", clientes: 41, retention: [1, 0.93, 0.88, 0.84, 0.8, null] },
+    { cohort: "Mar", clientes: 49, retention: [1, 0.94, 0.9, 0.86, null, null] },
+    { cohort: "Abr", clientes: 56, retention: [1, 0.95, 0.91, null, null, null] },
+    { cohort: "May", clientes: 64, retention: [1, 0.96, null, null, null, null] },
+    { cohort: "Jun", clientes: 71, retention: [1, null, null, null, null, null] }
+  ];
+}
+
+function projectionSeries() {
+  return [
+    { mes: "Jul", base: 180000, expansion: 244000, agresivo: 310000 },
+    { mes: "Ago", base: 228000, expansion: 326000, agresivo: 438000 },
+    { mes: "Sep", base: 286000, expansion: 421000, agresivo: 592000 },
+    { mes: "Oct", base: 351000, expansion: 548000, agresivo: 782000 },
+    { mes: "Nov", base: 420000, expansion: 689000, agresivo: 1010000 },
+    { mes: "Dic", base: 498000, expansion: 852000, agresivo: 1290000 }
+  ];
+}
+
+function RetentionHeatmap() {
+  const months = ["M0", "M1", "M2", "M3", "M4", "M5"];
+  const rows = retentionCohorts();
+
   return (
-    <PageShell eyebrow="Resumen ejecutivo" title="Tahona Hubs: recurrencia, margen operativo y red escalable.">
-      <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Clientes activos" value={String(activeClients)} helper="+17% vs marzo" icon={Users} tone="warm" />
-        <MetricCard label="Ingresos del mes" value={formatCurrency(monthRevenue)} helper="Cobros recurrentes" icon={Banknote} />
-        <MetricCard label="Retención semanal" value={formatPercent(retention)} helper="Base activa/retained" icon={TrendingUp} tone="green" />
-        <MetricCard label="Ocupación promedio" value={formatPercent(avgOccupation)} helper={`${delivered} entregas históricas`} icon={Package} tone="gold" />
+    <Card className="mt-md min-w-0 shadow-sm">
+      <CardHeader className="flex-row items-start justify-between gap-sm">
+        <div>
+          <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">Retencion</p>
+          <CardTitle className="mt-1">Cohortes de suscripcion</CardTitle>
+        </div>
+        <Badge variant="outline">6 meses</Badge>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <div className="min-w-[660px]">
+            <div className="grid grid-cols-[116px_repeat(6,minmax(64px,1fr))_92px] gap-1 text-xs font-semibold uppercase text-muted-foreground">
+              <div>Cohorte</div>
+              {months.map((month) => (
+                <div key={month} className="text-center">{month}</div>
+              ))}
+              <div className="text-right">Clientes</div>
+            </div>
+            <div className="mt-2 space-y-1">
+              {rows.map((row) => (
+                <div key={row.cohort} className="grid grid-cols-[116px_repeat(6,minmax(64px,1fr))_92px] gap-1">
+                  <div className="flex h-10 items-center rounded-md bg-surface-2 px-3 text-sm font-semibold">{row.cohort}</div>
+                  {row.retention.map((value, index) => {
+                    const active = typeof value === "number";
+                    const intensity = active ? Math.max(12, Math.round(value * 58)) : 0;
+                    const style = {
+                      background: active
+                        ? `color-mix(in srgb, var(--brand) ${intensity}%, var(--surface-2))`
+                        : "color-mix(in srgb, var(--surface-2) 72%, transparent)",
+                      color: active && value > 0.88 ? "white" : "var(--text)"
+                    } satisfies CSSProperties;
+
+                    return (
+                      <div
+                        key={`${row.cohort}-${months[index]}`}
+                        className="flex h-10 items-center justify-center rounded-md border border-border font-mono text-sm font-semibold"
+                        style={style}
+                      >
+                        {active ? `${Math.round(value * 100)}%` : "-"}
+                      </div>
+                    );
+                  })}
+                  <div className="flex h-10 items-center justify-end rounded-md bg-surface-2 px-3 font-mono text-sm font-semibold">{row.clientes}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-sm flex flex-wrap items-center justify-between gap-xs text-xs text-muted-foreground">
+              <span>Lectura: M0 es alta, M1-M3 muestran recurrencia real y M4-M5 presionan el playbook de retencion.</span>
+              <span className="font-mono">Meta M3 &gt; 85%</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function metricTooltip(value: unknown, name: unknown) {
+  const metric = String(name).toLowerCase();
+  if (metric.includes("ingreso")) return formatCurrency(Number(value));
+  if (metric.includes("margen") || metric.includes("churn")) return formatPercent(Number(value));
+  return String(value);
+}
+
+function SummaryPage() {
+  const metrics = useExecutiveMetrics();
+  const { incidencias, cobros, clientes, hubs } = useTahonaStore();
+  const riskRows = [
+    ...incidencias.filter((item) => item.estado !== "resuelta").slice(0, 5).map((item) => ({ type: "Incidencia", owner: hubName(hubs, item.hub_id), amount: "-", status: item.estado, date: item.fecha })),
+    ...cobros.filter((item) => item.estado !== "cobrado").slice(0, 5).map((item) => ({ type: "Cobro", owner: clientName(clientes, item.cliente_id), amount: formatCurrency(item.monto), status: item.estado, date: item.fecha }))
+  ];
+  const columns: Array<DataTableColumn<(typeof riskRows)[number]>> = [
+    { key: "type", header: "Riesgo", render: (row) => row.type },
+    { key: "owner", header: "Dueño", render: (row) => row.owner },
+    { key: "amount", header: "Monto", align: "right", render: (row) => row.amount },
+    { key: "status", header: "Estado", render: (row) => <StatusPill tone={row.status.includes("fallido") || row.status.includes("abierta") ? "danger" : "warning"} label={row.status.replaceAll("_", " ")} /> },
+    { key: "date", header: "Fecha", render: (row) => shortDate(row.date) }
+  ];
+
+  return (
+    <PageShell
+      eyebrow="Resumen ejecutivo"
+      title="Recurrencia, capacidad y riesgo en una sola lectura."
+      description="Vista para inversionistas y dirección: crecimiento, ingresos, retención y operación se leen con contexto y no como decoración."
+    >
+      <div className="space-y-sm">
+        <Card className="shadow-sm">
+          <CardContent className="p-md">
+            <div className="flex flex-col justify-between gap-md md:flex-row md:items-start">
+              <div>
+                <p className="text-caption font-semibold uppercase text-primary">Ingresos recurrentes (MRR)</p>
+                <p className="mt-sm font-mono text-5xl font-semibold leading-none text-foreground">{formatCurrency(metrics.revenue)}</p>
+                <div className="mt-sm flex flex-wrap items-center gap-xs">
+                  <StatusPill tone="success" label="+14.2% vs mes" />
+                  <span className="text-sm text-muted-foreground">Target: margen bruto &gt;60%</span>
+                </div>
+              </div>
+              <div className="h-28 min-w-[260px] flex-1 rounded-md bg-info-bg p-xs">
+                <svg viewBox="0 0 320 120" className="h-full w-full" role="img" aria-label="Tendencia de ingresos recurrentes">
+                  <defs>
+                    <linearGradient id="mrrSparkFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="var(--brand)" stopOpacity="0.02" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M8 96 C48 88 72 78 104 66 C136 54 160 38 196 28 C232 18 262 12 312 8 L312 112 L8 112 Z" fill="url(#mrrSparkFill)" />
+                  <path d="M8 96 C48 88 72 78 104 66 C136 54 160 38 196 28 C232 18 262 12 312 8" fill="none" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-sm md:grid-cols-3">
+          <KpiCard label="Clientes activos" value={metrics.activeClients} helper={`${metrics.pausedClients} pausados`} target="200 piloto" icon={Users} delta="+6.0%" deltaTone="up" />
+          <KpiCard label="Retención" value={metrics.retention} formatter={formatPercent} helper="Activos / no cancelados" icon={TrendingUp} target=">85%" />
+          <KpiCard label="LTV/CAC proxy" value={3.4} formatter={(value) => `${value.toFixed(1)}x`} helper={`${formatCurrency(metrics.riskRevenue)} en riesgo`} icon={Banknote} target=">3x" />
+        </div>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <ChartCard title="Clientes activos">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D9C8B4" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} dot={false} isAnimationActive={false} />
-            </LineChart>
+      {false ? (
+      <div className="hidden">
+        <KpiCard label="Clientes activos" value={metrics.activeClients} helper={`${metrics.pausedClients} pausados`} target="200 piloto" icon={Users} delta="+6.0%" deltaTone="up" />
+        <KpiCard label="Ingresos cobrados" value={metrics.revenue} formatter={formatCurrency} helper="Cobros históricos mock" icon={Banknote} delta="+14.2%" deltaTone="up" />
+        <KpiCard label="Retención" value={metrics.retention} formatter={formatPercent} helper="Activos / no cancelados" icon={TrendingUp} target=">85%" />
+        <KpiCard label="Riesgo activo" value={metrics.operationalRisk} helper={`${formatCurrency(metrics.riskRevenue)} en pagos no cobrados`} icon={AlertTriangle} deltaTone={metrics.operationalRisk ? "down" : "up"} delta={metrics.operationalRisk ? "vigilar" : "estable"} />
+      </div>
+      ) : null}
+      <div className="mt-md grid items-start gap-md xl:grid-cols-[minmax(560px,1.15fr)_minmax(420px,0.85fr)]">
+        <ChartCard eyebrow="Crecimiento" title="Ingresos, clientes y margen bruto" action={<Badge variant="info">8 meses</Badge>}>
+          <ResponsiveContainer width="100%" height={330}>
+            <ComposedChart data={growthSeries()}>
+              <CartesianGrid stroke={GRID} vertical={false} />
+              <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+              <YAxis yAxisId="left" tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
+              <YAxis yAxisId="right" orientation="right" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} />
+              <Tooltip formatter={metricTooltip} />
+              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
+              <Bar yAxisId="left" dataKey="ingresos" name="Ingresos" fill={BRAND} radius={[6, 6, 0, 0]} animationDuration={480} />
+              <Line yAxisId="left" type="monotone" dataKey="clientes" name="Clientes" stroke={TEXT} strokeWidth={3} dot={false} animationDuration={480} />
+              <Line yAxisId="right" type="monotone" dataKey="margen" name="Margen bruto" stroke={SUCCESS} strokeWidth={3} dot={false} animationDuration={480} />
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Ingresos mensuales">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D9C8B4" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingresos" fill="#D4A574" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        <Card className="min-w-0 shadow-sm">
+          <CardHeader><CardTitle>Riesgos que bloquean escala</CardTitle></CardHeader>
+          <CardContent><DataTable rows={riskRows} columns={columns} getRowId={(row) => `${row.type}-${row.owner}-${row.date}`} /></CardContent>
+        </Card>
       </div>
+      <RetentionHeatmap />
     </PageShell>
   );
 }
 
 function GrowthPage() {
-  const data = growthData();
-  const mrr = data[data.length - 1].ingresos;
+  const data = growthSeries();
   return (
-    <PageShell eyebrow="Crecimiento" title="Base recurrente y MRR con churn controlado.">
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="MRR estimado" value={formatCurrency(mrr)} icon={TrendingUp} />
-        <MetricCard label="Churn rate" value={formatPercent(data[data.length - 1].churn)} icon={Users} tone="gold" />
-        <MetricCard label="Crecimiento 8 meses" value="+233%" icon={Banknote} tone="green" />
+    <PageShell eyebrow="Crecimiento" title="Adquisición, ingresos y churn con señales comparables." description="El objetivo es demostrar repetición y calidad de ingreso, no solo volumen bruto.">
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Crecimiento clientes" value={2.33} formatter={(value) => `${Math.round(value * 100)}%`} icon={Users} helper="Nov-Jun" />
+        <KpiCard label="Margen bruto" value={0.65} formatter={formatPercent} icon={TrendingUp} target=">60%" delta="+16 pp" deltaTone="up" />
+        <KpiCard label="Churn mensual" value={0.044} formatter={formatPercent} icon={ShieldCheck} target="<5%" delta="mejora" deltaTone="up" />
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <ChartCard title="Clientes">
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={data}>
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="clientes" stroke="#A0411F" strokeWidth={3} isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Ingresos">
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data}>
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingresos" fill="#5F7652" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
+      <ChartCard eyebrow="Serie mensual" title="Clientes, ingresos y churn" action={<Badge variant="outline">Sin pie charts</Badge>}>
+        <ResponsiveContainer width="100%" height={360}>
+          <ComposedChart data={data}>
+            <CartesianGrid stroke={GRID} vertical={false} />
+            <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+            <YAxis yAxisId="left" tickLine={false} axisLine={false} />
+            <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${Math.round(Number(value) * 100)}%`} tickLine={false} axisLine={false} />
+            <Tooltip formatter={metricTooltip} />
+            <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
+            <Area yAxisId="left" dataKey="clientes" name="Clientes" fill={BRAND} stroke={BRAND} fillOpacity={0.14} animationDuration={480} />
+            <Bar yAxisId="left" dataKey="ingresos" name="Ingresos" fill={ACCENT} radius={[6, 6, 0, 0]} animationDuration={480} />
+            <Line yAxisId="right" dataKey="churn" name="Churn" stroke={DANGER} strokeWidth={3} dot={false} animationDuration={480} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartCard>
     </PageShell>
   );
 }
 
 function OperationsPage() {
-  const { hubs, incidencias } = useTahonaStore();
-  const incidentData = Object.entries(
-    incidencias.reduce<Record<string, number>>((acc, item) => {
-      acc[item.tipo] = (acc[item.tipo] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name: name.replaceAll("_", " "), value }));
+  const { entregas, incidencias, hubs, casilleros } = useTahonaStore();
+  const todayDeliveries = entregas.filter((item) => item.fecha === today);
+  const onTime = entregas.filter((item) => item.estado === "entregado" || item.estado === "listo").length / entregas.length;
+  const openIncidents = incidencias.filter((item) => item.estado !== "resuelta");
+  const columns: Array<DataTableColumn<Incidencia>> = [
+    { key: "tipo", header: "Tipo", render: (row) => row.tipo.replaceAll("_", " ") },
+    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
+    { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "abierta" ? "danger" : "warning"} label={row.estado.replaceAll("_", " ")} /> }
+  ];
   return (
-    <PageShell eyebrow="Operación" title="Capacidad, eficiencia y causas de fricción.">
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-        <ChartCard title="Ocupación por hub y slot">
-          <div className="grid gap-3">
-            {hubs.map((hub, hubIndex) => (
-              <div key={hub.id} className="grid grid-cols-[130px_repeat(3,1fr)] items-center gap-2">
-                <span className="text-sm font-semibold">{hub.nombre.replace("Hub ", "")}</span>
-                {hub.slots_horarios.map((slot, index) => {
-                  const value = 56 + hubIndex * 11 + index * 7;
-                  return (
-                    <div key={slot} className="rounded-md p-3 text-center text-sm font-semibold text-white" style={{ backgroundColor: `rgba(160,65,31,${value / 100})` }}>
-                      {value}%
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </ChartCard>
-        <ChartCard title="Incidencias por categoría">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={incidentData} innerRadius={70} outerRadius={110} dataKey="value" isAnimationActive={false}>
-                {incidentData.map((_, index) => (
-                  <Cell key={index} fill={chartColors[index % chartColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
+    <PageShell eyebrow="Operación" title="Capacidad, entregas y excepciones de red." description="Dirección necesita saber si la operación puede escalar antes de vender más.">
+      <div className="grid gap-sm md:grid-cols-4">
+        <KpiCard label="Entregas hoy" value={todayDeliveries.length} icon={Package} helper="Pedidos programados" />
+        <KpiCard label="On-time proxy" value={onTime} formatter={formatPercent} icon={ShieldCheck} target=">94%" />
+        <KpiCard label="Ocupación" value={hubs.reduce((sum, hub) => sum + hub.casilleros_ocupados_actual / hub.casilleros_total, 0) / hubs.length} formatter={formatPercent} icon={Boxes} />
+        <KpiCard label="Incidencias abiertas" value={openIncidents.length} icon={AlertTriangle} />
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {hubs.map((hub) => (
-          <Card key={hub.id}>
-            <CardContent className="p-5">
-              <h3 className="text-xl font-semibold">{hub.nombre}</h3>
-              <ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} className="mt-5" />
-              <p className="mt-3 text-sm text-muted-foreground">Eficiencia producción estimada: 94%</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mt-md grid gap-md xl:grid-cols-[0.9fr_1.1fr]">
+        <HubCapacityTable hubs={hubs} />
+        <Card className="shadow-sm"><CardHeader><CardTitle>Incidencias abiertas</CardTitle></CardHeader><CardContent><DataTable rows={openIncidents} columns={columns} getRowId={(row) => row.id} /></CardContent></Card>
       </div>
     </PageShell>
   );
 }
 
 function CustomersPage() {
-  const { clientes, hubs } = useTahonaStore();
-  const byHub = hubs.map((hub) => ({
-    name: hub.nombre.replace("Hub ", ""),
-    value: clientes.filter((item) => item.hub_asignado_id === hub.id && item.estado === "activo").length
-  }));
+  const { clientes, cobros } = useTahonaStore();
+  const columns: Array<DataTableColumn<Cliente>> = [
+    { key: "cliente", header: "Cliente", render: (row) => <div><p className="font-semibold">{row.nombre} {row.apellido}</p><p className="text-xs text-muted-foreground">{row.email}</p></div> },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "activo" ? "success" : row.estado === "pausado" ? "warning" : "danger"} label={row.estado} /> },
+    { key: "colonia", header: "Colonia", render: (row) => row.colonia },
+    { key: "ticket", header: "Ticket", align: "right", render: (row) => formatCurrency(row.ticket_promedio_semanal_mxn) }
+  ];
+  const arpu = clientes.filter((item) => item.estado === "activo").reduce((sum, item) => sum + item.ticket_promedio_semanal_mxn, 0) / clientes.filter((item) => item.estado === "activo").length;
   return (
-    <PageShell eyebrow="Clientes" title="Cohortes, ticket y distribución por zona.">
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
-        <ChartCard title="Retención por cohorte">
-          <div className="space-y-3">
-            {["Nov", "Dic", "Ene", "Feb", "Mar", "Abr"].map((month, row) => (
-              <div key={month} className="grid grid-cols-[60px_repeat(6,1fr)] items-center gap-2">
-                <span className="text-sm font-semibold">{month}</span>
-                {Array.from({ length: 6 }, (_, col) => {
-                  const value = 96 - row * 3 - col * 4;
-                  return (
-                    <div key={col} className="rounded-md bg-tahona-nopal p-2 text-center text-xs font-semibold text-white" style={{ opacity: value / 100 }}>
-                      {value}%
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </ChartCard>
-        <ChartCard title="Distribución por hub">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={byHub}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#A0411F" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
+    <PageShell eyebrow="Clientes" title="Base recurrente, ticket y estados de cuenta." description="La tabla permite revisar la calidad de base: activos, pausados, ticket promedio y zona.">
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Activos" value={clientes.filter((item) => item.estado === "activo").length} icon={Users} />
+        <KpiCard label="ARPU semanal" value={arpu} formatter={formatCurrency} icon={Banknote} />
+        <KpiCard label="Cobros registrados" value={cobros.length} icon={CreditCard} />
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <MetricCard label="Ticket promedio" value={formatCurrency(424)} icon={Banknote} />
-        <MetricCard label="Frecuencia semanal" value="2.3 entregas" icon={Package} tone="gold" />
-        <MetricCard label="Segmento top" value="Familias urbanas" icon={Users} tone="green" />
-      </div>
+      <Card className="mt-md shadow-sm"><CardHeader><CardTitle>Clientes</CardTitle></CardHeader><CardContent><DataTable rows={clientes.slice(0, 90)} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
     </PageShell>
   );
 }
 
 function ProductsPage() {
-  const { productos, entregas, incidencias } = useTahonaStore();
-  const top = productos.slice(0, 8).map((product, index) => ({
-    name: product.nombre.split(" ").slice(0, 2).join(" "),
-    ingreso: product.precio_mxn * (42 - index * 3),
-    unidades: 42 - index * 3
-  }));
+  const { productos, entregas } = useTahonaStore();
+  const rows = productos.map((product) => {
+    const units = entregas.flatMap((delivery) => delivery.productos).filter((item) => item.producto_id === product.id).reduce((sum, item) => sum + item.cantidad, 0);
+    return { product, units, revenue: units * product.precio_mxn };
+  }).sort((a, b) => b.revenue - a.revenue);
+  const columns: Array<DataTableColumn<(typeof rows)[number]>> = [
+    { key: "product", header: "Producto", render: (row) => <div><p className="font-semibold">{row.product.nombre}</p><p className="text-xs text-muted-foreground">{row.product.categoria}</p></div> },
+    { key: "units", header: "Unidades", align: "right", render: (row) => row.units },
+    { key: "revenue", header: "Ingreso", align: "right", render: (row) => formatCurrency(row.revenue) },
+    { key: "price", header: "Precio", align: "right", render: (row) => formatCurrency(row.product.precio_mxn) }
+  ];
   return (
-    <PageShell eyebrow="Productos" title="Rotación, ingreso por SKU e incidencias.">
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <ChartCard title="Ingreso por SKU">
-          <ResponsiveContainer width="100%" height={340}>
-            <BarChart data={top}>
-              <XAxis dataKey="name" />
-              <YAxis />
+    <PageShell eyebrow="Productos" title="Mix de venta por SKU y contribución." description="La decisión de producción y catálogo necesita ranking por unidades e ingresos.">
+      <div className="grid gap-md xl:grid-cols-[0.9fr_1.1fr]">
+        <ChartCard eyebrow="Top 8" title="Ingresos por producto">
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={rows.slice(0, 8)} layout="vertical">
+              <CartesianGrid stroke={GRID} horizontal={false} />
+              <XAxis type="number" tickFormatter={(value) => `$${Number(value) / 1000}k`} />
+              <YAxis type="category" dataKey={(row) => row.product.nombre.slice(0, 18)} width={140} />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Bar dataKey="ingreso" fill="#D4A574" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+              <Bar dataKey="revenue" fill={BRAND} radius={[0, 6, 6, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
-        <Card>
-          <CardContent className="p-5">
-            <h2 className="text-xl font-semibold">Lecturas clave</h2>
-            <div className="mt-5 space-y-4">
-              <Insight label="Top seller" value={productos[0].nombre} />
-              <Insight label="Menor rotación" value={productos[12].nombre} />
-              <Insight label="Entregas medidas" value={String(entregas.length)} />
-              <Insight label="Incidencias producto" value={String(incidencias.filter((item) => item.tipo === "producto_dañado").length)} />
-            </div>
-          </CardContent>
-        </Card>
+        <Card className="shadow-sm"><CardHeader><CardTitle>Ranking SKU</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.product.id} /></CardContent></Card>
       </div>
     </PageShell>
   );
 }
 
 function HubsPage() {
-  const { hubs } = useTahonaStore();
+  const { hubs, casilleros } = useTahonaStore();
   return (
-    <PageShell eyebrow="Hubs" title="Desempeño territorial de la red inicial.">
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
+    <PageShell eyebrow="Hubs" title="Capacidad territorial y ocupación de red." description="Expansión responsable: ver clientes activos, casilleros y presión por hub.">
+      <div className="grid gap-md xl:grid-cols-[1fr_0.95fr]">
         <HubMap hubs={hubs} />
-        <div className="space-y-4">
-          {hubs.map((hub) => (
-            <Card key={hub.id}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">{hub.nombre}</h2>
-                  <Badge variant="secondary">{hub.clientes_activos} activos</Badge>
-                </div>
-                <ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} className="mt-5" />
-                <p className="mt-3 text-sm text-muted-foreground">{hub.direccion}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <HubCapacityTable hubs={hubs} />
+      </div>
+      <div className="mt-md grid gap-sm md:grid-cols-3">
+        {hubs.map((hub) => {
+          const issues = casilleros.filter((item) => item.hub_id === hub.id && item.estado === "incidencia").length;
+          return <Card key={hub.id} className="shadow-sm"><CardContent className="p-md"><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3><p className="mt-2 text-sm text-muted-foreground">{hub.gerente} · {hub.clientes_activos} clientes</p><div className="mt-sm"><ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} /></div><div className="mt-sm">{issues ? <StatusPill tone="danger" label={`${issues} incidencias`} /> : <StatusPill tone="success" label="estable" />}</div></CardContent></Card>;
+        })}
       </div>
     </PageShell>
   );
 }
 
 function ProjectionsPage() {
-  const [newHubs, setNewHubs] = useState(4);
-  const [clientsPerHub, setClientsPerHub] = useState(90);
-  const [ticket, setTicket] = useState(430);
-  const weeklyRevenue = newHubs * clientsPerHub * ticket;
-  const monthlyRevenue = weeklyRevenue * 4.33;
+  const scenarios = [
+    { scenario: "Base", hubs: 3, clientes: 230, revenue: 498000, capex: 0, risk: "Bajo" },
+    { scenario: "Expansión CDMX", hubs: 6, clientes: 410, revenue: 852000, capex: 620000, risk: "Medio" },
+    { scenario: "Agresivo", hubs: 10, clientes: 680, revenue: 1290000, capex: 1450000, risk: "Alto" }
+  ];
+  const columns: Array<DataTableColumn<(typeof scenarios)[number]>> = [
+    { key: "scenario", header: "Escenario", render: (row) => row.scenario },
+    { key: "hubs", header: "Hubs", align: "right", render: (row) => row.hubs },
+    { key: "clientes", header: "Clientes", align: "right", render: (row) => row.clientes },
+    { key: "revenue", header: "Ingreso mensual", align: "right", render: (row) => formatCurrency(row.revenue) },
+    { key: "capex", header: "Capex", align: "right", render: (row) => formatCurrency(row.capex) },
+    { key: "risk", header: "Riesgo", render: (row) => <StatusPill tone={row.risk === "Alto" ? "danger" : row.risk === "Medio" ? "warning" : "success"} label={row.risk} /> }
+  ];
   return (
-    <PageShell eyebrow="Proyecciones" title="Modelo simple para abrir nuevos hubs.">
-      <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <Card>
-          <CardContent className="space-y-6 p-6">
-            <Slider label="Nuevos hubs" value={newHubs} min={1} max={18} onChange={setNewHubs} />
-            <Slider label="Clientes por hub" value={clientsPerHub} min={40} max={180} onChange={setClientsPerHub} />
-            <Slider label="Ticket semanal" value={ticket} min={220} max={720} onChange={setTicket} prefix="$" />
-          </CardContent>
-        </Card>
-        <div className="grid gap-4 md:grid-cols-2">
-          <MetricCard label="Ingreso semanal proyectado" value={formatCurrency(weeklyRevenue)} icon={Banknote} />
-          <MetricCard label="Ingreso mensual proyectado" value={formatCurrency(monthlyRevenue)} icon={TrendingUp} tone="green" />
-          <MetricCard label="Clientes nuevos" value={String(newHubs * clientsPerHub)} icon={Users} tone="warm" />
-          <MetricCard label="Casilleros requeridos" value={String(newHubs * 24)} icon={MapPin} tone="gold" />
-        </div>
+    <PageShell eyebrow="Proyecciones" title="Escenarios de expansión con ingresos, capex y riesgo." description="Un inversionista necesita ver qué cambia al abrir hubs: clientes, ingreso, inversión y complejidad.">
+      <div className="grid gap-md xl:grid-cols-[1.05fr_0.95fr]">
+        <ChartCard eyebrow="Forecast" title="Ingreso mensual por escenario">
+          <ResponsiveContainer width="100%" height={360}>
+            <AreaChart data={projectionSeries()}>
+              <CartesianGrid stroke={GRID} vertical={false} />
+              <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+              <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Area dataKey="base" stroke={TEXT} fill={TEXT} fillOpacity={0.08} isAnimationActive={false} />
+              <Area dataKey="expansion" stroke={BRAND} fill={BRAND} fillOpacity={0.12} isAnimationActive={false} />
+              <Area dataKey="agresivo" stroke={ACCENT} fill={ACCENT} fillOpacity={0.22} isAnimationActive={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <Card className="shadow-sm"><CardHeader><CardTitle>Escenarios</CardTitle></CardHeader><CardContent><DataTable rows={scenarios} columns={columns} getRowId={(row) => row.scenario} /></CardContent></Card>
       </div>
     </PageShell>
   );
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardContent className="p-5">
-        <h2 className="mb-5 text-xl font-semibold">{title}</h2>
-        {children}
-      </CardContent>
-    </Card>
-  );
+function HubCapacityTable({ hubs }: { hubs: Hub[] }) {
+  const columns: Array<DataTableColumn<Hub>> = [
+    { key: "hub", header: "Hub", render: (row) => <div><p className="font-semibold">{row.nombre}</p><p className="text-xs text-muted-foreground">{row.colonia}</p></div> },
+    { key: "clientes", header: "Clientes", align: "right", render: (row) => row.clientes_activos },
+    { key: "lockers", header: "Casilleros", align: "right", render: (row) => `${row.casilleros_ocupados_actual}/${row.casilleros_total}` },
+    { key: "ocupacion", header: "Ocupación", render: (row) => <div className="min-w-40"><ProgressBar value={(row.casilleros_ocupados_actual / row.casilleros_total) * 100} /></div> },
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.casilleros_ocupados_actual / row.casilleros_total > 0.88 ? "warning" : "success"} label={row.casilleros_ocupados_actual / row.casilleros_total > 0.88 ? "presión" : "estable"} /> }
+  ];
+  return <Card className="shadow-sm"><CardHeader><CardTitle>Capacidad por hub</CardTitle></CardHeader><CardContent><DataTable rows={hubs} columns={columns} getRowId={(row) => row.id} /></CardContent></Card>;
 }
 
-function Insight({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border bg-background p-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-      <p className="mt-2 font-semibold">{value}</p>
-    </div>
-  );
+function clientName(clientes: Cliente[], id: string) {
+  const client = clientes.find((item) => item.id === id);
+  return client ? `${client.nombre} ${client.apellido}` : id;
 }
 
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  prefix,
-  onChange
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  prefix?: string;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-2 flex justify-between text-sm font-semibold">
-        <span>{label}</span>
-        <span>{prefix}{value}</span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-tahona-terracotta"
-      />
-    </label>
-  );
+function hubName(hubs: Hub[], id: string) {
+  return hubs.find((item) => item.id === id)?.nombre ?? id;
 }
