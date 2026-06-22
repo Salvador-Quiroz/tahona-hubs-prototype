@@ -64,7 +64,7 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   },
   productos: {
     eyebrow: "Paso 1 de 4",
-    title: "Arma una bolsa clara, sin fricción.",
+    title: "Arma una bolsa clara, sin friccion.",
     body: "Cada producto muestra precio, disponibilidad y cantidad. Puedes ajustar antes de confirmar.",
     cta: "Elegir horario",
     next: "/suscribirme/horarios"
@@ -72,13 +72,13 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   horarios: {
     eyebrow: "Paso 2 de 4",
     title: "Selecciona hub y ventana.",
-    body: "El horario debe sentirse garantizado: capacidad visible, slots concretos y ubicación entendible.",
+    body: "El horario debe sentirse garantizado: capacidad visible, slots concretos y ubicacion entendible.",
     cta: "Continuar a datos",
     next: "/suscribirme/direccion"
   },
   direccion: {
     eyebrow: "Paso 3 de 4",
-    title: "Datos mínimos para operar.",
+    title: "Datos minimos para operar.",
     body: "Solo lo necesario para confirmar cuenta, contacto y zona de retiro. Sin formularios eternos.",
     cta: "Continuar a pago",
     next: "/suscribirme/pago"
@@ -86,14 +86,14 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   pago: {
     eyebrow: "Paso 4 de 4",
     title: "Pago protegido y pedido listo.",
-    body: "Tarjeta, resumen y seguridad visibles. Facturación y cupón se mantienen como opciones secundarias.",
+    body: "Tarjeta, resumen y seguridad visibles. Facturacion y cupon se mantienen como opciones secundarias.",
     cta: "Confirmar pedido",
     next: "/suscribirme/confirmacion"
   },
   confirmacion: {
     eyebrow: "Confirmado",
-    title: "Tu retiro quedó programado.",
-    body: "Guarda tu pase de retiro. El código final aparecerá en tu cuenta cuando el casillero esté cargado.",
+    title: "Tu retiro quedo programado.",
+    body: "Guarda tu pase de retiro. El codigo final aparecera en tu cuenta cuando el casillero este cargado.",
     cta: "Ver mi cuenta",
     next: "/cuenta"
   }
@@ -119,7 +119,7 @@ function SectionHeader({
   const resolvedBody =
     eyebrow === "Vitrina semanal"
       ? "Conchas, hogazas y piezas laminadas listas para apartar antes del corte. Eliges, pagas y retiras en tu hub."
-      : eyebrow === "CatÃ¡logo"
+      : eyebrow === "Catalogo"
         ? "Aparta piezas recien horneadas, compara precios y arma tu bolsa sin perder la ventana de corte."
       : eyebrow === "Pedido con retiro"
         ? "Aparta antes del corte, elige ventana y recoge con pase digital. Sin filas, sin vueltas, sin depender de inventario al llegar."
@@ -128,7 +128,7 @@ function SectionHeader({
       : eyebrow === "Paso 1 de 4"
         ? "Elige cantidades desde la vitrina semanal. Tu bolsa se actualiza en el momento y siempre ves el total antes de avanzar."
       : eyebrow === "Paso 2 de 4"
-        ? "Escoge el hub y la ventana que sí te funciona. La disponibilidad se lee antes de pagar."
+        ? "Escoge el hub y la ventana que si te funciona. La disponibilidad se lee antes de pagar."
       : eyebrow === "Paso 3 de 4"
         ? "Solo pedimos los datos necesarios para confirmar cuenta, avisos y soporte de retiro."
       : eyebrow === "Paso 4 de 4"
@@ -137,14 +137,14 @@ function SectionHeader({
   const resolvedTitle =
     eyebrow === "Pedido con retiro"
       ? "Tu bolsa lista, tu casillero esperando."
-      : eyebrow === "CatÃ¡logo"
+      : eyebrow === "Catalogo"
         ? "Tu pan de la semana, recien horneado."
       : eyebrow === "Hubs"
         ? "Retira cerca, sin filas."
       : eyebrow === "Paso 1 de 4"
         ? "Escoge tu pan para la semana."
       : eyebrow === "Paso 2 de 4"
-        ? "Elige dónde y cuándo retirarlo."
+        ? "Elige donde y cuando retirarlo."
       : eyebrow === "Paso 3 de 4"
         ? "Tu cuenta queda lista en un minuto."
       : eyebrow === "Paso 4 de 4"
@@ -153,9 +153,8 @@ function SectionHeader({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -80px" }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col justify-between gap-6 md:flex-row md:items-end"
     >
@@ -204,7 +203,7 @@ function ProductLine({
       </div>
       <div className="min-w-0">
         <p className="line-clamp-1 font-sans text-sm font-semibold text-[var(--ink)]">{product.nombre}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{quantity} pza · {formatCurrency(product.precio_mxn)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{quantity} pza - {formatCurrency(product.precio_mxn)}</p>
       </div>
       {action ?? <p className="font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(product.precio_mxn * quantity)}</p>}
     </div>
@@ -221,7 +220,7 @@ function AppPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; prod
           <div>
             <p className="text-caption font-semibold uppercase text-secondary">Pase Tahona</p>
             <h3 className="mt-2 text-h2 font-semibold">{shortDate(entrega.fecha)}</h3>
-            <p className="mt-1 text-sm text-white/70">{hub.nombre} · {entrega.slot}</p>
+            <p className="mt-1 text-sm text-white/70">{hub.nombre} - {entrega.slot}</p>
           </div>
           <div className="flex h-14 w-14 items-center justify-center rounded-md bg-white text-foreground">
             <QrCode className="h-7 w-7" aria-hidden />
@@ -251,7 +250,7 @@ function AppPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; prod
 }
 
 function DeliveryTimeline({ estado }: { estado: Entrega["estado"] }) {
-  const stages = ["Apartado", "En producción", "Cargado", "Listo", "Retirado"];
+  const stages = ["Apartado", "En produccion", "Cargado", "Listo", "Retirado"];
   const activeIndex = estado === "entregado" ? 4 : estado === "listo" ? 3 : estado === "incidencia" ? 3 : 1;
 
   return (
@@ -300,9 +299,9 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
       <DeliveryTimeline estado={entrega.estado} />
       <article className={cn("overflow-hidden rounded-xl bg-card shadow-lg", isRetired && "grayscale")}>
         <div className="bg-primary p-md text-white">
-          <p className="text-caption font-semibold uppercase text-white/72">TAHONA · Pase de retiro</p>
+          <p className="text-caption font-semibold uppercase text-white/72">TAHONA - Pase de retiro</p>
           <h2 className="mt-2 text-h2 font-semibold">{hub.nombre}</h2>
-          <p className="mt-1 text-body-l text-white/82">{shortDate(entrega.fecha)} · {entrega.slot}</p>
+          <p className="mt-1 text-body-l text-white/82">{shortDate(entrega.fecha)} - {entrega.slot}</p>
         </div>
         <div className="relative border-y border-dashed border-border bg-card">
           <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--bg)]" aria-hidden />
@@ -314,11 +313,11 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
           </div>
           {!isReady && !isRetired ? (
             <div className="mt-sm rounded-md border border-info/20 bg-info-bg p-sm text-sm text-info">
-              Tu pan se está horneando. El QR se activa cuando el casillero queda cargado.
+              Tu pan se esta horneando. El QR se activa cuando el casillero queda cargado.
             </div>
           ) : null}
           <p className="mt-sm text-center font-mono text-2xl font-semibold tracking-normal text-foreground">{passCode}</p>
-          <p className="mt-1 text-center text-xs text-muted-foreground">Fallback si el escáner no lee el QR</p>
+          <p className="mt-1 text-center text-xs text-muted-foreground">Fallback si el escaner no lee el QR</p>
           <div className="mt-md grid grid-cols-2 gap-xs">
             <div className="rounded-md border border-border bg-surface-2 p-sm">
               <p className="text-xs text-muted-foreground">Casillero</p>
@@ -366,23 +365,23 @@ export function LandingPage() {
         <Container className="relative flex min-h-[86svh] flex-col justify-between py-12 md:py-16">
           <div className="max-w-4xl pt-lg">
             <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              TAHONA · Desde 1957
+              TAHONA - Desde 1957
             </p>
             <h1 className="mt-4 max-w-[12ch] font-serif text-[clamp(3.5rem,11vw,8.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-[var(--ink)]">
               Pan fresco, sin fila.
             </h1>
             <p className="mt-6 max-w-2xl font-serif text-display font-medium text-[var(--brand)] text-balance">
-              Pan recién hecho, apartado sin hacer fila.
+              Pan recien hecho, apartado sin hacer fila.
             </p>
             <p className="mt-4 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-[var(--ink-soft)]">
-              Aparta piezas recién horneadas y retíralas en un hub con horario y casillero confirmados.
+              Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados.
             </p>
             <div className="mt-lg flex flex-wrap gap-xs">
               <Button asChild size="lg">
                 <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/catalogo">Ver catálogo</Link>
+                <Link href="/catalogo">Ver catalogo</Link>
               </Button>
             </div>
           </div>
@@ -406,8 +405,8 @@ export function LandingPage() {
           <SectionHeader
             eyebrow="Vitrina semanal"
             title="Lo que sale del horno esta semana."
-            body="Una selección corta en portada. El catálogo completo queda para comparar, elegir y apartar sin perderse."
-            action={<Button asChild variant="outline"><Link href="/catalogo">Abrir catálogo</Link></Button>}
+            body="Una seleccion corta en portada. El catalogo completo queda para comparar, elegir y apartar sin perderse."
+            action={<Button asChild variant="outline"><Link href="/catalogo">Abrir catalogo</Link></Button>}
           />
           <div className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((product) => (
@@ -432,8 +431,8 @@ export function LandingPage() {
         <Container className="grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <SectionHeader
             eyebrow="Pedido con retiro"
-            title="El flujo crítico es corto, verificable y con estados claros."
-            body="El cliente debe saber qué pidió, cuánto paga, dónde retira y qué pasa si hay una excepción."
+            title="El flujo critico es corto, verificable y con estados claros."
+            body="El cliente debe saber que pidio, cuanto paga, donde retira y que pasa si hay una excepcion."
           />
           <div className="grid gap-xs sm:grid-cols-2">
             {[
@@ -458,7 +457,7 @@ export function LandingPage() {
         <Container>
           <SectionHeader
             eyebrow="Red Tahona"
-            title="Tres barrios, una rutina más fácil."
+            title="Tres barrios, una rutina mas facil."
             action={<Button asChild variant="outline"><Link href="/hubs">Ver hubs</Link></Button>}
           />
           <div className="mt-lg grid gap-sm md:grid-cols-3">
@@ -474,68 +473,6 @@ export function LandingPage() {
 
 export function CatalogoPage() {
   return <CatalogoExactPage />;
-}
-
-function CatalogoPageLegacy() {
-  const { productos, cart, addToCart, removeFromCart } = useTahonaStore();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("Todo");
-  const categories = ["Todo", ...Array.from(new Set(productos.map((product) => product.categoria)))];
-  const filtered = productos.filter((product) => {
-    const matchesCategory = category === "Todo" || product.categoria === category;
-    const matchesQuery = `${product.nombre} ${product.descripcion_corta}`.toLowerCase().includes(query.toLowerCase());
-    return matchesCategory && matchesQuery;
-  });
-
-  return (
-    <main className="storefront-shell py-lg">
-      <Container>
-        <SectionHeader
-          eyebrow="Catálogo"
-          title="Elige pan por antojo, día y disponibilidad."
-          body="La vitrina está diseñada para escanear rápido: imagen, categoría, precio y acción."
-          action={<Button asChild><Link href="/suscribirme/productos">Armar pedido</Link></Button>}
-        />
-        <div className="sticky top-[calc(68px+env(safe-area-inset-top))] z-20 mt-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_86%,transparent)] p-xs shadow-md backdrop-blur-xl">
-          <div className="flex flex-col gap-xs lg:flex-row lg:items-center">
-            <label className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar hogaza, concha, croissant..." className="pl-10" />
-            </label>
-            <div className="flex gap-2 overflow-x-auto">
-              {categories.map((item) => (
-                <Button
-                  key={item}
-                  type="button"
-                  variant={item === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCategory(item)}
-                >
-                  {item}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="mt-md grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((product) => (
-            <CatalogProductCard
-              key={product.id}
-              href={`/catalogo/${product.slug}`}
-              imageUrl={product.imagen_url}
-              name={product.nombre}
-              category={product.categoria}
-              price={product.precio_mxn}
-              quantity={cart[product.id] ?? 0}
-              onIncrement={() => addToCart(product.id)}
-              onDecrement={() => removeFromCart(product.id)}
-              availability={availabilityLabel(product.disponibilidad.length)}
-            />
-          ))}
-        </div>
-      </Container>
-    </main>
-  );
 }
 
 function availabilityLabel(days: number) {
@@ -590,7 +527,7 @@ function CatalogoExactPage() {
               Corte semanal
             </p>
             <p className="mt-2 font-serif text-[1.125rem] font-medium text-[var(--ink)]">
-              Viernes · 10:00 PM
+              Viernes - 10:00 PM
             </p>
             <p className="mt-1 font-mono text-sm font-medium text-[var(--brand)] [font-variant-numeric:tabular-nums]">
               Cierra en {countdown}
@@ -627,12 +564,7 @@ function CatalogoExactPage() {
         </section>
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <motion.div
-            variants={gridStagger}
-            initial="initial"
-            animate="animate"
-            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            >
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((product) => (
               <TahonaCatalogCard
                 key={product.id}
@@ -643,7 +575,7 @@ function CatalogoExactPage() {
               />
             ))}
             {!filtered.length ? <CatalogEmptyState onReset={() => setCategory("Todo")} /> : null}
-          </motion.div>
+          </div>
           <CatalogBag
             items={cartItems}
             count={cartCount}
@@ -774,7 +706,8 @@ function TahonaCatalogCard({
 
   return (
     <motion.article
-      variants={fadeUp}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { y: -4, boxShadow: "var(--shadow-md)" }}
       transition={{ duration: 0.24, ease: easeOutSoft }}
       className="group overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)]"
@@ -1099,7 +1032,7 @@ export function ProductDetailPage({ slug }: { slug: string }) {
           </div>
           {related.length > 0 ? (
             <div className="mt-lg">
-              <SectionHeader eyebrow="También puede interesarte" title="Misma familia, otra textura." compact />
+              <SectionHeader eyebrow="Tambien puede interesarte" title="Misma familia, otra textura." compact />
               <div className="mt-sm grid gap-xs md:grid-cols-3">
                 {related.map((item) => <ProductLine key={item.id} product={item} quantity={1} action={<Button asChild variant="outline" size="sm"><Link href={`/catalogo/${item.slug}`}>Ver</Link></Button>} />)}
               </div>
@@ -1116,9 +1049,9 @@ export function ComoFuncionaPage() {
     <main className="storefront-shell py-lg">
       <Container>
         <SectionHeader
-          eyebrow="Cómo funciona"
+          eyebrow="Como funciona"
           title="Una compra de pan debe sentirse tan simple como recoger una llave."
-          body="El proceso completo cabe en cuatro decisiones. Todo lo demás queda automatizado por operación."
+          body="El proceso completo cabe en cuatro decisiones. Todo lo demas queda automatizado por operacion."
         />
         <div className="mt-lg grid gap-sm md:grid-cols-4">
           {[
@@ -1159,7 +1092,7 @@ function HubCard({ hub }: { hub: Hub }) {
         </div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{hub.direccion}</p>
         <div className="mt-sm">
-          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Ocupación</span><span>{occupation}%</span></div>
+          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Ocupacion</span><span>{occupation}%</span></div>
           <ProgressBar value={occupation} />
         </div>
       </div>
@@ -1172,7 +1105,7 @@ export function HubsPage() {
   return (
     <main className="storefront-shell py-lg">
       <Container>
-        <SectionHeader eyebrow="Hubs" title="Red de retiro con horarios concretos." body="Cada hub muestra dirección, capacidad y ventanas para que el cliente decida con confianza." />
+        <SectionHeader eyebrow="Hubs" title="Red de retiro con horarios concretos." body="Cada hub muestra direccion, capacidad y ventanas para que el cliente decida con confianza." />
         <div className="mt-lg grid gap-md lg:grid-cols-[1fr_0.9fr]">
           <HubMap hubs={hubs} />
           <div className="grid gap-sm">
@@ -1201,7 +1134,7 @@ export function HubDetailPage({ slug }: { slug: string }) {
           <p className="mt-sm text-body-l text-muted-foreground">{hub.direccion}</p>
           <div className="mt-md grid gap-xs md:grid-cols-3">
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros</p><p className="mt-1 text-h2 font-semibold">{hub.casilleros_total}</p></CardContent></Card>
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupación</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupacion</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Clientes</p><p className="mt-1 text-h2 font-semibold">{hub.clientes_activos}</p></CardContent></Card>
           </div>
           <Card className="mt-md">
@@ -1234,7 +1167,7 @@ function CheckoutContactFields() {
   return (
     <div className="mt-md grid gap-sm md:grid-cols-2">
       <Field label="Nombre" placeholder="Mariana Soto" autoComplete="name" required />
-      <Field label="Teléfono" type="tel" inputMode="tel" placeholder="55 0000 0000" autoComplete="tel" required />
+      <Field label="Telefono" type="tel" inputMode="tel" placeholder="55 0000 0000" autoComplete="tel" required />
       <Field label="Email" type="email" inputMode="email" placeholder="nombre@correo.com" autoComplete="email" required />
       <div className="space-y-2 md:col-span-2">
         <label htmlFor="hub-note" className="block text-sm font-semibold text-foreground">Nota para el hub</label>
@@ -1242,7 +1175,7 @@ function CheckoutContactFields() {
       </div>
       <label className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-sm text-sm md:col-span-2">
         <input type="checkbox" className="h-4 w-4 accent-primary" />
-        Crear cuenta para gestionar mi bolsa después de pagar
+        Crear cuenta para gestionar mi bolsa despues de pagar
       </label>
     </div>
   );
@@ -1253,11 +1186,11 @@ function CheckoutPaymentFields({ total }: { total: number }) {
     <div className="mt-md grid gap-sm">
       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
         <LockKeyhole className="h-4 w-4 text-success" aria-hidden />
-        Pago seguro · Visa · Mastercard · Stripe
+        Pago seguro - Visa - Mastercard - Stripe
       </div>
       <Card className="">
         <CardContent className="grid gap-sm p-md md:grid-cols-2">
-          <Field label="Número de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
+          <Field label="Numero de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
           <Field label="Vencimiento" inputMode="numeric" placeholder="MM/AA" required />
           <Field label="CVV" inputMode="numeric" placeholder="123" required />
         </CardContent>
@@ -1267,10 +1200,10 @@ function CheckoutPaymentFields({ total }: { total: number }) {
       </div>
       <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-sm">
         <AccordionItem value="coupon">
-          <AccordionTrigger>¿Tienes un código o facturación?</AccordionTrigger>
+          <AccordionTrigger>Tienes un codigo o facturacion?</AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-xs md:grid-cols-2">
-              <Field label="Cupón" placeholder="TAHONA10" />
+              <Field label="Cupon" placeholder="TAHONA10" />
               <Field label="RFC" placeholder="Opcional" />
             </div>
           </AccordionContent>
@@ -1339,32 +1272,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
             </div>
           ) : null}
           {step === "direccion" ? <CheckoutContactFields /> : null}
-          {false && step === "direccion" ? (
-            <div className="mt-md grid gap-sm md:grid-cols-2">
-              <Field label="Nombre" placeholder="Mariana" required />
-              <Field label="Apellido" placeholder="Soto" required />
-              <Field label="Correo" type="email" placeholder="nombre@correo.com" required />
-              <Field label="Telefono" placeholder="55 0000 0000" required />
-              <Field label="Colonia" placeholder="Condesa" required />
-              <Field label="Referencia" placeholder="Edificio, piso o indicación breve" />
-            </div>
-          ) : null}
           {step === "pago" ? <CheckoutPaymentFields total={total} /> : null}
-          {false && step === "pago" ? (
-            <div className="mt-md grid gap-sm">
-              <Card className="">
-                <CardContent className="grid gap-sm p-md md:grid-cols-2">
-                  <Field label="Nombre en tarjeta" placeholder="Mariana Soto" required />
-                  <Field label="Número de tarjeta" placeholder="4242 4242 4242 4242" required />
-                  <Field label="Vencimiento" placeholder="MM/AA" required />
-                  <Field label="CVC" placeholder="123" required />
-                </CardContent>
-              </Card>
-              <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-sm">
-                <AccordionItem value="coupon"><AccordionTrigger>Agregar cupón o facturación</AccordionTrigger><AccordionContent><div className="grid gap-xs md:grid-cols-2"><Field label="Cupón" placeholder="TAHONA10" /><Field label="RFC" placeholder="Opcional" /></div></AccordionContent></AccordionItem>
-              </Accordion>
-            </div>
-          ) : null}
           {step === "confirmacion" ? (
             <div className="mt-md grid gap-sm md:grid-cols-2">
               <StatusPill tone="success" label="Pedido confirmado" />
@@ -1410,7 +1318,7 @@ function AccountNav({ active }: { active: string }) {
   const items = [
     ["/cuenta", "Resumen"],
     ["/cuenta/entregas", "Entregas"],
-    ["/cuenta/suscripcion", "Suscripción"],
+    ["/cuenta/suscripcion", "Suscripcion"],
     ["/cuenta/pagos", "Pagos"],
     ["/cuenta/perfil", "Perfil"]
   ];
@@ -1438,7 +1346,7 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
           <div className="flex gap-sm">
             <AlertTriangle className="mt-1 h-5 w-5 shrink-0 text-danger" aria-hidden />
             <div>
-              <p className="font-semibold text-danger">Tu pago no se procesó.</p>
+              <p className="font-semibold text-danger">Tu pago no se proceso.</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Actualiza tu tarjeta antes del corte del viernes. Monto pendiente: {formatCurrency(failedCharge.monto)}.
               </p>
@@ -1458,8 +1366,8 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
                 <div>
                   <StatusPill tone={delivery.estado === "incidencia" ? "danger" : delivery.estado === "listo" ? "success" : "info"} label={delivery.estado.replaceAll("_", " ")} />
                   <CardTitle className="mt-sm">Tu bolsa del {shortDate(delivery.fecha)}</CardTitle>
-                  <p className="mt-2 text-sm text-muted-foreground">{data.hub.nombre} · {delivery.slot}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Se cobra el viernes previo · {formatCurrency(weeklyTotal)}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{data.hub.nombre} - {delivery.slot}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Se cobra el viernes previo - {formatCurrency(weeklyTotal)}</p>
                 </div>
                 <Button asChild>
                   <Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link>
@@ -1501,19 +1409,10 @@ export function AccountPage({ view, entregaId }: { view: string; entregaId?: str
     <main className="storefront-shell py-lg">
       <Container>
         <div className="mb-md flex flex-col justify-between gap-sm md:flex-row md:items-end">
-          <SectionHeader eyebrow="Mi cuenta" title={`Hola, ${data.client.nombre}.`} body="Tu próximo retiro, suscripción y pagos en una sola lectura." compact />
+          <SectionHeader eyebrow="Mi cuenta" title={`Hola, ${data.client.nombre}.`} body="Tu proximo retiro, suscripcion y pagos en una sola lectura." compact />
           <AccountNav active={activeView} />
         </div>
         {view === "resumen" ? <AccountSummary data={data} delivery={delivery} /> : null}
-        {false && view === "resumen" ? (
-          <div className="grid gap-md lg:grid-cols-[390px_1fr]">
-            <BoardingPass entrega={delivery} hub={data.hub} productos={data.productos} />
-            <div className="grid gap-sm md:grid-cols-2">
-              <Card className=""><CardHeader><CardTitle>Próximo retiro</CardTitle></CardHeader><CardContent><StatusPill tone={delivery.estado === "incidencia" ? "danger" : "success"} label={delivery.estado.replaceAll("_", " ")} /><p className="mt-sm text-sm text-muted-foreground">{data.hub.nombre} · {shortDate(delivery.fecha)} · {delivery.slot}</p><Button asChild className="mt-md"><Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link></Button></CardContent></Card>
-              <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{data.subscription.productos.slice(0, 3).map((item) => <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />)}<Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion">Editar suscripción</Link></Button></CardContent></Card>
-            </div>
-          </div>
-        ) : null}
         {view === "entregas" ? <DeliveryList entregas={data.deliveries} productos={data.productos} hubs={data.hubs} /> : null}
         {view === "entrega" ? <DeliveryDetail entrega={delivery} productos={data.productos} hub={getHub(data.hubs, delivery.hub_id)} /> : null}
         {view === "suscripcion" ? <SubscriptionPanelV2 subscription={data.subscription} productos={data.productos} charges={data.charges} /> : null}
@@ -1531,7 +1430,7 @@ function DeliveryList({ entregas, productos, hubs }: { entregas: Entrega[]; prod
     <div className="grid gap-xs">
       {entregas.map((entrega) => (
         <Link key={entrega.id} href={`/cuenta/entrega/${entrega.id}`} className="grid gap-sm rounded-lg border border-border bg-card p-sm shadow-sm md:grid-cols-[1fr_auto_auto] md:items-center">
-          <div><p className="font-semibold">{shortDate(entrega.fecha)} · {getHub(hubs, entrega.hub_id).nombre}</p><p className="mt-1 text-sm text-muted-foreground">{entrega.productos.length} tipos · {entrega.slot}</p></div>
+          <div><p className="font-semibold">{shortDate(entrega.fecha)} - {getHub(hubs, entrega.hub_id).nombre}</p><p className="mt-1 text-sm text-muted-foreground">{entrega.productos.length} tipos - {entrega.slot}</p></div>
           <StatusPill tone={entrega.estado === "incidencia" ? "danger" : entrega.estado === "listo" ? "warning" : "success"} label={entrega.estado.replaceAll("_", " ")} />
           <p className="font-mono text-sm font-semibold">{formatCurrency(deliveryTotal(productos, entrega))}</p>
         </Link>
@@ -1547,17 +1446,17 @@ function DeliveryDetail({ entrega, productos, hub }: { entrega: Entrega; product
       <Card className="">
         <CardHeader><CardTitle>Instrucciones de retiro</CardTitle></CardHeader>
         <CardContent className="space-y-sm">
-          {["Llega dentro de tu ventana.", "Escanea el código QR en el módulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
+          {["Llega dentro de tu ventana.", "Escanea el codigo QR en el modulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
           <div className="rounded-md border border-danger/20 bg-danger-bg p-sm">
-            <p className="text-sm font-semibold text-danger">¿El casillero no abre?</p>
-            <p className="mt-1 text-sm text-muted-foreground">Ten listo tu código de respaldo y contacta soporte desde aquí.</p>
+            <p className="text-sm font-semibold text-danger">El casillero no abre?</p>
+            <p className="mt-1 text-sm text-muted-foreground">Ten listo tu codigo de respaldo y contacta soporte desde aqui.</p>
             <Button asChild variant="outline" className="mt-sm bg-card">
               <Link href="/soporte">Necesito ayuda</Link>
             </Button>
           </div>
           <div className="border-t border-border pt-sm">
-            <p className="text-sm font-semibold">Bitácora</p>
-            {["Pedido apartado", "Producción confirmada", "Casillero asignado", "QR activado"].map((event) => (
+            <p className="text-sm font-semibold">Bitacora</p>
+            {["Pedido apartado", "Produccion confirmada", "Casillero asignado", "QR activado"].map((event) => (
               <div key={event} className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
                 {event}
@@ -1626,7 +1525,7 @@ function SubscriptionPanelV2({
             <div>
               <p className="text-caption font-semibold uppercase text-primary">Bolsa semanal activa</p>
               <CardTitle className="mt-1">Tu suscripcion queda bajo control.</CardTitle>
-              <p className="mt-2 text-sm text-muted-foreground">Se cobra el {chargeDate} · {formatCurrency(weeklyTotal)}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Se cobra el {chargeDate} - {formatCurrency(weeklyTotal)}</p>
             </div>
             <StatusPill tone={subscription.estado === "activa" ? "success" : "warning"} label={subscription.estado} />
           </CardHeader>
@@ -1768,15 +1667,6 @@ function SubscriptionPanelV2({
   );
 }
 
-function SubscriptionPanel({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
-  return (
-    <div className="grid gap-md lg:grid-cols-[1fr_360px]">
-      <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{subscription.productos.map((item) => <ProductLine key={item.producto_id} product={getProduct(productos, item.producto_id)} quantity={item.cantidad} />)}</CardContent></Card>
-      <Card className=""><CardHeader><CardTitle>Control</CardTitle></CardHeader><CardContent className="space-y-xs"><StatusPill tone="success" label={subscription.estado} /><p className="text-sm text-muted-foreground">Próxima entrega: {shortDate(subscription.proxima_entrega)}</p><p className="text-h3 font-semibold">{formatCurrency(subscriptionTotal(productos, subscription))} / semana</p><Button asChild className="w-full"><Link href="/cuenta/suscripcion/editar">Editar</Link></Button><Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/pausar">Pausar</Link></Button></CardContent></Card>
-    </div>
-  );
-}
-
 function EditSubscription({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
   return (
     <Card className="">
@@ -1794,10 +1684,10 @@ function EditSubscription({ subscription, productos }: { subscription: Suscripci
 function PauseSubscription() {
   return (
     <Card className="max-w-2xl">
-      <CardHeader><CardTitle>Pausar suscripción</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Pausar suscripcion</CardTitle></CardHeader>
       <CardContent className="space-y-sm">
         {[1, 2, 4].map((weeks) => <Button key={weeks} variant="outline" className="w-full justify-between">Pausar {weeks} semana{weeks > 1 ? "s" : ""}<ChevronRight className="h-4 w-4" /></Button>)}
-        <p className="text-sm text-muted-foreground">La pausa no cancela tu cuenta ni elimina tu configuración.</p>
+        <p className="text-sm text-muted-foreground">La pausa no cancela tu cuenta ni elimina tu configuracion.</p>
       </CardContent>
     </Card>
   );
@@ -1821,7 +1711,7 @@ function ProfilePanel() {
         <Field label="Nombre" defaultValue="Mariana" />
         <Field label="Apellido" defaultValue="Soto" />
         <Field label="Correo" defaultValue="mariana@correo.com" />
-        <Field label="Teléfono" defaultValue="55 3200 7800" />
+        <Field label="Telefono" defaultValue="55 3200 7800" />
         <Field label="Hub principal" defaultValue="Hub Polanco" />
         <Field label="Colonia" defaultValue="Polanco" />
       </CardContent>
@@ -1833,10 +1723,10 @@ export function SupportPage() {
   return (
     <main className="storefront-shell py-lg">
       <Container className="grid gap-lg lg:grid-cols-[0.8fr_1.2fr]">
-        <SectionHeader eyebrow="Soporte" title="Ayuda clara antes, durante y después del retiro." body="La prioridad es resolver incidencias de casillero, cobro o pedido sin forzar llamadas innecesarias." />
+        <SectionHeader eyebrow="Soporte" title="Ayuda clara antes, durante y despues del retiro." body="La prioridad es resolver incidencias de casillero, cobro o pedido sin forzar llamadas innecesarias." />
         <div className="grid gap-sm">
           {[
-            [HelpCircle, "No puedo abrir mi casillero", "Valida código, hub y ventana de retiro."],
+            [HelpCircle, "No puedo abrir mi casillero", "Valida codigo, hub y ventana de retiro."],
             [Receipt, "Tengo un problema de cobro", "Revisa reintentos, recibos y tarjeta."],
             [PackageCheck, "Mi pedido no corresponde", "Levanta incidencia con foto y detalle."]
           ].map(([Icon, title, body]) => <Card key={String(title)} className=""><CardContent className="flex gap-sm p-md"><Icon className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">{title as string}</h2><p className="mt-1 text-sm text-muted-foreground">{body as string}</p></div></CardContent></Card>)}
@@ -1861,7 +1751,7 @@ export function AuthPage({ mode }: { mode: "login" | "registro" }) {
           <CardContent className="space-y-sm">
             {!isLogin ? <Field label="Nombre" placeholder="Mariana Soto" /> : null}
             <Field label="Correo" type="email" placeholder="nombre@correo.com" />
-            <Field label="Contraseña" type="password" placeholder="••••••••" />
+            <Field label="Contrasena" type="password" placeholder="********" />
             <Button asChild className="w-full"><Link href="/cuenta">{isLogin ? "Entrar" : "Crear cuenta"}</Link></Button>
             <Button asChild variant="ghost" className="w-full"><Link href={isLogin ? "/registro" : "/login"}>{isLogin ? "Crear cuenta" : "Ya tengo cuenta"}</Link></Button>
           </CardContent>
