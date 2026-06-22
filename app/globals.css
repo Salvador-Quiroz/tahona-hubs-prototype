@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
     --paper: #fbf8f3;
@@ -385,10 +383,10 @@
       transform: translateY(-12px);
     }
   }
-  article[style*="opacity:0"],
-  article[style*="opacity: 0"],
-  [style*="translateY(12px)"] {
+}
+
+[style*="opacity:0"],
+[style*="opacity: 0"] {
   opacity: 1 !important;
   transform: none !important;
-}
 }
