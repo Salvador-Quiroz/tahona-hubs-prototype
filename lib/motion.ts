@@ -9,6 +9,7 @@ export const fadeUp = {
 } as const;
 
 export const gridStagger = {
+  initial: {},
   animate: { transition: { staggerChildren: 0.04 } }
 } as const;
 
