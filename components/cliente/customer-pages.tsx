@@ -350,62 +350,108 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
     </div>
   );
 }
-
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
+  const hero = productos[0];
   const featured = productos.slice(0, 4);
 
   return (
     <main className="bg-[var(--paper)] text-[var(--ink)]">
-      {/* ============ HERO AZUL DE MARCA ============ */}
-      <section className="relative overflow-hidden bg-[var(--brand)] text-white">
-        {/* textura blueprint sutil */}
+      {/* ============ HERO: AZUL CON PROFUNDIDAD + FOTO DE PAN ============ */}
+      <section className="relative overflow-hidden">
+        {/* Capa 1: gradiente azul con profundidad (no plano) */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          className="absolute inset-0"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
-            backgroundSize: "46px 46px"
+            background:
+              "radial-gradient(120% 120% at 15% 10%, #2a4ce0 0%, #2040d0 38%, #16308f 78%, #0f2470 100%)"
           }}
           aria-hidden
         />
-        {/* halo amarillo */}
+        {/* Capa 2: halo amarillo calido */}
         <div
-          className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full opacity-40 blur-3xl"
+          className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-30 blur-[90px]"
           style={{ background: "radial-gradient(circle, var(--accent), transparent 70%)" }}
           aria-hidden
         />
-        <Container className="relative flex min-h-[82svh] flex-col justify-center py-16 md:py-24">
-          <div className="max-w-4xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--ink)]">
+        {/* Capa 3: textura de cuadricula fina */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.10]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px)",
+            backgroundSize: "52px 52px"
+          }}
+          aria-hidden
+        />
+        {/* Capa 4: grano sutil */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+            backgroundSize: "4px 4px"
+          }}
+          aria-hidden
+        />
+
+        <Container className="relative grid min-h-[88svh] items-center gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+          {/* Columna texto */}
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
               Tahona · Desde 1957
             </span>
-            <h1 className="mt-6 max-w-[14ch] font-serif text-[clamp(3rem,9vw,7rem)] font-medium leading-[0.95] tracking-[-0.03em] text-white">
-              Pan fresco, <span className="text-[var(--accent)]">sin fila.</span>
+            <h1 className="mt-6 font-serif text-[clamp(2.75rem,7vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.03em] text-white">
+              Pan fresco,
+              <br />
+              <span className="text-[var(--accent)]">sin fila.</span>
             </h1>
-            <p className="mt-6 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-white/85">
+            <p className="mt-6 max-w-md font-sans text-[1.0625rem] leading-[1.6] text-white/80">
               Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados. Sin filas, sin vueltas.
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="accent" className="shadow-[0_8px_30px_rgba(0,0,0,.2)]">
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button asChild size="lg" variant="accent" className="shadow-[0_10px_34px_rgba(0,0,0,.25)]">
                 <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button asChild size="lg" className="border border-white/30 bg-white/10 text-white hover:bg-white/20">
+              <Button asChild size="lg" className="border border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20">
                 <Link href="/catalogo">Ver catalogo</Link>
               </Button>
             </div>
+            <div className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-6">
+              {[
+                ["Corte", "Jueves 18:00"],
+                ["Retiro", "3 ventanas"],
+                ["Hubs", `${hubs.length} zonas`]
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p className="font-sans text-[0.7rem] uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
+                  <p className="mt-1 font-mono text-sm font-medium text-white [font-variant-numeric:tabular-nums]">{value}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-16 grid max-w-3xl grid-cols-3 gap-4 border-t border-white/20 pt-6">
-            {[
-              ["Corte", "Jueves 18:00"],
-              ["Retiro", "3 ventanas"],
-              ["Hubs", `${hubs.length} zonas`]
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="font-sans text-xs uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
-                <p className="mt-1 font-mono text-base font-medium text-white [font-variant-numeric:tabular-nums]">{value}</p>
+
+          {/* Columna foto de pan */}
+          <div className="relative hidden lg:block">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(0,0,0,.4)]">
+              <Image
+                src={hero.imagen_url}
+                alt={hero.nombre}
+                fill
+                priority
+                sizes="(max-width: 1024px) 0px, 540px"
+                className="object-cover"
+              />
+              {/* viñeta calida sobre la foto para fundirla con el azul */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/40 via-transparent to-transparent" aria-hidden />
+              {/* etiqueta flotante */}
+              <div className="absolute bottom-5 left-5 rounded-[14px] bg-[var(--paper-raised)]/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur-sm">
+                <p className="font-sans text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[var(--brand)]">Recien horneado</p>
+                <p className="mt-0.5 font-serif text-[1.05rem] font-medium text-[var(--ink)]">{hero.nombre}</p>
               </div>
-            ))}
+            </div>
+            {/* acento amarillo detras de la foto */}
+            <div className="absolute -right-5 -top-5 -z-10 h-24 w-24 rounded-[20px] bg-[var(--accent)]" aria-hidden />
           </div>
         </Container>
       </section>
@@ -438,14 +484,22 @@ export function LandingPage() {
         </Container>
       </section>
 
-      {/* ============ BANDA AZUL: PEDIDO CON RETIRO ============ */}
-      <section className="relative overflow-hidden bg-[var(--brand)] py-xl text-white">
+      {/* ============ BANDA AZUL CON PROFUNDIDAD: PEDIDO CON RETIRO ============ */}
+      <section className="relative overflow-hidden py-xl text-white">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.1]"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 120% at 85% 0%, #2a4ce0 0%, #2040d0 42%, #16308f 100%)"
+          }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
-            backgroundSize: "46px 46px"
+              "linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px)",
+            backgroundSize: "52px 52px"
           }}
           aria-hidden
         />
@@ -497,8 +551,13 @@ export function LandingPage() {
 
       {/* ============ CIERRE CON CTA AMARILLO ============ */}
       <section className="px-4 pb-xl">
-        <Container className="overflow-hidden rounded-[28px] bg-[var(--accent)] px-8 py-14 text-[var(--ink)] md:px-14 md:py-20">
-          <div className="max-w-2xl">
+        <Container className="relative overflow-hidden rounded-[28px] bg-[var(--accent)] px-8 py-14 text-[var(--ink)] md:px-14 md:py-20">
+          <div
+            className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-50 blur-2xl"
+            style={{ background: "radial-gradient(circle, #fff, transparent 70%)" }}
+            aria-hidden
+          />
+          <div className="relative max-w-2xl">
             <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Tahona Hubs</p>
             <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-balance">
               Empieza tu semana con pan recien horneado.
