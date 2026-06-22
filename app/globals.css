@@ -277,11 +277,13 @@
   }
 
   .enter-soft {
-    animation: enter-soft var(--dur-hero) var(--ease-out) both;
+    opacity: 1;
+    animation: enter-soft var(--dur-hero) var(--ease-out);
   }
 
   .enter-rise {
-    animation: enter-rise var(--dur-base) var(--ease-out) both;
+    opacity: 1;
+    animation: enter-rise var(--dur-base) var(--ease-out);
   }
 
   .safe-bottom {
@@ -385,8 +387,16 @@
   }
 }
 
+/* Seguro anti-pantalla-en-blanco: si Framer deja algo en opacity:0 inline y no lo anima, lo mostramos. */
 [style*="opacity:0"],
 [style*="opacity: 0"] {
   opacity: 1 !important;
   transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-soft,
+  .enter-rise {
+    animation: none;
+  }
 }
