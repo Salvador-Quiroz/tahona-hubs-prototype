@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+article[style*="opacity:0"],
+article[style*="opacity: 0"],
+[style*="translateY(12px)"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 @layer base {
   :root {
     --paper: #fbf8f3;
