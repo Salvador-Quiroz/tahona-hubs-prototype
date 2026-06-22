@@ -630,10 +630,9 @@ function CatalogoExactPage() {
           <motion.div
             variants={gridStagger}
             initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
+            animate="animate"
             className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-          >
+            >
             {filtered.map((product) => (
               <TahonaCatalogCard
                 key={product.id}
