@@ -353,60 +353,71 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
 
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
-  const hero = productos[0];
   const featured = productos.slice(0, 4);
 
   return (
-    <main className="storefront-shell text-foreground">
-      <section className="relative min-h-[86svh] overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-        <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="100vw" className="object-cover opacity-28" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--paper)_0%,rgba(251,248,243,.92)_40%,rgba(251,248,243,.36)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[var(--paper)] to-transparent" />
-        <Container className="relative flex min-h-[86svh] flex-col justify-between py-12 md:py-16">
-          <div className="max-w-4xl pt-lg">
-            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              TAHONA - Desde 1957
-            </p>
-            <h1 className="mt-4 max-w-[12ch] font-serif text-[clamp(3.5rem,11vw,8.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-[var(--ink)]">
-              Pan fresco, sin fila.
+    <main className="bg-[var(--paper)] text-[var(--ink)]">
+      {/* ============ HERO AZUL DE MARCA ============ */}
+      <section className="relative overflow-hidden bg-[var(--brand)] text-white">
+        {/* textura blueprint sutil */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
+            backgroundSize: "46px 46px"
+          }}
+          aria-hidden
+        />
+        {/* halo amarillo */}
+        <div
+          className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle, var(--accent), transparent 70%)" }}
+          aria-hidden
+        />
+        <Container className="relative flex min-h-[82svh] flex-col justify-center py-16 md:py-24">
+          <div className="max-w-4xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--ink)]">
+              Tahona · Desde 1957
+            </span>
+            <h1 className="mt-6 max-w-[14ch] font-serif text-[clamp(3rem,9vw,7rem)] font-medium leading-[0.95] tracking-[-0.03em] text-white">
+              Pan fresco, <span className="text-[var(--accent)]">sin fila.</span>
             </h1>
-            <p className="mt-6 max-w-2xl font-serif text-display font-medium text-[var(--brand)] text-balance">
-              Pan recien hecho, apartado sin hacer fila.
+            <p className="mt-6 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-white/85">
+              Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados. Sin filas, sin vueltas.
             </p>
-            <p className="mt-4 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-[var(--ink-soft)]">
-              Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados.
-            </p>
-            <div className="mt-lg flex flex-wrap gap-xs">
-              <Button asChild size="lg">
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Button asChild size="lg" variant="accent" className="shadow-[0_8px_30px_rgba(0,0,0,.2)]">
                 <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" className="border border-white/30 bg-white/10 text-white hover:bg-white/20">
                 <Link href="/catalogo">Ver catalogo</Link>
               </Button>
             </div>
           </div>
-          <div className="grid max-w-3xl grid-cols-3 gap-2 border-t border-[var(--line)] pt-6">
+          <div className="mt-16 grid max-w-3xl grid-cols-3 gap-4 border-t border-white/20 pt-6">
             {[
               ["Corte", "Jueves 18:00"],
               ["Retiro", "3 ventanas"],
               ["Hubs", `${hubs.length} zonas`]
             ].map(([label, value]) => (
               <div key={label}>
-                <p className="font-sans text-xs uppercase tracking-[0.08em] text-[var(--ink-faint)]">{label}</p>
-                <p className="mt-1 font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{value}</p>
+                <p className="font-sans text-xs uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
+                <p className="mt-1 font-mono text-base font-medium text-white [font-variant-numeric:tabular-nums]">{value}</p>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
+      {/* ============ VITRINA SEMANAL ============ */}
       <section className="py-xl">
         <Container>
           <SectionHeader
             eyebrow="Vitrina semanal"
             title="Lo que sale del horno esta semana."
             body="Una seleccion corta en portada. El catalogo completo queda para comparar, elegir y apartar sin perderse."
-            action={<Button asChild variant="outline"><Link href="/catalogo">Abrir catalogo</Link></Button>}
+            action={<Button asChild variant="accent"><Link href="/catalogo">Abrir catalogo</Link></Button>}
           />
           <div className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((product) => (
@@ -427,38 +438,54 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-raised)_76%,transparent)] py-xl backdrop-blur">
-        <Container className="grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-          <SectionHeader
-            eyebrow="Pedido con retiro"
-            title="El flujo critico es corto, verificable y con estados claros."
-            body="El cliente debe saber que pidio, cuanto paga, donde retira y que pasa si hay una excepcion."
-          />
-          <div className="grid gap-xs sm:grid-cols-2">
+      {/* ============ BANDA AZUL: PEDIDO CON RETIRO ============ */}
+      <section className="relative overflow-hidden bg-[var(--brand)] py-xl text-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.1]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
+            backgroundSize: "46px 46px"
+          }}
+          aria-hidden
+        />
+        <Container className="relative grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="max-w-xl">
+            <div className="mb-4 h-1 w-10 rounded-full bg-[var(--accent)]" aria-hidden />
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">Pedido con retiro</p>
+            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-white text-balance">
+              Tu bolsa lista, tu casillero esperando.
+            </h2>
+            <p className="mt-4 max-w-[46ch] font-sans text-[0.95rem] leading-[1.6] text-white/80">
+              El cliente debe saber que pidio, cuanto paga, donde retira y que pasa si hay una excepcion. Todo en cuatro pasos.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             {[
               [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
               [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
               [Wallet, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
               [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde cuenta."]
             ].map(([Icon, title, body]) => (
-              <Card key={String(title)} className="">
-                <CardContent className="p-md">
-                  <Icon className="h-6 w-6 text-[var(--brand)]" aria-hidden />
-                  <h3 className="mt-sm font-serif text-[1.5rem] font-medium text-[var(--ink)]">{title as string}</h3>
-                  <p className="mt-2 font-sans text-sm leading-6 text-[var(--ink-soft)]">{body as string}</p>
-                </CardContent>
-              </Card>
+              <div key={String(title)} className="rounded-[16px] border border-white/15 bg-white/[0.07] p-5 backdrop-blur-sm transition-colors duration-[200ms] hover:bg-white/[0.12]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--accent)] text-[var(--ink)]">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <h3 className="mt-4 font-serif text-[1.35rem] font-medium text-white">{title as string}</h3>
+                <p className="mt-2 font-sans text-sm leading-6 text-white/70">{body as string}</p>
+              </div>
             ))}
           </div>
         </Container>
       </section>
 
+      {/* ============ RED TAHONA ============ */}
       <section className="py-xl">
         <Container>
           <SectionHeader
             eyebrow="Red Tahona"
             title="Tres barrios, una rutina mas facil."
-            action={<Button asChild variant="outline"><Link href="/hubs">Ver hubs</Link></Button>}
+            action={<Button asChild variant="accent"><Link href="/hubs">Ver hubs</Link></Button>}
           />
           <div className="mt-lg grid gap-sm md:grid-cols-3">
             {hubs.map((hub) => (
@@ -467,10 +494,27 @@ export function LandingPage() {
           </div>
         </Container>
       </section>
+
+      {/* ============ CIERRE CON CTA AMARILLO ============ */}
+      <section className="px-4 pb-xl">
+        <Container className="overflow-hidden rounded-[28px] bg-[var(--accent)] px-8 py-14 text-[var(--ink)] md:px-14 md:py-20">
+          <div className="max-w-2xl">
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Tahona Hubs</p>
+            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-balance">
+              Empieza tu semana con pan recien horneado.
+            </h2>
+            <p className="mt-4 max-w-[44ch] font-sans text-[1rem] leading-[1.6] text-[var(--ink)]/75">
+              Aparta hoy, recoge esta semana. Sin filas, sin compromisos largos, cancela cuando quieras.
+            </p>
+            <Button asChild size="lg" className="mt-8">
+              <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
+          </div>
+        </Container>
+      </section>
     </main>
   );
 }
-
 export function CatalogoPage() {
   return <CatalogoExactPage />;
 }
