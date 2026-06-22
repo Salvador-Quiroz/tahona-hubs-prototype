@@ -49,18 +49,18 @@ export function DataTable<T>({
 
   if (rows.length === 0) {
     return (
-      <div className={cn("rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] p-md shadow-sm", className)}>
-        {emptyState ?? <p className="text-sm text-muted-foreground">Sin datos para mostrar.</p>}
+      <div className={cn("rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-6 shadow-[var(--shadow-sm)]", className)}>
+        {emptyState ?? <p className="font-sans text-sm text-[var(--ink-faint)]">Sin datos para mostrar.</p>}
       </div>
     );
   }
 
   return (
-    <div className={cn("relative overflow-hidden rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] shadow-sm backdrop-blur", className)}>
+    <div className={cn("relative overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)] backdrop-blur", className)}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
-          <thead className="sticky top-0 z-10 bg-surface-2/90 text-caption uppercase text-muted-foreground backdrop-blur">
-            <tr className="border-b border-border">
+          <thead className="sticky top-0 z-10 bg-[var(--paper-sunken)] font-sans text-[0.75rem] uppercase tracking-[0.08em] text-[var(--ink-faint)] backdrop-blur">
+            <tr className="border-b border-[var(--line)]">
               {selectable ? (
                 <th className="w-11 px-xs text-left">
                   <input
@@ -68,7 +68,7 @@ export function DataTable<T>({
                     checked={allSelected}
                     onChange={toggleAll}
                     aria-label="Seleccionar todos"
-                    className="h-4 w-4 accent-primary"
+                    className="h-4 w-4 accent-[var(--brand)]"
                   />
                 </th>
               ) : null}
@@ -91,7 +91,7 @@ export function DataTable<T>({
             {rows.map((row, index) => {
               const id = getRowId(row);
               return (
-                <tr key={id} className={cn("h-11 border-b border-border transition-colors hover:bg-info-bg last:border-0", index % 2 === 1 && "bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]")}>
+                <tr key={id} className={cn("h-11 border-b border-[var(--line)] text-[var(--ink-soft)] transition-colors hover:bg-[var(--brand-tint)] last:border-0", index % 2 === 1 && "bg-[color-mix(in_srgb,var(--paper-sunken)_55%,transparent)]")}>
                   {selectable ? (
                     <td className="px-xs">
                       <input
@@ -99,7 +99,7 @@ export function DataTable<T>({
                         checked={selected.has(id)}
                         onChange={() => toggleOne(id)}
                         aria-label={`Seleccionar fila ${id}`}
-                        className="h-4 w-4 accent-primary"
+                        className="h-4 w-4 accent-[var(--brand)]"
                       />
                     </td>
                   ) : null}
@@ -122,7 +122,7 @@ export function DataTable<T>({
         </table>
       </div>
       {selectable && selected.size > 0 ? (
-        <div className="absolute inset-x-md bottom-md flex items-center justify-between rounded-lg border border-border bg-card p-xs shadow-md">
+        <div className="absolute inset-x-md bottom-md flex items-center justify-between rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] p-xs shadow-[var(--shadow-md)]">
           <span className="px-xs text-sm font-semibold">{selected.size} seleccionados</span>
           <div className="flex items-center gap-xs">{bulkActions}</div>
         </div>

@@ -83,14 +83,15 @@ function PageShell({
   children: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-transparent px-sm py-md text-foreground lg:px-md">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-[var(--ink)] lg:px-6">
       <div className="mx-auto max-w-[1540px]">
-        <header className="mb-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-md shadow-md backdrop-blur">
+        <header className="mb-6 rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-6 shadow-[var(--shadow-sm)] backdrop-blur">
           <div className="flex flex-col justify-between gap-md xl:flex-row xl:items-end">
             <div className="max-w-4xl">
-              <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
-              <h1 className="mt-2 text-h1 font-semibold tracking-[-0.015em] text-foreground">{title}</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
+              <div className="mb-4 h-0.5 w-8 bg-[var(--brand)]" />
+              <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{eyebrow}</p>
+              <h1 className="mt-3 font-sans text-[clamp(1.75rem,3vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--ink)]">{title}</h1>
+              <p className="mt-3 max-w-3xl font-sans text-sm leading-6 text-[var(--ink-soft)]">{description}</p>
             </div>
             <div className="flex flex-wrap gap-xs">
               {actions ?? (
@@ -212,7 +213,7 @@ function HubCapacity({ hubs, casilleros }: { hubs: Hub[]; casilleros: Casillero[
         const issues = hubLockers.filter((item) => item.estado === "incidencia").length;
         const occupation = Math.round((loaded / hub.casilleros_total) * 100);
         return (
-          <Card key={hub.id} className="shadow-none">
+          <Card key={hub.id} className="">
             <CardContent className="p-md">
               <div className="flex items-start justify-between gap-sm">
                 <div><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3></div>

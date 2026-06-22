@@ -156,6 +156,14 @@
 
   .panel-shell {
     --bg: var(--panel-bg);
+    --paper: var(--panel-bg);
+    --paper-raised: var(--panel-surface);
+    --paper-sunken: #eef1f6;
+    --ink: #111827;
+    --ink-soft: #4b5563;
+    --ink-faint: #7b8190;
+    --line: rgba(17, 24, 39, 0.10);
+    --line-strong: rgba(17, 24, 39, 0.18);
     --surface: var(--panel-surface);
     --surface-2: #eef1f6;
     background:

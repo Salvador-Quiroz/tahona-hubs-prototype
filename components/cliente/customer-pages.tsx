@@ -100,7 +100,7 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
 };
 
 function Container({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("mx-auto w-full max-w-7xl px-sm md:px-md", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full max-w-[1240px] px-4 md:px-6", className)}>{children}</div>;
 }
 
 function SectionHeader({
@@ -157,14 +157,15 @@ function SectionHeader({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -80px" }}
       transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col justify-between gap-md md:flex-row md:items-end"
+      className="flex flex-col justify-between gap-6 md:flex-row md:items-end"
     >
       <div className={cn("max-w-3xl", compact && "max-w-2xl")}>
-        <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
-        <h2 className={cn("mt-2 font-display font-semibold text-foreground text-balance", compact ? "text-h1" : "text-display")}>
+        <div className="mb-4 h-0.5 w-8 bg-[var(--brand)]" aria-hidden />
+        <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{eyebrow}</p>
+        <h2 className={cn("mt-3 font-serif font-medium tracking-[-0.02em] text-[var(--ink)] text-balance", compact ? "text-h1" : "text-display")}>
           {resolvedTitle}
         </h2>
-        {resolvedBody ? <p className="mt-3 max-w-2xl text-body-s text-muted-foreground md:text-body">{resolvedBody}</p> : null}
+        {resolvedBody ? <p className="mt-4 max-w-[48ch] font-sans text-[0.875rem] leading-[1.5] text-[var(--ink-soft)] md:text-base">{resolvedBody}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </motion.div>
@@ -197,15 +198,15 @@ function ProductLine({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[72px_1fr_auto] items-center gap-sm rounded-lg border border-border bg-card p-xs">
-      <div className="relative h-[72px] overflow-hidden rounded-md bg-muted">
+    <div className="grid grid-cols-[72px_1fr_auto] items-center gap-4 rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] p-2 shadow-[var(--shadow-sm)]">
+      <div className="relative h-[72px] overflow-hidden rounded-[12px] bg-[var(--paper-sunken)]">
         <Image src={product.imagen_url} alt={product.nombre} fill sizes="72px" className="object-cover" />
       </div>
       <div className="min-w-0">
-        <p className="line-clamp-1 text-sm font-semibold text-foreground">{product.nombre}</p>
+        <p className="line-clamp-1 font-sans text-sm font-semibold text-[var(--ink)]">{product.nombre}</p>
         <p className="mt-1 text-xs text-muted-foreground">{quantity} pza · {formatCurrency(product.precio_mxn)}</p>
       </div>
-      {action ?? <p className="font-mono text-sm font-semibold">{formatCurrency(product.precio_mxn * quantity)}</p>}
+      {action ?? <p className="font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(product.precio_mxn * quantity)}</p>}
     </div>
   );
 }
@@ -339,7 +340,7 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
           </div>
         </div>
       </article>
-      <Card className="shadow-none">
+      <Card className="">
         <CardHeader><CardTitle>Contenido del pedido</CardTitle></CardHeader>
         <CardContent className="space-y-xs">
           {entrega.productos.map((item) => (
@@ -358,42 +359,42 @@ export function LandingPage() {
 
   return (
     <main className="storefront-shell text-foreground">
-      <section className="relative min-h-[86svh] overflow-hidden bg-foreground text-white">
-        <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="100vw" className="object-cover opacity-68" />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/72 to-foreground/18" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
-        <Container className="relative flex min-h-[86svh] flex-col justify-between py-xl">
+      <section className="relative min-h-[86svh] overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+        <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="100vw" className="object-cover opacity-28" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--paper)_0%,rgba(251,248,243,.92)_40%,rgba(251,248,243,.36)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[var(--paper)] to-transparent" />
+        <Container className="relative flex min-h-[86svh] flex-col justify-between py-12 md:py-16">
           <div className="max-w-4xl pt-lg">
-            <p className="inline-flex min-h-9 items-center rounded-full bg-secondary px-sm text-sm font-semibold text-foreground">
+            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
               Desde 1957.
             </p>
-            <h1 className="mt-md font-display text-7xl font-black leading-none tracking-[-0.02em] sm:text-8xl lg:text-9xl">
+            <h1 className="mt-4 max-w-[12ch] font-serif text-[clamp(3.5rem,11vw,8.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-[var(--ink)]">
               TAHONA
             </h1>
-            <p className="mt-md max-w-2xl font-display text-display font-semibold text-secondary text-balance">
+            <p className="mt-6 max-w-2xl font-serif text-display font-medium text-[var(--brand)] text-balance">
               Pan recién hecho, apartado sin hacer fila.
             </p>
-            <p className="mt-sm max-w-xl text-body-l text-white/78">
+            <p className="mt-4 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-[var(--ink-soft)]">
               Aparta piezas recién horneadas y retíralas en un hub con horario y casillero confirmados.
             </p>
             <div className="mt-lg flex flex-wrap gap-xs">
-              <Button asChild size="lg" variant="secondary">
+              <Button asChild size="lg">
                 <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/35 bg-white/10 text-white hover:bg-white/16">
+              <Button asChild size="lg" variant="outline">
                 <Link href="/catalogo">Ver catálogo</Link>
               </Button>
             </div>
           </div>
-          <div className="grid max-w-3xl grid-cols-3 gap-xs border-t border-white/16 pt-md">
+          <div className="grid max-w-3xl grid-cols-3 gap-2 border-t border-[var(--line)] pt-6">
             {[
               ["Corte", "Jueves 18:00"],
               ["Retiro", "3 ventanas"],
               ["Hubs", `${hubs.length} zonas`]
             ].map(([label, value]) => (
               <div key={label}>
-                <p className="text-xs uppercase text-white/50">{label}</p>
-                <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+                <p className="font-sans text-xs uppercase tracking-[0.08em] text-[var(--ink-faint)]">{label}</p>
+                <p className="mt-1 font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{value}</p>
               </div>
             ))}
           </div>
@@ -427,7 +428,7 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section className="border-y border-border bg-[color-mix(in_srgb,var(--surface)_70%,transparent)] py-xl backdrop-blur">
+      <section className="border-y border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-raised)_76%,transparent)] py-xl backdrop-blur">
         <Container className="grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <SectionHeader
             eyebrow="Pedido con retiro"
@@ -441,11 +442,11 @@ export function LandingPage() {
               [Wallet, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
               [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde cuenta."]
             ].map(([Icon, title, body]) => (
-              <Card key={String(title)} className="shadow-none">
+              <Card key={String(title)} className="">
                 <CardContent className="p-md">
-                  <Icon className="h-6 w-6 text-primary" aria-hidden />
-                  <h3 className="mt-sm text-h3 font-semibold">{title as string}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{body as string}</p>
+                  <Icon className="h-6 w-6 text-[var(--brand)]" aria-hidden />
+                  <h3 className="mt-sm font-serif text-[1.5rem] font-medium text-[var(--ink)]">{title as string}</h3>
+                  <p className="mt-2 font-sans text-sm leading-6 text-[var(--ink-soft)]">{body as string}</p>
                 </CardContent>
               </Card>
             ))}
@@ -1070,9 +1071,9 @@ export function ProductDetailPage({ slug }: { slug: string }) {
           <h1 className="mt-sm font-display text-display font-black text-foreground">{product.nombre}</h1>
           <p className="mt-sm text-body-l text-muted-foreground">{product.descripcion_premium}</p>
           <div className="mt-md grid gap-xs sm:grid-cols-3">
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Precio</p><p className="mt-1 text-h2 font-semibold">{formatCurrency(product.precio_mxn)}</p></CardContent></Card>
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Horneado</p><p className="mt-1 text-h2 font-semibold">{product.tiempo_horneado_min} min</p></CardContent></Card>
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Disponible</p><p className="mt-1 text-h2 font-semibold">{product.disponibilidad.length} días</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Precio</p><p className="mt-1 text-h2 font-semibold">{formatCurrency(product.precio_mxn)}</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Horneado</p><p className="mt-1 text-h2 font-semibold">6:00 AM</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Disponible</p><p className="mt-1 text-h2 font-semibold">{availabilityTone(product.disponibilidad.length)}</p></CardContent></Card>
           </div>
           <div className="mt-md rounded-lg border border-border bg-card p-md">
             <div className="flex flex-col gap-sm md:flex-row md:items-center md:justify-between">
@@ -1084,13 +1085,13 @@ export function ProductDetailPage({ slug }: { slug: string }) {
             </div>
           </div>
           <div className="mt-md grid gap-xs md:grid-cols-2">
-            <Card className="shadow-none">
+            <Card className="">
               <CardHeader><CardTitle>Ingredientes</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {product.ingredientes.map((ingredient) => <Badge key={ingredient} variant="soft">{ingredient}</Badge>)}
               </CardContent>
             </Card>
-            <Card className="shadow-none">
+            <Card className="">
               <CardHeader><CardTitle>Disponibilidad</CardTitle></CardHeader>
               <CardContent className="flex flex-wrap gap-2">
                 {product.disponibilidad.map((day) => <Badge key={day} variant="outline" className="capitalize">{day}</Badge>)}
@@ -1127,7 +1128,7 @@ export function ComoFuncionaPage() {
             [CreditCard, "Paga", "Confirma tarjeta y resumen de pedido."],
             [QrCode, "Retira", "Usa tu pase digital en el casillero."]
           ].map(([Icon, title, body], index) => (
-            <Card key={String(title)} className="shadow-none">
+            <Card key={String(title)} className="">
               <CardContent className="p-md">
                 <div className="flex h-11 w-11 items-center justify-center rounded-md bg-info-bg text-info"><Icon className="h-5 w-5" aria-hidden /></div>
                 <p className="mt-md text-caption font-semibold uppercase text-primary">0{index + 1}</p>
@@ -1200,11 +1201,11 @@ export function HubDetailPage({ slug }: { slug: string }) {
           <h1 className="mt-2 font-display text-display font-black">{hub.nombre}</h1>
           <p className="mt-sm text-body-l text-muted-foreground">{hub.direccion}</p>
           <div className="mt-md grid gap-xs md:grid-cols-3">
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros</p><p className="mt-1 text-h2 font-semibold">{hub.casilleros_total}</p></CardContent></Card>
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupación</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
-            <Card className="shadow-none"><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Clientes</p><p className="mt-1 text-h2 font-semibold">{hub.clientes_activos}</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros</p><p className="mt-1 text-h2 font-semibold">{hub.casilleros_total}</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupación</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Clientes</p><p className="mt-1 text-h2 font-semibold">{hub.clientes_activos}</p></CardContent></Card>
           </div>
-          <Card className="mt-md shadow-none">
+          <Card className="mt-md">
             <CardHeader><CardTitle>Ventanas disponibles</CardTitle></CardHeader>
             <CardContent className="grid gap-xs sm:grid-cols-3">
               {hub.slots_horarios.map((slot) => <StatusPill key={slot} tone="info" icon={Clock} label={slot} />)}
@@ -1255,7 +1256,7 @@ function CheckoutPaymentFields({ total }: { total: number }) {
         <LockKeyhole className="h-4 w-4 text-success" aria-hidden />
         Pago seguro · Visa · Mastercard · Stripe
       </div>
-      <Card className="shadow-none">
+      <Card className="">
         <CardContent className="grid gap-sm p-md md:grid-cols-2">
           <Field label="Número de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
           <Field label="Vencimiento" inputMode="numeric" placeholder="MM/AA" required />
@@ -1300,13 +1301,13 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
           <SectionHeader eyebrow={copy.eyebrow} title={copy.title} body={copy.body} compact />
           {step === "acceso" ? (
             <div className="mt-lg grid gap-sm md:grid-cols-3">
-              {["Sin filas", "Sin pago en tienda", "Con casillero"].map((item) => <Card key={item} className="shadow-none"><CardContent className="p-md"><Check className="h-5 w-5 text-success" /><p className="mt-sm font-semibold">{item}</p></CardContent></Card>)}
+              {["Sin filas", "Sin pago en tienda", "Con casillero"].map((item) => <Card key={item} className=""><CardContent className="p-md"><Check className="h-5 w-5 text-success" /><p className="mt-sm font-semibold">{item}</p></CardContent></Card>)}
             </div>
           ) : null}
           {step === "productos" ? (
             <div className="mt-md grid gap-sm md:grid-cols-2">
               {productos.slice(0, 8).map((product) => (
-                <Card key={product.id} className="overflow-hidden shadow-none">
+                <Card key={product.id} className="overflow-hidden">
                   <div className="grid grid-cols-[112px_1fr]">
                     <div className="relative min-h-[150px] bg-muted"><Image src={product.imagen_url} alt={product.nombre} fill sizes="120px" className="object-cover" /></div>
                     <CardContent className="p-sm">
@@ -1327,7 +1328,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
           {step === "horarios" ? (
             <div className="mt-md grid gap-sm">
               {hubs.map((hub) => (
-                <Card key={hub.id} className="shadow-none">
+                <Card key={hub.id} className="">
                   <CardContent className="p-md">
                     <div className="flex flex-col justify-between gap-sm md:flex-row md:items-center">
                       <div><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3><p className="mt-1 text-sm text-muted-foreground">{hub.direccion}</p></div>
@@ -1352,7 +1353,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
           {step === "pago" ? <CheckoutPaymentFields total={total} /> : null}
           {false && step === "pago" ? (
             <div className="mt-md grid gap-sm">
-              <Card className="shadow-none">
+              <Card className="">
                 <CardContent className="grid gap-sm p-md md:grid-cols-2">
                   <Field label="Nombre en tarjeta" placeholder="Mariana Soto" required />
                   <Field label="Número de tarjeta" placeholder="4242 4242 4242 4242" required />
@@ -1474,7 +1475,7 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-none">
+          <Card className="">
             <CardHeader><CardTitle>Contenido de la bolsa</CardTitle></CardHeader>
             <CardContent className="space-y-xs">
               {data.subscription.productos.map((item) => (
@@ -1509,8 +1510,8 @@ export function AccountPage({ view, entregaId }: { view: string; entregaId?: str
           <div className="grid gap-md lg:grid-cols-[390px_1fr]">
             <BoardingPass entrega={delivery} hub={data.hub} productos={data.productos} />
             <div className="grid gap-sm md:grid-cols-2">
-              <Card className="shadow-none"><CardHeader><CardTitle>Próximo retiro</CardTitle></CardHeader><CardContent><StatusPill tone={delivery.estado === "incidencia" ? "danger" : "success"} label={delivery.estado.replaceAll("_", " ")} /><p className="mt-sm text-sm text-muted-foreground">{data.hub.nombre} · {shortDate(delivery.fecha)} · {delivery.slot}</p><Button asChild className="mt-md"><Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link></Button></CardContent></Card>
-              <Card className="shadow-none"><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{data.subscription.productos.slice(0, 3).map((item) => <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />)}<Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion">Editar suscripción</Link></Button></CardContent></Card>
+              <Card className=""><CardHeader><CardTitle>Próximo retiro</CardTitle></CardHeader><CardContent><StatusPill tone={delivery.estado === "incidencia" ? "danger" : "success"} label={delivery.estado.replaceAll("_", " ")} /><p className="mt-sm text-sm text-muted-foreground">{data.hub.nombre} · {shortDate(delivery.fecha)} · {delivery.slot}</p><Button asChild className="mt-md"><Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link></Button></CardContent></Card>
+              <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{data.subscription.productos.slice(0, 3).map((item) => <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />)}<Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion">Editar suscripción</Link></Button></CardContent></Card>
             </div>
           </div>
         ) : null}
@@ -1544,7 +1545,7 @@ function DeliveryDetail({ entrega, productos, hub }: { entrega: Entrega; product
   return (
     <div className="mx-auto grid max-w-[920px] gap-md lg:grid-cols-[480px_1fr]">
       <BoardingPass entrega={entrega} hub={hub} productos={productos} />
-      <Card className="shadow-none">
+      <Card className="">
         <CardHeader><CardTitle>Instrucciones de retiro</CardTitle></CardHeader>
         <CardContent className="space-y-sm">
           {["Llega dentro de tu ventana.", "Escanea el código QR en el módulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
@@ -1771,15 +1772,15 @@ function SubscriptionPanelV2({
 function SubscriptionPanel({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
   return (
     <div className="grid gap-md lg:grid-cols-[1fr_360px]">
-      <Card className="shadow-none"><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{subscription.productos.map((item) => <ProductLine key={item.producto_id} product={getProduct(productos, item.producto_id)} quantity={item.cantidad} />)}</CardContent></Card>
-      <Card className="shadow-none"><CardHeader><CardTitle>Control</CardTitle></CardHeader><CardContent className="space-y-xs"><StatusPill tone="success" label={subscription.estado} /><p className="text-sm text-muted-foreground">Próxima entrega: {shortDate(subscription.proxima_entrega)}</p><p className="text-h3 font-semibold">{formatCurrency(subscriptionTotal(productos, subscription))} / semana</p><Button asChild className="w-full"><Link href="/cuenta/suscripcion/editar">Editar</Link></Button><Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/pausar">Pausar</Link></Button></CardContent></Card>
+      <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{subscription.productos.map((item) => <ProductLine key={item.producto_id} product={getProduct(productos, item.producto_id)} quantity={item.cantidad} />)}</CardContent></Card>
+      <Card className=""><CardHeader><CardTitle>Control</CardTitle></CardHeader><CardContent className="space-y-xs"><StatusPill tone="success" label={subscription.estado} /><p className="text-sm text-muted-foreground">Próxima entrega: {shortDate(subscription.proxima_entrega)}</p><p className="text-h3 font-semibold">{formatCurrency(subscriptionTotal(productos, subscription))} / semana</p><Button asChild className="w-full"><Link href="/cuenta/suscripcion/editar">Editar</Link></Button><Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/pausar">Pausar</Link></Button></CardContent></Card>
     </div>
   );
 }
 
 function EditSubscription({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
   return (
-    <Card className="shadow-none">
+    <Card className="">
       <CardHeader><CardTitle>Editar bolsa semanal</CardTitle></CardHeader>
       <CardContent className="grid gap-xs md:grid-cols-2">
         {productos.slice(0, 8).map((product) => {
@@ -1793,7 +1794,7 @@ function EditSubscription({ subscription, productos }: { subscription: Suscripci
 
 function PauseSubscription() {
   return (
-    <Card className="max-w-2xl shadow-none">
+    <Card className="max-w-2xl">
       <CardHeader><CardTitle>Pausar suscripción</CardTitle></CardHeader>
       <CardContent className="space-y-sm">
         {[1, 2, 4].map((weeks) => <Button key={weeks} variant="outline" className="w-full justify-between">Pausar {weeks} semana{weeks > 1 ? "s" : ""}<ChevronRight className="h-4 w-4" /></Button>)}
@@ -1807,7 +1808,7 @@ function PaymentsPanel({ charges }: { charges: Cobro[] }) {
   return (
     <div className="grid gap-xs">
       {charges.map((charge) => (
-        <Card key={charge.id} className="shadow-none"><CardContent className="grid gap-sm p-sm md:grid-cols-[1fr_auto_auto] md:items-center"><div><p className="font-semibold">{shortDate(charge.fecha)}</p><p className="text-sm text-muted-foreground">{charge.metodo}</p></div><StatusPill tone={charge.estado === "cobrado" ? "success" : charge.estado === "fallido" ? "danger" : "warning"} label={charge.estado} /><p className="font-mono font-semibold">{formatCurrency(charge.monto)}</p></CardContent></Card>
+        <Card key={charge.id} className=""><CardContent className="grid gap-sm p-sm md:grid-cols-[1fr_auto_auto] md:items-center"><div><p className="font-semibold">{shortDate(charge.fecha)}</p><p className="text-sm text-muted-foreground">{charge.metodo}</p></div><StatusPill tone={charge.estado === "cobrado" ? "success" : charge.estado === "fallido" ? "danger" : "warning"} label={charge.estado} /><p className="font-mono font-semibold">{formatCurrency(charge.monto)}</p></CardContent></Card>
       ))}
     </div>
   );
@@ -1815,7 +1816,7 @@ function PaymentsPanel({ charges }: { charges: Cobro[] }) {
 
 function ProfilePanel() {
   return (
-    <Card className="max-w-3xl shadow-none">
+    <Card className="max-w-3xl">
       <CardHeader><CardTitle>Datos personales</CardTitle></CardHeader>
       <CardContent className="grid gap-sm md:grid-cols-2">
         <Field label="Nombre" defaultValue="Mariana" />
@@ -1839,7 +1840,7 @@ export function SupportPage() {
             [HelpCircle, "No puedo abrir mi casillero", "Valida código, hub y ventana de retiro."],
             [Receipt, "Tengo un problema de cobro", "Revisa reintentos, recibos y tarjeta."],
             [PackageCheck, "Mi pedido no corresponde", "Levanta incidencia con foto y detalle."]
-          ].map(([Icon, title, body]) => <Card key={String(title)} className="shadow-none"><CardContent className="flex gap-sm p-md"><Icon className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">{title as string}</h2><p className="mt-1 text-sm text-muted-foreground">{body as string}</p></div></CardContent></Card>)}
+          ].map(([Icon, title, body]) => <Card key={String(title)} className=""><CardContent className="flex gap-sm p-md"><Icon className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">{title as string}</h2><p className="mt-1 text-sm text-muted-foreground">{body as string}</p></div></CardContent></Card>)}
         </div>
       </Container>
     </main>

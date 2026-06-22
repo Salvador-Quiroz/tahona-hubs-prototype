@@ -77,14 +77,15 @@ function PageShell({
       : description;
 
   return (
-    <main className="min-h-screen bg-transparent px-sm py-md text-foreground lg:px-md">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-[var(--ink)] lg:px-6">
       <div className="mx-auto max-w-[1540px]">
-        <header className="mb-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] p-md shadow-md backdrop-blur">
+        <header className="mb-6 rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-6 shadow-[var(--shadow-sm)] backdrop-blur">
           <div className="flex flex-col justify-between gap-md xl:flex-row xl:items-end">
             <div className="max-w-4xl">
-              <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
-              <h1 className="mt-2 text-h1 font-semibold tracking-[-0.015em]">{title}</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{resolvedDescription}</p>
+              <div className="mb-4 h-0.5 w-8 bg-[var(--brand)]" />
+              <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{eyebrow}</p>
+              <h1 className="mt-3 font-sans text-[clamp(1.75rem,3vw,2.75rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--ink)]">{title}</h1>
+              <p className="mt-3 max-w-3xl font-sans text-sm leading-6 text-[var(--ink-soft)]">{resolvedDescription}</p>
             </div>
             <div className="grid min-w-[280px] grid-cols-2 gap-2">
               {meta ?? (
@@ -106,19 +107,20 @@ function PageShell({
 
 function Signal({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border bg-surface-2/75 px-xs py-2 shadow-xs">
-      <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
+    <div className="rounded-[12px] border border-[var(--line)] bg-[var(--paper-sunken)] px-3 py-2 shadow-[var(--shadow-sm)]">
+      <p className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{label}</p>
+      <p className="mt-1 font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{value}</p>
     </div>
   );
 }
 
 function ChartCard({ title, eyebrow, action, children }: { title: string; eyebrow: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <Card className="min-w-0 shadow-sm">
+    <Card className="min-w-0">
       <CardHeader className="flex-row items-start justify-between gap-sm">
         <div>
-          <p className="eyebrow-mark text-caption font-semibold uppercase text-primary">{eyebrow}</p>
+          <div className="mb-3 h-0.5 w-8 bg-[var(--brand)]" />
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{eyebrow}</p>
           <CardTitle className="mt-1">{title}</CardTitle>
         </div>
         {action}

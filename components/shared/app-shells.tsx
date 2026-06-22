@@ -174,10 +174,10 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
 
 function ClienteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-foreground text-white">
+    <footer className="border-t border-white/10 bg-[var(--ink)] text-white">
       <div className="mx-auto grid max-w-7xl gap-lg px-sm py-xl md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr] md:px-md">
         <div>
-          <p className="font-display text-3xl font-black leading-none">TAHONA</p>
+          <p className="font-serif text-3xl font-semibold leading-none tracking-[-0.02em]">TAHONA</p>
           <p className="mt-2 text-sm font-semibold text-secondary">Desde 1957.</p>
           <p className="mt-sm max-w-sm text-sm leading-6 text-white/68">
             Panadería mexicana con pedido semanal, hubs de retiro y casilleros inteligentes.
@@ -231,10 +231,10 @@ function ToolShell({
 
   return (
     <div className="panel-shell min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-border bg-[var(--text)] text-white lg:block">
-        <div className="border-b border-white/10 bg-white p-5 text-foreground">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-[var(--line)] bg-[#111827] text-white lg:block">
+        <div className="border-b border-white/10 bg-[var(--paper-raised)] p-5 text-[var(--ink)]">
           <TahonaWordmark />
-          <p className="mt-4 text-xs font-semibold uppercase text-primary">{title}</p>
+          <p className="mt-4 font-sans text-xs font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">{title}</p>
         </div>
         <nav className="space-y-1 p-3" aria-label={title}>
           {nav.map((item) => {
@@ -245,8 +245,8 @@ function ToolShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white",
-                  active && "bg-primary text-white"
+                  "flex h-10 items-center gap-3 rounded-[12px] px-3 font-sans text-sm font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white",
+                  active && "bg-[var(--brand)] text-white"
                 )}
               >
                 <Icon className="h-4 w-4" aria-hidden />
@@ -256,14 +256,14 @@ function ToolShell({
           })}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-4">
-          <Link href="/" className="block rounded-md border border-white/16 px-3 py-2 text-center text-xs font-semibold uppercase text-white/70 hover:bg-white/10">
+          <Link href="/" className="block rounded-[12px] border border-white/16 px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.08em] text-white/70 hover:bg-white/10">
             Ver tienda
           </Link>
         </div>
       </aside>
       <header
         className={cn(
-          "safe-top sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] backdrop-blur-xl transition-shadow duration-base lg:ml-72",
+          "safe-top sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-raised)_92%,transparent)] backdrop-blur-xl transition-shadow duration-base lg:ml-72",
           collapsed && "shadow-sm"
         )}
       >
@@ -279,7 +279,7 @@ function ToolShell({
           </div>
         </div>
       </header>
-      <nav className="sticky top-[calc(57px+env(safe-area-inset-top))] z-20 flex gap-2 overflow-x-auto border-b border-border bg-card px-sm py-2 lg:hidden">
+      <nav className="sticky top-[calc(57px+env(safe-area-inset-top))] z-20 flex gap-2 overflow-x-auto border-b border-[var(--line)] bg-[var(--paper-raised)] px-sm py-2 lg:hidden">
         {nav.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href;
@@ -288,8 +288,8 @@ function ToolShell({
               key={item.href}
               href={item.href}
               className={cn(
-                "inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-border px-3 text-sm font-semibold",
-                active ? "bg-primary text-white" : "bg-card text-muted-foreground"
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-[12px] border border-[var(--line)] px-3 text-sm font-semibold",
+                active ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-raised)] text-[var(--ink-soft)]"
               )}
             >
               <Icon className="h-4 w-4" aria-hidden />

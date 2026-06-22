@@ -4,15 +4,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex min-w-max items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all duration-base ease-out-soft focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.92]",
+  "inline-flex min-w-max items-center justify-center gap-2 whitespace-nowrap rounded-[12px] font-sans text-sm font-semibold transition-all duration-base ease-out-soft focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 active:scale-[0.92]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm hover:-translate-y-0.5 hover:bg-[var(--brand-hover)] hover:shadow-md",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:-translate-y-0.5 hover:bg-[var(--accent-edge)] hover:shadow-md",
-        outline: "border border-border bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] text-foreground shadow-xs hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:bg-card hover:shadow-sm",
-        ghost: "text-foreground hover:bg-muted",
-        accent: "bg-accent text-accent-foreground shadow-sm hover:-translate-y-0.5 hover:bg-[var(--accent-edge)] hover:shadow-md"
+        default: "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[var(--brand-press)] hover:shadow-[var(--shadow-md)]",
+        secondary: "bg-[var(--paper-sunken)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[var(--crust-soft)] hover:shadow-[var(--shadow-md)]",
+        outline: "border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:bg-[var(--paper)] hover:shadow-[var(--shadow-md)]",
+        ghost: "text-[var(--ink)] hover:bg-[var(--paper-sunken)]",
+        accent: "bg-[var(--accent)] text-[var(--ink)] shadow-[var(--shadow-sm)] hover:-translate-y-0.5 hover:bg-[#f6bf39] hover:shadow-[var(--shadow-md)]"
       },
       size: {
         default: "h-11 px-sm",

@@ -56,15 +56,15 @@ export function KpiCard({
     : displayValue;
 
   return (
-    <article className={cn("relative overflow-hidden rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] p-md shadow-sm backdrop-blur transition-all duration-base ease-out-soft hover:-translate-y-1 hover:shadow-md", className)}>
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--brand)_45%,transparent)] to-transparent" aria-hidden />
+    <article className={cn("relative overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)] backdrop-blur transition-all duration-base ease-out-soft hover:-translate-y-1 hover:shadow-[var(--shadow-md)]", className)}>
+      <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[var(--brand)] to-transparent opacity-40" aria-hidden />
       <div className="flex items-start justify-between gap-md">
         <div>
-          <p className="text-caption font-semibold uppercase text-muted-foreground">{label}</p>
-          <p className="mt-sm font-mono text-3xl font-semibold leading-none text-foreground">{renderedValue}</p>
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{label}</p>
+          <p className="mt-3 font-mono text-3xl font-medium leading-none text-[var(--ink)] [font-variant-numeric:tabular-nums]">{renderedValue}</p>
         </div>
         {Icon ? (
-          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-info-bg text-info shadow-xs">
+          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--brand-tint)] text-[var(--brand)] shadow-[var(--shadow-sm)]">
             <Icon className="h-5 w-5" aria-hidden />
           </span>
         ) : null}
@@ -74,18 +74,18 @@ export function KpiCard({
           <span
             className={cn(
               "inline-flex items-center gap-1 font-semibold",
-              deltaTone === "up" && "text-success",
-              deltaTone === "down" && "text-danger",
-              deltaTone === "flat" && "text-muted-foreground"
+              deltaTone === "up" && "text-[var(--ok)]",
+              deltaTone === "down" && "text-[var(--danger)]",
+              deltaTone === "flat" && "text-[var(--ink-faint)]"
             )}
           >
             <DeltaIcon className="h-4 w-4" aria-hidden />
             {delta}
           </span>
         ) : null}
-        {target ? <span className="text-muted-foreground">Target: {target}</span> : null}
+        {target ? <span className="text-[var(--ink-faint)]">Target: {target}</span> : null}
       </div>
-      {helper ? <p className="mt-xs text-sm leading-5 text-muted-foreground">{helper}</p> : null}
+      {helper ? <p className="mt-2 font-sans text-sm leading-5 text-[var(--ink-soft)]">{helper}</p> : null}
     </article>
   );
 }
