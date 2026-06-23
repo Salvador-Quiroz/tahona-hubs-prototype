@@ -1,0 +1,30 @@
+name: Bug report
+description: Reporta un problema reproducible en el prototipo.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumen
+      description: Describe qué salió mal y cuál era el comportamiento esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      description: Incluye ruta, viewport o rol si aplica.
+      placeholder: |
+        1. Ir a /catalogo
+        2. Hacer clic en ...
+        3. Ver error ...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Capturas, logs o detalles del entorno.
+    validations:
+      required: false

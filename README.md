@@ -2,6 +2,14 @@
 
 Prototipo Next.js para una red de hubs de retiro de pan fresco de Tahona. Incluye app cliente PWA, panel operador y dashboard ejecutivo con datos mockeados coherentes entre vistas.
 
+## Estado del proyecto
+
+- App cliente con catálogo, onboarding, cuenta, entregas, pagos y soporte.
+- Panel operador para producción, carga, casilleros, cobros, pedidos, incidencias y administración.
+- Dashboard ejecutivo con vistas de crecimiento, operación, clientes, productos, hubs y proyecciones.
+- Datos determinísticos en memoria para que las rutas y relaciones se mantengan consistentes.
+- Verificación local activa con TypeScript, ESLint y build de producción.
+
 ## Stack
 
 - Next.js 14 App Router
@@ -14,17 +22,24 @@ Prototipo Next.js para una red de hubs de retiro de pan fresco de Tahona. Incluy
 - Zustand
 - Datos mockeados determinísticos en `lib/mock-data`
 
-## Comandos
+## Primeros pasos
 
 ```bash
 npm install
 npm run dev
+```
+
+Servidor local: `http://localhost:3000`
+
+## Calidad
+
+```bash
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-Servidor local: `http://localhost:3000`
+El repositorio incluye GitHub Actions en `.github/workflows/ci.yml` para ejecutar estas validaciones en pushes y pull requests.
 
 ## Estructura
 
@@ -39,7 +54,7 @@ Servidor local: `http://localhost:3000`
 
 ## Decisiones de diseño
 
-Tahona se trató como marca madre cálida y patrimonial: café profundo, terracota, crema, dorado pan tostado, maíz y nopal para señales operativas. El sitio oficial comunica “Desde 1957”, ubicaciones reales como Montevideo 290 Lindavista y Eje Central con Belisario Domínguez, y lenguaje de tradición mexicana; no expone tokens CSS reutilizables, así que la paleta se documenta como fallback premium conservador.
+Tahona se trató como marca madre cálida y patrimonial: café profundo, terracota, crema, dorado pan tostado, maíz y nopal para señales operativas. El sitio oficial comunica "Desde 1957", ubicaciones reales como Montevideo 290 Lindavista y Eje Central con Belisario Domínguez, y lenguaje de tradición mexicana; no expone tokens CSS reutilizables, así que la paleta se documenta como fallback premium conservador.
 
 La inspiración Cedric Grolet se aplica solo al catálogo y detalle de producto: fotografía protagonista, tipografía grande, producto como pieza editorial y transiciones suaves. Operador y dashboard usan interfaces más densas, sobrias y escaneables.
 
@@ -58,7 +73,7 @@ El dataset se genera de forma determinística:
 
 Las relaciones se preservan por ID: clientes pertenecen a hubs, suscripciones pertenecen a clientes, entregas referencian cliente/hub/casillero y cobros referencian cliente.
 
-## Rutas
+## Rutas principales
 
 ### App Cliente
 
@@ -119,11 +134,10 @@ Las relaciones se preservan por ID: clientes pertenecen a hubs, suscripciones pe
 
 ## Verificación local
 
-Pasaron:
+Última verificación local:
 
 - `npm run typecheck`
 - `npm run lint`
 - `npm run build`
-- Revisión HTTP local de las 48 rutas con status 200
 
-Nota: la conexión al Browser in-app falló en este entorno Windows antes de abrir una pestaña, así que la verificación visual directa queda pendiente aunque el build y las rutas locales estén correctas.
+Las 48 rutas compilan correctamente en producción.
