@@ -55,6 +55,7 @@ El repositorio incluye GitHub Actions en `.github/workflows/ci.yml` para ejecuta
 
 - La guía de arranque está en `docs/github-setup.md`.
 - La guía para contribuir está en `CONTRIBUTING.md`.
+- El roadmap del prototipo está en `docs/product-roadmap.md`.
 - Dependabot revisa dependencias npm y GitHub Actions cada semana.
 
 ## Estructura
