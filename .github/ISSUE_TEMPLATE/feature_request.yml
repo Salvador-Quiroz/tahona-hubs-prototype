@@ -1,0 +1,32 @@
+name: Feature request
+description: Propón una mejora para cliente, operador o dashboard.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado
+      description: Describe qué usuario se beneficia y qué debería poder hacer.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - App cliente
+        - Panel operador
+        - Dashboard ejecutivo
+        - Datos mockeados
+        - Diseño / UI
+        - Infraestructura
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Detalles
+      description: Agrega rutas, estados, datos o criterios de aceptación relevantes.
+    validations:
+      required: false

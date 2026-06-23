@@ -1,10 +1,22 @@
 {
   "name": "tahona-hubs-prototype",
   "version": "0.1.0",
+  "description": "Prototipo Next.js para una red de hubs de retiro de pan fresco de Tahona.",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Salvador-Quiroz/tahona-hubs-prototype.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Salvador-Quiroz/tahona-hubs-prototype/issues"
+  },
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "ci": "npm run typecheck && npm run lint && npm run build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"

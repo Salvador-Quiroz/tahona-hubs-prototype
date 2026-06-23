@@ -272,7 +272,7 @@ function ToolShell({
             {title}
           </Link>
           <div className="hidden text-sm font-semibold text-muted-foreground lg:block">
-            {isDashboard ? "Vista para dirección e inversionistas" : "Panel operador"}
+            {isDashboard ? "Vista ejecutiva de dirección" : "Panel operador"}
           </div>
           <div className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-semibold text-foreground">
             18 jun 2026

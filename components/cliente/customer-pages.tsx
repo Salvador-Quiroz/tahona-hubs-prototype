@@ -352,8 +352,17 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
 }
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
-  const hero = productos[0];
-  const featured = productos.slice(0, 4);
+  const reduceMotion = useReducedMotion();
+  const hero = getProduct(productos, "prod-001");
+  const showcase = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-003"), getProduct(productos, "prod-010")];
+  const featured = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-002"), getProduct(productos, "prod-003")];
+  const marqueeItems = ["Hogazas de masa madre", "Pan dulce mexicano", "Bolleria & croissants", "Horneado cada manana", `${hubs.length} hubs en CDMX`, "Desde 1957"];
+  const steps = [
+    [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
+    [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
+    [CreditCard, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
+    [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde tu cuenta."]
+  ] as const;
 
   return (
     <main className="bg-[var(--paper)] text-[var(--ink)]">
@@ -480,6 +489,46 @@ export function LandingPage() {
                 availability={availabilityLabel(product.disponibilidad.length)}
               />
             ))}
+          </div>
+        </Container>
+      </section>
+
+      <section className="relative overflow-hidden bg-[var(--brand)] py-[clamp(4.5rem,8vw,8rem)] text-white">
+        <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:54px_54px]" aria-hidden />
+        <Container className="relative">
+          <div className="max-w-[650px]">
+            <div className="mb-5 h-1 w-12 rounded-full bg-[var(--accent)]" aria-hidden />
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Pedido con retiro</p>
+            <h2 className="mt-4 font-serif text-[clamp(2.5rem,4.8vw,4.1rem)] font-medium leading-[1.02] tracking-[-0.02em]">
+              Tu bolsa lista, tu casillero esperando.
+            </h2>
+            <p className="mt-5 max-w-[52ch] text-base leading-[1.65] text-white/78 md:text-lg">
+              Sabes que pediste, cuanto pagas y donde retiras. Cuatro pasos y el pan es tuyo.
+            </p>
+          </div>
+          <div className="relative mt-14">
+            <div className="absolute left-[7%] right-[7%] top-9 hidden h-px bg-white/18 md:block" aria-hidden />
+            <div className="absolute left-[7%] top-9 hidden h-px rounded-full bg-[var(--accent)] shadow-[0_0_18px_rgba(255,207,90,.8)] motion-safe:animate-[th-step-fill_9s_ease-in-out_infinite] md:block" aria-hidden />
+            <div className="absolute top-[29px] hidden h-5 w-5 rounded-full bg-[var(--accent)] shadow-[0_0_0_7px_rgba(255,207,90,.22)] motion-safe:animate-[th-step-travel_9s_ease-in-out_infinite] md:block" aria-hidden />
+            <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map(([Icon, title, body], index) => (
+                <motion.div
+                  key={title}
+                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+                  whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -120px" }}
+                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-center"
+                >
+                  <span className="mx-auto flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 border-[var(--accent)] bg-[#16308f] text-[var(--accent)] shadow-[0_18px_40px_rgba(8,18,60,.35)]">
+                    <Icon className="h-7 w-7" aria-hidden />
+                  </span>
+                  <span className="mt-5 block font-mono text-[0.7rem] uppercase tracking-[0.16em] text-[var(--accent)]">Paso {String(index + 1).padStart(2, "0")}</span>
+                  <h3 className="mt-2 font-serif text-2xl font-medium text-white">{title}</h3>
+                  <p className="mx-auto mt-3 max-w-[25ch] text-sm leading-[1.6] text-white/72">{body}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </Container>
       </section>

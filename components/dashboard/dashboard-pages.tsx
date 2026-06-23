@@ -272,7 +272,7 @@ function SummaryPage() {
     <PageShell
       eyebrow="Resumen ejecutivo"
       title="Recurrencia, capacidad y riesgo en una sola lectura."
-      description="Vista para inversionistas y dirección: crecimiento, ingresos, retención y operación se leen con contexto y no como decoración."
+      description="Vista para dirección: crecimiento, ingresos, retención y operación se leen con contexto y no como decoración."
     >
       <div className="space-y-sm">
         <Card className="shadow-sm">
@@ -304,7 +304,7 @@ function SummaryPage() {
         <div className="grid gap-sm md:grid-cols-3">
           <KpiCard label="Clientes activos" value={metrics.activeClients} helper={`${metrics.pausedClients} pausados`} target="200 piloto" icon={Users} delta="+6.0%" deltaTone="up" />
           <KpiCard label="Retención" value={metrics.retention} formatter={formatPercent} helper="Activos / no cancelados" icon={TrendingUp} target=">85%" />
-          <KpiCard label="LTV/CAC proxy" value={3.4} formatter={(value) => `${value.toFixed(1)}x`} helper={`${formatCurrency(metrics.riskRevenue)} en riesgo`} icon={Banknote} target=">3x" />
+          <KpiCard label="Valor recurrente" value={metrics.revenue} formatter={formatCurrency} helper={`${formatCurrency(metrics.riskRevenue)} en riesgo`} icon={Banknote} target="cobranza sana" />
         </div>
       </div>
       {false ? (
@@ -469,20 +469,20 @@ function HubsPage() {
 
 function ProjectionsPage() {
   const scenarios = [
-    { scenario: "Base", hubs: 3, clientes: 230, revenue: 498000, capex: 0, risk: "Bajo" },
-    { scenario: "Expansión CDMX", hubs: 6, clientes: 410, revenue: 852000, capex: 620000, risk: "Medio" },
-    { scenario: "Agresivo", hubs: 10, clientes: 680, revenue: 1290000, capex: 1450000, risk: "Alto" }
+    { scenario: "Base", hubs: 3, clientes: 230, revenue: 498000, setupCost: 0, risk: "Bajo" },
+    { scenario: "Expansión CDMX", hubs: 6, clientes: 410, revenue: 852000, setupCost: 620000, risk: "Medio" },
+    { scenario: "Agresivo", hubs: 10, clientes: 680, revenue: 1290000, setupCost: 1450000, risk: "Alto" }
   ];
   const columns: Array<DataTableColumn<(typeof scenarios)[number]>> = [
     { key: "scenario", header: "Escenario", render: (row) => row.scenario },
     { key: "hubs", header: "Hubs", align: "right", render: (row) => row.hubs },
     { key: "clientes", header: "Clientes", align: "right", render: (row) => row.clientes },
     { key: "revenue", header: "Ingreso mensual", align: "right", render: (row) => formatCurrency(row.revenue) },
-    { key: "capex", header: "Capex", align: "right", render: (row) => formatCurrency(row.capex) },
+    { key: "setupCost", header: "Costo apertura", align: "right", render: (row) => formatCurrency(row.setupCost) },
     { key: "risk", header: "Riesgo", render: (row) => <StatusPill tone={row.risk === "Alto" ? "danger" : row.risk === "Medio" ? "warning" : "success"} label={row.risk} /> }
   ];
   return (
-    <PageShell eyebrow="Proyecciones" title="Escenarios de expansión con ingresos, capex y riesgo." description="Un inversionista necesita ver qué cambia al abrir hubs: clientes, ingreso, inversión y complejidad.">
+    <PageShell eyebrow="Proyecciones" title="Escenarios de expansión con ingresos, costos y riesgo." description="Dirección puede ver qué cambia al abrir hubs: clientes, ingreso, costo de apertura y complejidad operativa.">
       <div className="grid gap-md xl:grid-cols-[1.05fr_0.95fr]">
         <ChartCard eyebrow="Forecast" title="Ingreso mensual por escenario">
           <ResponsiveContainer width="100%" height={360}>
