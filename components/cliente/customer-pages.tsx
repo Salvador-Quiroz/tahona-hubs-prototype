@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   User,
+  Wallet,
   Wheat,
   X
 } from "lucide-react";
@@ -350,7 +351,7 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
   );
 }
 export function LandingPage() {
-  const { productos, hubs } = useTahonaStore();
+  const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const reduceMotion = useReducedMotion();
   const hero = getProduct(productos, "prod-001");
   const showcase = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-003"), getProduct(productos, "prod-010")];
@@ -488,7 +489,7 @@ export function LandingPage() {
                 availability={availabilityLabel(product.disponibilidad.length)}
               />
             ))}
-          </motion.div>
+          </div>
         </Container>
       </section>
 
