@@ -63,7 +63,7 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   },
   productos: {
     eyebrow: "Paso 1 de 4",
-    title: "Arma una bolsa clara, sin fricción.",
+    title: "Arma una bolsa clara, sin friccion.",
     body: "Cada producto muestra precio, disponibilidad y cantidad. Puedes ajustar antes de confirmar.",
     cta: "Elegir horario",
     next: "/suscribirme/horarios"
@@ -71,13 +71,13 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   horarios: {
     eyebrow: "Paso 2 de 4",
     title: "Selecciona hub y ventana.",
-    body: "El horario debe sentirse garantizado: capacidad visible, slots concretos y ubicación entendible.",
+    body: "El horario debe sentirse garantizado: capacidad visible, slots concretos y ubicacion entendible.",
     cta: "Continuar a datos",
     next: "/suscribirme/direccion"
   },
   direccion: {
     eyebrow: "Paso 3 de 4",
-    title: "Datos mínimos para operar.",
+    title: "Datos minimos para operar.",
     body: "Solo lo necesario para confirmar cuenta, contacto y zona de retiro. Sin formularios eternos.",
     cta: "Continuar a pago",
     next: "/suscribirme/pago"
@@ -85,14 +85,14 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   pago: {
     eyebrow: "Paso 4 de 4",
     title: "Pago protegido y pedido listo.",
-    body: "Tarjeta, resumen y seguridad visibles. Facturación y cupón se mantienen como opciones secundarias.",
+    body: "Tarjeta, resumen y seguridad visibles. Facturacion y cupon se mantienen como opciones secundarias.",
     cta: "Confirmar pedido",
     next: "/suscribirme/confirmacion"
   },
   confirmacion: {
     eyebrow: "Confirmado",
-    title: "Tu retiro quedó programado.",
-    body: "Guarda tu pase de retiro. El código final aparecerá en tu cuenta cuando el casillero esté cargado.",
+    title: "Tu retiro quedo programado.",
+    body: "Guarda tu pase de retiro. El codigo final aparecera en tu cuenta cuando el casillero este cargado.",
     cta: "Ver mi cuenta",
     next: "/cuenta"
   }
@@ -118,7 +118,7 @@ function SectionHeader({
   const resolvedBody =
     eyebrow === "Vitrina semanal"
       ? "Conchas, hogazas y piezas laminadas listas para apartar antes del corte. Eliges, pagas y retiras en tu hub."
-      : eyebrow === "CatÃ¡logo"
+      : eyebrow === "Catalogo"
         ? "Aparta piezas recien horneadas, compara precios y arma tu bolsa sin perder la ventana de corte."
       : eyebrow === "Pedido con retiro"
         ? "Aparta antes del corte, elige ventana y recoge con pase digital. Sin filas, sin vueltas, sin depender de inventario al llegar."
@@ -127,7 +127,7 @@ function SectionHeader({
       : eyebrow === "Paso 1 de 4"
         ? "Elige cantidades desde la vitrina semanal. Tu bolsa se actualiza en el momento y siempre ves el total antes de avanzar."
       : eyebrow === "Paso 2 de 4"
-        ? "Escoge el hub y la ventana que sí te funciona. La disponibilidad se lee antes de pagar."
+        ? "Escoge el hub y la ventana que si te funciona. La disponibilidad se lee antes de pagar."
       : eyebrow === "Paso 3 de 4"
         ? "Solo pedimos los datos necesarios para confirmar cuenta, avisos y soporte de retiro."
       : eyebrow === "Paso 4 de 4"
@@ -136,14 +136,14 @@ function SectionHeader({
   const resolvedTitle =
     eyebrow === "Pedido con retiro"
       ? "Tu bolsa lista, tu casillero esperando."
-      : eyebrow === "CatÃ¡logo"
+      : eyebrow === "Catalogo"
         ? "Tu pan de la semana, recien horneado."
       : eyebrow === "Hubs"
         ? "Retira cerca, sin filas."
       : eyebrow === "Paso 1 de 4"
         ? "Escoge tu pan para la semana."
       : eyebrow === "Paso 2 de 4"
-        ? "Elige dónde y cuándo retirarlo."
+        ? "Elige donde y cuando retirarlo."
       : eyebrow === "Paso 3 de 4"
         ? "Tu cuenta queda lista en un minuto."
       : eyebrow === "Paso 4 de 4"
@@ -152,9 +152,8 @@ function SectionHeader({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -80px" }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col justify-between gap-6 md:flex-row md:items-end"
     >
@@ -203,7 +202,7 @@ function ProductLine({
       </div>
       <div className="min-w-0">
         <p className="line-clamp-1 font-sans text-sm font-semibold text-[var(--ink)]">{product.nombre}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{quantity} pza · {formatCurrency(product.precio_mxn)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{quantity} pza - {formatCurrency(product.precio_mxn)}</p>
       </div>
       {action ?? <p className="font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(product.precio_mxn * quantity)}</p>}
     </div>
@@ -220,7 +219,7 @@ function AppPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; prod
           <div>
             <p className="text-caption font-semibold uppercase text-secondary">Pase Tahona</p>
             <h3 className="mt-2 text-h2 font-semibold">{shortDate(entrega.fecha)}</h3>
-            <p className="mt-1 text-sm text-white/70">{hub.nombre} · {entrega.slot}</p>
+            <p className="mt-1 text-sm text-white/70">{hub.nombre} - {entrega.slot}</p>
           </div>
           <div className="flex h-14 w-14 items-center justify-center rounded-md bg-white text-foreground">
             <QrCode className="h-7 w-7" aria-hidden />
@@ -250,7 +249,7 @@ function AppPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; prod
 }
 
 function DeliveryTimeline({ estado }: { estado: Entrega["estado"] }) {
-  const stages = ["Apartado", "En producción", "Cargado", "Listo", "Retirado"];
+  const stages = ["Apartado", "En produccion", "Cargado", "Listo", "Retirado"];
   const activeIndex = estado === "entregado" ? 4 : estado === "listo" ? 3 : estado === "incidencia" ? 3 : 1;
 
   return (
@@ -299,9 +298,9 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
       <DeliveryTimeline estado={entrega.estado} />
       <article className={cn("overflow-hidden rounded-xl bg-card shadow-lg", isRetired && "grayscale")}>
         <div className="bg-primary p-md text-white">
-          <p className="text-caption font-semibold uppercase text-white/72">TAHONA · Pase de retiro</p>
+          <p className="text-caption font-semibold uppercase text-white/72">TAHONA - Pase de retiro</p>
           <h2 className="mt-2 text-h2 font-semibold">{hub.nombre}</h2>
-          <p className="mt-1 text-body-l text-white/82">{shortDate(entrega.fecha)} · {entrega.slot}</p>
+          <p className="mt-1 text-body-l text-white/82">{shortDate(entrega.fecha)} - {entrega.slot}</p>
         </div>
         <div className="relative border-y border-dashed border-border bg-card">
           <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--bg)]" aria-hidden />
@@ -313,11 +312,11 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
           </div>
           {!isReady && !isRetired ? (
             <div className="mt-sm rounded-md border border-info/20 bg-info-bg p-sm text-sm text-info">
-              Tu pan se está horneando. El QR se activa cuando el casillero queda cargado.
+              Tu pan se esta horneando. El QR se activa cuando el casillero queda cargado.
             </div>
           ) : null}
           <p className="mt-sm text-center font-mono text-2xl font-semibold tracking-normal text-foreground">{passCode}</p>
-          <p className="mt-1 text-center text-xs text-muted-foreground">Fallback si el escáner no lee el QR</p>
+          <p className="mt-1 text-center text-xs text-muted-foreground">Fallback si el escaner no lee el QR</p>
           <div className="mt-md grid grid-cols-2 gap-xs">
             <div className="rounded-md border border-border bg-surface-2 p-sm">
               <p className="text-xs text-muted-foreground">Casillero</p>
@@ -350,7 +349,6 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
     </div>
   );
 }
-
 export function LandingPage() {
   const { productos, hubs } = useTahonaStore();
   const reduceMotion = useReducedMotion();
@@ -366,228 +364,129 @@ export function LandingPage() {
   ] as const;
 
   return (
-    <main className="storefront-shell overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-      <nav className="sticky top-0 z-50 border-b border-[var(--line)] bg-[rgba(251,248,243,0.86)] backdrop-blur-[14px]">
-        <Container className="flex h-[72px] items-center justify-between gap-4">
-          <Link href="/" className="flex min-w-0 items-baseline gap-2 text-[var(--ink)] no-underline">
-            <span className="font-serif text-[1.65rem] font-semibold leading-none tracking-[-0.02em]">TAHONA</span>
-            <span className="hidden font-mono text-[0.65rem] uppercase tracking-[0.16em] text-[var(--ink-faint)] sm:inline">
-              Desde 1957
-            </span>
-          </Link>
-          <div className="hidden items-center gap-2 md:flex">
-            {[
-              ["/", "Inicio"],
-              ["/catalogo", "Catalogo"],
-              ["/hubs", "Hubs"],
-              ["/como-funciona", "Proceso"]
-            ].map(([href, label], index) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "rounded-[9px] px-3 py-2 text-sm font-semibold no-underline transition-colors",
-                  index === 0 ? "bg-[var(--paper-sunken)] text-[var(--ink)]" : "text-[var(--ink-soft)] hover:bg-[var(--paper-sunken)] hover:text-[var(--ink)]"
-                )}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button asChild className="h-11 rounded-[12px] bg-[var(--brand)] px-4 text-white hover:bg-[var(--brand-press)]">
-              <Link href="/suscribirme/productos">
-                <ShoppingBag className="h-4 w-4" aria-hidden />
-                <span className="hidden sm:inline">Apartar mi pan</span>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-[12px] border-[var(--line)] bg-[var(--paper)]">
-              <Link href="/cuenta" aria-label="Mi cuenta">
-                <User className="h-5 w-5" aria-hidden />
-              </Link>
-            </Button>
-          </div>
-        </Container>
-      </nav>
+    <main className="bg-[var(--paper)] text-[var(--ink)]">
+      {/* ============ HERO: AZUL CON PROFUNDIDAD + FOTO DE PAN ============ */}
+      <section className="relative overflow-hidden">
+        {/* Capa 1: gradiente azul con profundidad (no plano) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 120% at 15% 10%, #2a4ce0 0%, #2040d0 38%, #16308f 78%, #0f2470 100%)"
+          }}
+          aria-hidden
+        />
+        {/* Capa 2: halo amarillo calido */}
+        <div
+          className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-30 blur-[90px]"
+          style={{ background: "radial-gradient(circle, var(--accent), transparent 70%)" }}
+          aria-hidden
+        />
+        {/* Capa 3: textura de cuadricula fina */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.10]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px)",
+            backgroundSize: "52px 52px"
+          }}
+          aria-hidden
+        />
+        {/* Capa 4: grano sutil */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+            backgroundSize: "4px 4px"
+          }}
+          aria-hidden
+        />
 
-      <section id="top" className="relative overflow-hidden bg-[var(--brand)] text-white">
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,#2a4ce0_0%,#2040d0_38%,#16308f_75%,#0f2470_100%)] bg-[length:200%_200%] motion-safe:animate-[th-mesh_18s_ease_infinite]" aria-hidden />
-        <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:54px_54px] [mask-image:radial-gradient(120%_100%_at_30%_20%,black_40%,transparent_92%)]" aria-hidden />
-        <div className="absolute -left-44 top-[8%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,var(--accent),transparent_70%)] opacity-30 blur-[80px] motion-safe:animate-[th-float-slow_9s_ease-in-out_infinite]" aria-hidden />
-        <div className="absolute -right-28 bottom-[-140px] h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,#3a5cff,transparent_70%)] opacity-50 blur-[90px]" aria-hidden />
-
-        <Container className="relative grid min-h-[calc(100svh-72px)] gap-12 py-14 md:py-20 lg:grid-cols-[0.95fr_0.85fr] lg:items-center">
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-[620px]"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-[0.72rem] font-bold uppercase tracking-[0.13em] text-[var(--ink)]">
-              <span className="h-2 w-2 rounded-full bg-[var(--ink)]" aria-hidden />
-              Pan recien horneado - CDMX
+        <Container className="relative grid min-h-[88svh] items-center gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+          {/* Columna texto */}
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
+              Tahona · Desde 1957
             </span>
-            <h1 className="mt-6 font-serif text-[clamp(3.6rem,8.4vw,7.4rem)] font-medium leading-[0.9] tracking-[-0.035em] text-balance">
+            <h1 className="mt-6 font-serif text-[clamp(2.75rem,7vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.03em] text-white">
               Pan fresco,
               <br />
-              <span className="italic text-[var(--accent)]">sin fila.</span>
+              <span className="text-[var(--accent)]">sin fila.</span>
             </h1>
-            <p className="mt-7 max-w-[31rem] text-[1.08rem] leading-[1.65] text-white/82 md:text-[1.2rem]">
-              Hogazas, pan dulce, bolleria y mas: aparta tus piezas favoritas y retiralas en un hub con horario y casillero confirmados. Del horno a tu semana, sin vueltas.
+            <p className="mt-6 max-w-md font-sans text-[1.0625rem] leading-[1.6] text-white/80">
+              Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados. Sin filas, sin vueltas.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="motion-sheen h-14 rounded-full bg-[var(--accent)] px-7 text-base text-[var(--ink)] shadow-[0_18px_50px_rgba(255,207,90,0.34)] hover:bg-[#ffd976]">
-                <Link href="/suscribirme/productos">
-                  Apartar mi pan <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
+              <Button asChild size="lg" variant="accent" className="shadow-[0_10px_34px_rgba(0,0,0,.25)]">
+                <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-full border-white/28 bg-white/8 px-7 text-base text-white backdrop-blur hover:bg-white/14 hover:text-white">
+              <Button asChild size="lg" className="border border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20">
                 <Link href="/catalogo">Ver catalogo</Link>
               </Button>
             </div>
-            <div className="mt-12 grid max-w-[480px] grid-cols-3 gap-4 border-t border-white/20 pt-6">
+            <div className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-6">
               {[
-                ["Corte", "Vie - 22:00"],
+                ["Corte", "Jueves 18:00"],
                 ["Retiro", "3 ventanas"],
                 ["Hubs", `${hubs.length} zonas`]
               ].map(([label, value]) => (
                 <div key={label}>
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">{label}</p>
-                  <p className="mt-1 font-mono text-sm text-white [font-variant-numeric:tabular-nums]">{value}</p>
+                  <p className="font-sans text-[0.7rem] uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
+                  <p className="mt-1 font-mono text-sm font-medium text-white [font-variant-numeric:tabular-nums]">{value}</p>
                 </div>
               ))}
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 32, rotate: 1.5 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mx-auto w-full max-w-[470px] lg:max-w-none"
-          >
-            <div className="absolute -right-6 -top-6 h-32 w-32 rounded-[28px] bg-[var(--accent)] motion-safe:animate-[th-float-slow_7s_ease-in-out_infinite]" aria-hidden />
-            <div className="absolute left-[38%] top-0 z-20 hidden sm:block" aria-hidden>
-              <span className="absolute h-5 w-5 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.2s_ease-in_infinite]" />
-              <span className="absolute left-7 h-4 w-4 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.6s_ease-in_.6s_infinite]" />
-              <span className="absolute -left-6 h-4 w-4 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.9s_ease-in_1.1s_infinite]" />
-            </div>
-            <div className="relative z-10 aspect-[4/5] overflow-hidden rounded-[28px] border border-white/22 shadow-[0_40px_100px_rgba(8,18,60,0.48)] motion-safe:animate-[th-float_8s_ease-in-out_infinite]">
-              <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="(min-width: 1024px) 44vw, 88vw" className="object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/48 to-transparent" />
-              <div className="absolute bottom-5 left-5 rounded-[16px] bg-white/95 px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.2)]">
-                <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Recien horneado</p>
-                <p className="mt-1 font-serif text-xl font-medium text-[var(--ink)]">{hero.nombre.replace(" de la Casa", "")}</p>
-              </div>
-              <div className="absolute right-5 top-5 rounded-full bg-[var(--accent)] px-4 py-2 font-mono text-sm font-semibold text-[var(--ink)]">
-                {formatCurrency(hero.precio_mxn)}
-              </div>
-            </div>
-            <div className="absolute left-[-1rem] top-8 z-20 hidden items-center gap-3 rounded-[18px] border border-white/22 bg-[rgba(16,26,46,0.62)] px-4 py-3 text-white shadow-[0_18px_45px_rgba(8,18,60,0.38)] backdrop-blur md:flex">
-              <span className="h-3 w-3 rounded-full bg-[var(--accent)] motion-safe:animate-[th-pulse_2s_ease_infinite]" aria-hidden />
-              <div>
-                <p className="text-[0.62rem] uppercase tracking-[0.12em] text-white/70">El corte cierra en</p>
-                <p className="mt-1 font-mono text-lg [font-variant-numeric:tabular-nums]">3d 23:13:06</p>
-              </div>
-            </div>
-          </motion.div>
-        </Container>
-      </section>
-
-      <div className="overflow-hidden whitespace-nowrap bg-[var(--ink)] py-4 text-white">
-        <div className="inline-flex motion-safe:animate-[th-marquee_28s_linear_infinite]">
-          {[0, 1].map((group) => (
-            <span key={group} className="inline-flex items-center font-serif text-xl italic">
-              {marqueeItems.map((item) => (
-                <span key={`${group}-${item}`} className="inline-flex items-center">
-                  <span className="px-7">{item}</span>
-                  <span className="text-[var(--accent)]">+</span>
-                </span>
-              ))}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <section className="bg-[var(--paper)] py-[clamp(4rem,8vw,7rem)]">
-        <Container>
-          <motion.article
-            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px 0px -120px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="relative min-h-[520px] overflow-hidden rounded-[28px] shadow-[0_40px_95px_rgba(15,26,46,0.26)] md:min-h-[640px]"
-          >
-            <Image src={showcase[1].imagen_url} alt={showcase[1].nombre} fill sizes="100vw" className="object-cover" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,16,40,.86)_0%,rgba(8,16,40,.58)_42%,rgba(8,16,40,.08)_74%),linear-gradient(0deg,rgba(8,16,40,.68),transparent_50%)]" />
-            <div className="absolute inset-0 flex flex-col justify-end p-7 text-white md:p-14">
-              <div className="mb-4 inline-flex items-center gap-3">
-                <span className="font-mono text-sm font-semibold text-[var(--accent)]">01</span>
-                <span className="h-px w-9 bg-[var(--accent)]" aria-hidden />
-                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/88">{showcase[1].categoria} - del horno de hoy</span>
-              </div>
-              <h2 className="max-w-[15ch] font-serif text-[clamp(2.7rem,5vw,4.8rem)] font-medium leading-none tracking-[-0.02em]">
-                {showcase[1].nombre}.
-              </h2>
-              <p className="mt-5 max-w-[46ch] text-base leading-[1.65] text-white/86 md:text-lg">
-                Capas doradas, miga tierna y ese primer crujido que avisa que acaba de salir del horno.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <p className="font-serif text-5xl font-medium">{formatCurrency(showcase[1].precio_mxn)}</p>
-                <Button asChild className="h-12 rounded-[12px] bg-[var(--accent)] px-6 text-[var(--ink)] hover:bg-[#ffd976]">
-                  <Link href={`/catalogo/${showcase[1].slug}`}>
-                    Apartar esta pieza <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-            <div className="absolute bottom-8 right-8 hidden items-center gap-2 md:flex">
-              {showcase.map((product, index) => (
-                <span key={product.id} className={cn("h-2.5 rounded-full bg-white/45", index === 1 ? "w-8 bg-[var(--accent)]" : "w-2.5")} />
-              ))}
-            </div>
-          </motion.article>
-        </Container>
-      </section>
-
-      <section id="vitrina" className="bg-[var(--paper)] py-[clamp(4rem,8vw,7rem)]">
-        <Container>
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div>
-              <div className="mb-4 h-1 w-12 rounded-full bg-[var(--brand)]" aria-hidden />
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Vitrina semanal</p>
-              <h2 className="mt-3 max-w-[15ch] font-serif text-[clamp(2.25rem,4.3vw,3.7rem)] font-medium leading-[1.02] tracking-[-0.02em]">
-                Lo que sale del horno esta semana.
-              </h2>
-            </div>
-            <Button asChild variant="outline" className="h-12 rounded-full border-[var(--ink)] bg-transparent px-6 text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white">
-              <Link href="/catalogo">
-                Abrir catalogo <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </Button>
           </div>
-          <motion.div
-            variants={gridStagger}
-            initial={reduceMotion ? false : "hidden"}
-            whileInView={reduceMotion ? undefined : "show"}
-            viewport={{ once: true, margin: "0px 0px -120px" }}
-            className="mt-11 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {featured.map((product, index) => (
-              <motion.div key={product.id} variants={fadeUp}>
-                <Link href={`/catalogo/${product.slug}`} className="group block overflow-hidden rounded-[20px] border border-[var(--line)] bg-white text-[var(--ink)] no-underline shadow-[0_1px_2px_rgba(15,26,46,0.04)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,26,46,0.10)]">
-                  <div className="relative aspect-[4/5] overflow-hidden">
-                    <Image src={product.imagen_url} alt={product.nombre} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <span className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] shadow-sm">
-                      {index === 1 ? "Pocas horneadas" : index === 2 ? "Disponible esta semana" : "Disponible diario"}
-                    </span>
-                  </div>
-                  <div className="p-5">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{product.categoria}</p>
-                    <h3 className="mt-2 min-h-[3.4rem] font-serif text-[1.55rem] font-medium leading-[1.08]">{product.nombre.replace(" de la Casa", "")}</h3>
-                    <p className="mt-4 font-mono text-base font-semibold">{formatCurrency(product.precio_mxn)}</p>
-                  </div>
-                </Link>
-              </motion.div>
+
+          {/* Columna foto de pan */}
+          <div className="relative hidden lg:block">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(0,0,0,.4)]">
+              <Image
+                src={hero.imagen_url}
+                alt={hero.nombre}
+                fill
+                priority
+                sizes="(max-width: 1024px) 0px, 540px"
+                className="object-cover"
+              />
+              {/* viñeta calida sobre la foto para fundirla con el azul */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/40 via-transparent to-transparent" aria-hidden />
+              {/* etiqueta flotante */}
+              <div className="absolute bottom-5 left-5 rounded-[14px] bg-[var(--paper-raised)]/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur-sm">
+                <p className="font-sans text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[var(--brand)]">Recien horneado</p>
+                <p className="mt-0.5 font-serif text-[1.05rem] font-medium text-[var(--ink)]">{hero.nombre}</p>
+              </div>
+            </div>
+            {/* acento amarillo detras de la foto */}
+            <div className="absolute -right-5 -top-5 -z-10 h-24 w-24 rounded-[20px] bg-[var(--accent)]" aria-hidden />
+          </div>
+        </Container>
+      </section>
+
+      {/* ============ VITRINA SEMANAL ============ */}
+      <section className="py-xl">
+        <Container>
+          <SectionHeader
+            eyebrow="Vitrina semanal"
+            title="Lo que sale del horno esta semana."
+            body="Una seleccion corta en portada. El catalogo completo queda para comparar, elegir y apartar sin perderse."
+            action={<Button asChild variant="accent"><Link href="/catalogo">Abrir catalogo</Link></Button>}
+          />
+          <div className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((product) => (
+              <CatalogProductCard
+                key={product.id}
+                href={`/catalogo/${product.slug}`}
+                imageUrl={product.imagen_url}
+                name={product.nombre}
+                category={product.categoria}
+                price={product.precio_mxn}
+                quantity={cart[product.id] ?? 0}
+                onIncrement={() => addToCart(product.id)}
+                onDecrement={() => removeFromCart(product.id)}
+                availability={availabilityLabel(product.disponibilidad.length)}
+              />
             ))}
           </motion.div>
         </Container>
@@ -633,193 +532,98 @@ export function LandingPage() {
         </Container>
       </section>
 
-      <section className="bg-[var(--paper-sunken)] py-[clamp(4.5rem,8vw,7.5rem)]">
-        <Container className="grid gap-12 lg:grid-cols-[0.9fr_1fr] lg:items-center">
-          <div>
-            <div className="mb-5 h-1 w-12 rounded-full bg-[var(--brand)]" aria-hidden />
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Red Tahona - CDMX</p>
-            <h2 className="mt-4 max-w-[13ch] font-serif text-[clamp(2.4rem,4.8vw,4.1rem)] font-medium leading-[1.02] tracking-[-0.02em]">
-              Tres barrios, una rutina mas facil.
+      {/* ============ BANDA AZUL CON PROFUNDIDAD: PEDIDO CON RETIRO ============ */}
+      <section className="relative overflow-hidden py-xl text-white">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 120% at 85% 0%, #2a4ce0 0%, #2040d0 42%, #16308f 100%)"
+          }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px)",
+            backgroundSize: "52px 52px"
+          }}
+          aria-hidden
+        />
+        <Container className="relative grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="max-w-xl">
+            <div className="mb-4 h-1 w-10 rounded-full bg-[var(--accent)]" aria-hidden />
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">Pedido con retiro</p>
+            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-white text-balance">
+              Tu bolsa lista, tu casillero esperando.
             </h2>
-            <p className="mt-6 max-w-[34rem] text-lg leading-[1.65] text-[var(--ink-soft)]">
-              Casilleros refrigerados a pasos de tu casa u oficina. Llegas, escaneas y te llevas el pan tibio.
+            <p className="mt-4 max-w-[46ch] font-sans text-[0.95rem] leading-[1.6] text-white/80">
+              El cliente debe saber que pidio, cuanto paga, donde retira y que pasa si hay una excepcion. Todo en cuatro pasos.
             </p>
-            <div className="mt-8 grid gap-4">
-              {hubs.map((hub, index) => (
-                <Link key={hub.id} href={`/hubs/${hub.slug}`} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border border-[var(--line)] bg-white p-5 text-[var(--ink)] no-underline shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
-                  <div className="flex items-start gap-4">
-                    <span className="mt-2 h-3 w-3 rounded-full bg-[var(--brand)]" aria-hidden />
-                    <div>
-                      <h3 className="font-serif text-2xl font-medium">{hub.nombre}</h3>
-                      <p className="mt-1 text-sm text-[var(--ink-soft)]">{hub.direccion}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-lg font-semibold">{[82, 74, 69][index] ?? 70}%</p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.1em] text-[var(--ink-faint)]">ocupacion</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
           </div>
-
-          <div className="relative min-h-[430px] overflow-hidden rounded-[28px] bg-[var(--brand)] p-8 shadow-[0_28px_80px_rgba(32,64,208,.22)]">
-            <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,.72)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.72)_1px,transparent_1px)] [background-size:48px_48px]" aria-hidden />
-            <div className="relative z-10 inline-flex items-center gap-2 rounded-full bg-[#0f1a2e]/78 px-4 py-2 text-sm font-bold text-white">
-              <span className="h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden />
-              {hubs.length} sucursales - CDMX
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             {[
-              ["Polanco", "left-[32%] top-[27%]"],
-              ["Condesa", "left-[55%] top-[48%]"],
-              ["Del Valle", "left-[46%] top-[70%]"]
-            ].map(([label, position]) => (
-              <div key={label} className={cn("absolute", position)}>
-                <span className="block h-5 w-5 rounded-full border-4 border-white bg-[var(--accent)] shadow-[0_0_0_8px_rgba(255,207,90,.14)]" aria-hidden />
-                <span className="absolute left-7 top-[-3px] whitespace-nowrap rounded-full bg-[#0f1a2e]/90 px-3 py-1 text-sm font-semibold text-white">{label}</span>
+              [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
+              [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
+              [Wallet, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
+              [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde cuenta."]
+            ].map(([Icon, title, body]) => (
+              <div key={String(title)} className="rounded-[16px] border border-white/15 bg-white/[0.07] p-5 backdrop-blur-sm transition-colors duration-[200ms] hover:bg-white/[0.12]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--accent)] text-[var(--ink)]">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <h3 className="mt-4 font-serif text-[1.35rem] font-medium text-white">{title as string}</h3>
+                <p className="mt-2 font-sans text-sm leading-6 text-white/70">{body as string}</p>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
-      <section className="bg-[var(--paper)] py-[clamp(4.5rem,8vw,7rem)]">
+      {/* ============ RED TAHONA ============ */}
+      <section className="py-xl">
         <Container>
-          <div className="overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,var(--accent),#ffe7a3)] p-8 text-[var(--ink)] md:p-14 lg:p-16">
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--brand)]">Tahona Hubs</p>
-            <h2 className="mt-5 max-w-[18ch] font-serif text-[clamp(2.5rem,5vw,4.4rem)] font-medium leading-[1.02] tracking-[-0.02em]">
-              Empieza tu semana con pan recien horneado.
-            </h2>
-            <p className="mt-6 max-w-[38rem] text-lg leading-[1.65] text-[var(--ink-soft)]">
-              Aparta hoy, recoge esta semana. Sin filas, sin compromisos largos, cancela cuando quieras.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-4">
-              <Button asChild size="lg" className="h-14 rounded-full bg-[var(--ink)] px-7 text-white hover:bg-[#18243a]">
-                <Link href="/suscribirme/productos">
-                  Apartar mi pan <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-full border-[rgba(15,26,46,.32)] bg-transparent px-7 text-[var(--ink)] hover:bg-white/45">
-                <Link href="/como-funciona">Como funciona</Link>
-              </Button>
-            </div>
+          <SectionHeader
+            eyebrow="Red Tahona"
+            title="Tres barrios, una rutina mas facil."
+            action={<Button asChild variant="accent"><Link href="/hubs">Ver hubs</Link></Button>}
+          />
+          <div className="mt-lg grid gap-sm md:grid-cols-3">
+            {hubs.map((hub) => (
+              <HubCard key={hub.id} hub={hub} />
+            ))}
           </div>
         </Container>
       </section>
 
-      <footer className="bg-[var(--ink)] py-14 text-white">
-        <Container className="grid gap-10 md:grid-cols-[1.1fr_0.7fr_0.7fr_0.8fr]">
-          <div>
-            <p className="font-serif text-3xl font-semibold tracking-[-0.02em]">TAHONA</p>
-            <p className="mt-2 font-semibold text-[var(--accent)]">Desde 1957.</p>
-            <p className="mt-6 max-w-[28ch] text-sm leading-6 text-white/64">
-              Panaderia mexicana con pedido semanal, hubs de retiro y casilleros inteligentes.
+      {/* ============ CIERRE CON CTA AMARILLO ============ */}
+      <section className="px-4 pb-xl">
+        <Container className="relative overflow-hidden rounded-[28px] bg-[var(--accent)] px-8 py-14 text-[var(--ink)] md:px-14 md:py-20">
+          <div
+            className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-50 blur-2xl"
+            style={{ background: "radial-gradient(circle, #fff, transparent 70%)" }}
+            aria-hidden
+          />
+          <div className="relative max-w-2xl">
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Tahona Hubs</p>
+            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-balance">
+              Empieza tu semana con pan recien horneado.
+            </h2>
+            <p className="mt-4 max-w-[44ch] font-sans text-[1rem] leading-[1.6] text-[var(--ink)]/75">
+              Aparta hoy, recoge esta semana. Sin filas, sin compromisos largos, cancela cuando quieras.
             </p>
-            <p className="mt-8 font-mono text-xs uppercase tracking-[0.14em] text-white/42">Hecho en CDMX</p>
-          </div>
-          <div>
-            <p className="font-semibold">Cliente</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/64">
-              <Link href="/" className="hover:text-white">Inicio</Link>
-              <Link href="/catalogo" className="hover:text-white">Catalogo</Link>
-              <Link href="/hubs" className="hover:text-white">Hubs</Link>
-              <Link href="/como-funciona" className="hover:text-white">Proceso</Link>
-            </div>
-          </div>
-          <div>
-            <p className="font-semibold">Hubs</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/64">
-              {hubs.map((hub) => (
-                <Link key={hub.id} href={`/hubs/${hub.slug}`} className="hover:text-white">
-                  {hub.nombre.replace("Hub ", "")}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="font-semibold">Cuenta</p>
-            <div className="mt-5 grid gap-3 text-sm text-white/64">
-              <Link href="/login" className="hover:text-white">Entrar</Link>
-              <Link href="/registro" className="hover:text-white">Crear cuenta</Link>
-              <Link href="/soporte" className="hover:text-white">Soporte</Link>
-            </div>
-          </div>
-          <div className="border-t border-white/12 pt-6 text-sm text-white/45 md:col-span-4">
-            <div className="flex flex-col justify-between gap-3 md:flex-row">
-              <span>© 2026 Tahona. Todos los derechos reservados.</span>
-              <span className="font-mono">Hecho con oficio en CDMX</span>
-            </div>
+            <Button asChild size="lg" className="mt-8">
+              <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
           </div>
         </Container>
-      </footer>
+      </section>
     </main>
   );
 }
-
 export function CatalogoPage() {
   return <CatalogoExactPage />;
-}
-
-function CatalogoPageLegacy() {
-  const { productos, cart, addToCart, removeFromCart } = useTahonaStore();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("Todo");
-  const categories = ["Todo", ...Array.from(new Set(productos.map((product) => product.categoria)))];
-  const filtered = productos.filter((product) => {
-    const matchesCategory = category === "Todo" || product.categoria === category;
-    const matchesQuery = `${product.nombre} ${product.descripcion_corta}`.toLowerCase().includes(query.toLowerCase());
-    return matchesCategory && matchesQuery;
-  });
-
-  return (
-    <main className="storefront-shell py-lg">
-      <Container>
-        <SectionHeader
-          eyebrow="Catálogo"
-          title="Elige pan por antojo, día y disponibilidad."
-          body="La vitrina está diseñada para escanear rápido: imagen, categoría, precio y acción."
-          action={<Button asChild><Link href="/suscribirme/productos">Armar pedido</Link></Button>}
-        />
-        <div className="sticky top-[calc(68px+env(safe-area-inset-top))] z-20 mt-md rounded-lg border border-border bg-[color-mix(in_srgb,var(--surface)_86%,transparent)] p-xs shadow-md backdrop-blur-xl">
-          <div className="flex flex-col gap-xs lg:flex-row lg:items-center">
-            <label className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar hogaza, concha, croissant..." className="pl-10" />
-            </label>
-            <div className="flex gap-2 overflow-x-auto">
-              {categories.map((item) => (
-                <Button
-                  key={item}
-                  type="button"
-                  variant={item === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCategory(item)}
-                >
-                  {item}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="mt-md grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((product) => (
-            <CatalogProductCard
-              key={product.id}
-              href={`/catalogo/${product.slug}`}
-              imageUrl={product.imagen_url}
-              name={product.nombre}
-              category={product.categoria}
-              price={product.precio_mxn}
-              quantity={cart[product.id] ?? 0}
-              onIncrement={() => addToCart(product.id)}
-              onDecrement={() => removeFromCart(product.id)}
-              availability={availabilityLabel(product.disponibilidad.length)}
-            />
-          ))}
-        </div>
-      </Container>
-    </main>
-  );
 }
 
 function availabilityLabel(days: number) {
@@ -874,7 +678,7 @@ function CatalogoExactPage() {
               Corte semanal
             </p>
             <p className="mt-2 font-serif text-[1.125rem] font-medium text-[var(--ink)]">
-              Viernes · 10:00 PM
+              Viernes - 10:00 PM
             </p>
             <p className="mt-1 font-mono text-sm font-medium text-[var(--brand)] [font-variant-numeric:tabular-nums]">
               Cierra en {countdown}
@@ -911,13 +715,7 @@ function CatalogoExactPage() {
         </section>
 
         <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <motion.div
-            variants={gridStagger}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((product) => (
               <TahonaCatalogCard
                 key={product.id}
@@ -928,7 +726,7 @@ function CatalogoExactPage() {
               />
             ))}
             {!filtered.length ? <CatalogEmptyState onReset={() => setCategory("Todo")} /> : null}
-          </motion.div>
+          </div>
           <CatalogBag
             items={cartItems}
             count={cartCount}
@@ -1059,7 +857,8 @@ function TahonaCatalogCard({
 
   return (
     <motion.article
-      variants={fadeUp}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { y: -4, boxShadow: "var(--shadow-md)" }}
       transition={{ duration: 0.24, ease: easeOutSoft }}
       className="group overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)]"
@@ -1384,7 +1183,7 @@ export function ProductDetailPage({ slug }: { slug: string }) {
           </div>
           {related.length > 0 ? (
             <div className="mt-lg">
-              <SectionHeader eyebrow="También puede interesarte" title="Misma familia, otra textura." compact />
+              <SectionHeader eyebrow="Tambien puede interesarte" title="Misma familia, otra textura." compact />
               <div className="mt-sm grid gap-xs md:grid-cols-3">
                 {related.map((item) => <ProductLine key={item.id} product={item} quantity={1} action={<Button asChild variant="outline" size="sm"><Link href={`/catalogo/${item.slug}`}>Ver</Link></Button>} />)}
               </div>
@@ -1401,9 +1200,9 @@ export function ComoFuncionaPage() {
     <main className="storefront-shell py-lg">
       <Container>
         <SectionHeader
-          eyebrow="Cómo funciona"
+          eyebrow="Como funciona"
           title="Una compra de pan debe sentirse tan simple como recoger una llave."
-          body="El proceso completo cabe en cuatro decisiones. Todo lo demás queda automatizado por operación."
+          body="El proceso completo cabe en cuatro decisiones. Todo lo demas queda automatizado por operacion."
         />
         <div className="mt-lg grid gap-sm md:grid-cols-4">
           {[
@@ -1444,7 +1243,7 @@ function HubCard({ hub }: { hub: Hub }) {
         </div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{hub.direccion}</p>
         <div className="mt-sm">
-          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Ocupación</span><span>{occupation}%</span></div>
+          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Ocupacion</span><span>{occupation}%</span></div>
           <ProgressBar value={occupation} />
         </div>
       </div>
@@ -1457,7 +1256,7 @@ export function HubsPage() {
   return (
     <main className="storefront-shell py-lg">
       <Container>
-        <SectionHeader eyebrow="Hubs" title="Red de retiro con horarios concretos." body="Cada hub muestra dirección, capacidad y ventanas para que el cliente decida con confianza." />
+        <SectionHeader eyebrow="Hubs" title="Red de retiro con horarios concretos." body="Cada hub muestra direccion, capacidad y ventanas para que el cliente decida con confianza." />
         <div className="mt-lg grid gap-md lg:grid-cols-[1fr_0.9fr]">
           <HubMap hubs={hubs} />
           <div className="grid gap-sm">
@@ -1486,7 +1285,7 @@ export function HubDetailPage({ slug }: { slug: string }) {
           <p className="mt-sm text-body-l text-muted-foreground">{hub.direccion}</p>
           <div className="mt-md grid gap-xs md:grid-cols-3">
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros</p><p className="mt-1 text-h2 font-semibold">{hub.casilleros_total}</p></CardContent></Card>
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupación</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupacion</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Clientes</p><p className="mt-1 text-h2 font-semibold">{hub.clientes_activos}</p></CardContent></Card>
           </div>
           <Card className="mt-md">
@@ -1519,7 +1318,7 @@ function CheckoutContactFields() {
   return (
     <div className="mt-md grid gap-sm md:grid-cols-2">
       <Field label="Nombre" placeholder="Mariana Soto" autoComplete="name" required />
-      <Field label="Teléfono" type="tel" inputMode="tel" placeholder="55 0000 0000" autoComplete="tel" required />
+      <Field label="Telefono" type="tel" inputMode="tel" placeholder="55 0000 0000" autoComplete="tel" required />
       <Field label="Email" type="email" inputMode="email" placeholder="nombre@correo.com" autoComplete="email" required />
       <div className="space-y-2 md:col-span-2">
         <label htmlFor="hub-note" className="block text-sm font-semibold text-foreground">Nota para el hub</label>
@@ -1527,7 +1326,7 @@ function CheckoutContactFields() {
       </div>
       <label className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-sm text-sm md:col-span-2">
         <input type="checkbox" className="h-4 w-4 accent-primary" />
-        Crear cuenta para gestionar mi bolsa después de pagar
+        Crear cuenta para gestionar mi bolsa despues de pagar
       </label>
     </div>
   );
@@ -1538,11 +1337,11 @@ function CheckoutPaymentFields({ total }: { total: number }) {
     <div className="mt-md grid gap-sm">
       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
         <LockKeyhole className="h-4 w-4 text-success" aria-hidden />
-        Pago seguro · Visa · Mastercard · Stripe
+        Pago seguro - Visa - Mastercard - Stripe
       </div>
       <Card className="">
         <CardContent className="grid gap-sm p-md md:grid-cols-2">
-          <Field label="Número de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
+          <Field label="Numero de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
           <Field label="Vencimiento" inputMode="numeric" placeholder="MM/AA" required />
           <Field label="CVV" inputMode="numeric" placeholder="123" required />
         </CardContent>
@@ -1552,10 +1351,10 @@ function CheckoutPaymentFields({ total }: { total: number }) {
       </div>
       <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-sm">
         <AccordionItem value="coupon">
-          <AccordionTrigger>¿Tienes un código o facturación?</AccordionTrigger>
+          <AccordionTrigger>Tienes un codigo o facturacion?</AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-xs md:grid-cols-2">
-              <Field label="Cupón" placeholder="TAHONA10" />
+              <Field label="Cupon" placeholder="TAHONA10" />
               <Field label="RFC" placeholder="Opcional" />
             </div>
           </AccordionContent>
@@ -1624,32 +1423,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
             </div>
           ) : null}
           {step === "direccion" ? <CheckoutContactFields /> : null}
-          {false && step === "direccion" ? (
-            <div className="mt-md grid gap-sm md:grid-cols-2">
-              <Field label="Nombre" placeholder="Mariana" required />
-              <Field label="Apellido" placeholder="Soto" required />
-              <Field label="Correo" type="email" placeholder="nombre@correo.com" required />
-              <Field label="Telefono" placeholder="55 0000 0000" required />
-              <Field label="Colonia" placeholder="Condesa" required />
-              <Field label="Referencia" placeholder="Edificio, piso o indicación breve" />
-            </div>
-          ) : null}
           {step === "pago" ? <CheckoutPaymentFields total={total} /> : null}
-          {false && step === "pago" ? (
-            <div className="mt-md grid gap-sm">
-              <Card className="">
-                <CardContent className="grid gap-sm p-md md:grid-cols-2">
-                  <Field label="Nombre en tarjeta" placeholder="Mariana Soto" required />
-                  <Field label="Número de tarjeta" placeholder="4242 4242 4242 4242" required />
-                  <Field label="Vencimiento" placeholder="MM/AA" required />
-                  <Field label="CVC" placeholder="123" required />
-                </CardContent>
-              </Card>
-              <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-sm">
-                <AccordionItem value="coupon"><AccordionTrigger>Agregar cupón o facturación</AccordionTrigger><AccordionContent><div className="grid gap-xs md:grid-cols-2"><Field label="Cupón" placeholder="TAHONA10" /><Field label="RFC" placeholder="Opcional" /></div></AccordionContent></AccordionItem>
-              </Accordion>
-            </div>
-          ) : null}
           {step === "confirmacion" ? (
             <div className="mt-md grid gap-sm md:grid-cols-2">
               <StatusPill tone="success" label="Pedido confirmado" />
@@ -1695,7 +1469,7 @@ function AccountNav({ active }: { active: string }) {
   const items = [
     ["/cuenta", "Resumen"],
     ["/cuenta/entregas", "Entregas"],
-    ["/cuenta/suscripcion", "Suscripción"],
+    ["/cuenta/suscripcion", "Suscripcion"],
     ["/cuenta/pagos", "Pagos"],
     ["/cuenta/perfil", "Perfil"]
   ];
@@ -1723,7 +1497,7 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
           <div className="flex gap-sm">
             <AlertTriangle className="mt-1 h-5 w-5 shrink-0 text-danger" aria-hidden />
             <div>
-              <p className="font-semibold text-danger">Tu pago no se procesó.</p>
+              <p className="font-semibold text-danger">Tu pago no se proceso.</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Actualiza tu tarjeta antes del corte del viernes. Monto pendiente: {formatCurrency(failedCharge.monto)}.
               </p>
@@ -1743,8 +1517,8 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
                 <div>
                   <StatusPill tone={delivery.estado === "incidencia" ? "danger" : delivery.estado === "listo" ? "success" : "info"} label={delivery.estado.replaceAll("_", " ")} />
                   <CardTitle className="mt-sm">Tu bolsa del {shortDate(delivery.fecha)}</CardTitle>
-                  <p className="mt-2 text-sm text-muted-foreground">{data.hub.nombre} · {delivery.slot}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Se cobra el viernes previo · {formatCurrency(weeklyTotal)}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{data.hub.nombre} - {delivery.slot}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Se cobra el viernes previo - {formatCurrency(weeklyTotal)}</p>
                 </div>
                 <Button asChild>
                   <Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link>
@@ -1786,19 +1560,10 @@ export function AccountPage({ view, entregaId }: { view: string; entregaId?: str
     <main className="storefront-shell py-lg">
       <Container>
         <div className="mb-md flex flex-col justify-between gap-sm md:flex-row md:items-end">
-          <SectionHeader eyebrow="Mi cuenta" title={`Hola, ${data.client.nombre}.`} body="Tu próximo retiro, suscripción y pagos en una sola lectura." compact />
+          <SectionHeader eyebrow="Mi cuenta" title={`Hola, ${data.client.nombre}.`} body="Tu proximo retiro, suscripcion y pagos en una sola lectura." compact />
           <AccountNav active={activeView} />
         </div>
         {view === "resumen" ? <AccountSummary data={data} delivery={delivery} /> : null}
-        {false && view === "resumen" ? (
-          <div className="grid gap-md lg:grid-cols-[390px_1fr]">
-            <BoardingPass entrega={delivery} hub={data.hub} productos={data.productos} />
-            <div className="grid gap-sm md:grid-cols-2">
-              <Card className=""><CardHeader><CardTitle>Próximo retiro</CardTitle></CardHeader><CardContent><StatusPill tone={delivery.estado === "incidencia" ? "danger" : "success"} label={delivery.estado.replaceAll("_", " ")} /><p className="mt-sm text-sm text-muted-foreground">{data.hub.nombre} · {shortDate(delivery.fecha)} · {delivery.slot}</p><Button asChild className="mt-md"><Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link></Button></CardContent></Card>
-              <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{data.subscription.productos.slice(0, 3).map((item) => <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />)}<Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion">Editar suscripción</Link></Button></CardContent></Card>
-            </div>
-          </div>
-        ) : null}
         {view === "entregas" ? <DeliveryList entregas={data.deliveries} productos={data.productos} hubs={data.hubs} /> : null}
         {view === "entrega" ? <DeliveryDetail entrega={delivery} productos={data.productos} hub={getHub(data.hubs, delivery.hub_id)} /> : null}
         {view === "suscripcion" ? <SubscriptionPanelV2 subscription={data.subscription} productos={data.productos} charges={data.charges} /> : null}
@@ -1816,7 +1581,7 @@ function DeliveryList({ entregas, productos, hubs }: { entregas: Entrega[]; prod
     <div className="grid gap-xs">
       {entregas.map((entrega) => (
         <Link key={entrega.id} href={`/cuenta/entrega/${entrega.id}`} className="grid gap-sm rounded-lg border border-border bg-card p-sm shadow-sm md:grid-cols-[1fr_auto_auto] md:items-center">
-          <div><p className="font-semibold">{shortDate(entrega.fecha)} · {getHub(hubs, entrega.hub_id).nombre}</p><p className="mt-1 text-sm text-muted-foreground">{entrega.productos.length} tipos · {entrega.slot}</p></div>
+          <div><p className="font-semibold">{shortDate(entrega.fecha)} - {getHub(hubs, entrega.hub_id).nombre}</p><p className="mt-1 text-sm text-muted-foreground">{entrega.productos.length} tipos - {entrega.slot}</p></div>
           <StatusPill tone={entrega.estado === "incidencia" ? "danger" : entrega.estado === "listo" ? "warning" : "success"} label={entrega.estado.replaceAll("_", " ")} />
           <p className="font-mono text-sm font-semibold">{formatCurrency(deliveryTotal(productos, entrega))}</p>
         </Link>
@@ -1832,17 +1597,17 @@ function DeliveryDetail({ entrega, productos, hub }: { entrega: Entrega; product
       <Card className="">
         <CardHeader><CardTitle>Instrucciones de retiro</CardTitle></CardHeader>
         <CardContent className="space-y-sm">
-          {["Llega dentro de tu ventana.", "Escanea el código QR en el módulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
+          {["Llega dentro de tu ventana.", "Escanea el codigo QR en el modulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
           <div className="rounded-md border border-danger/20 bg-danger-bg p-sm">
-            <p className="text-sm font-semibold text-danger">¿El casillero no abre?</p>
-            <p className="mt-1 text-sm text-muted-foreground">Ten listo tu código de respaldo y contacta soporte desde aquí.</p>
+            <p className="text-sm font-semibold text-danger">El casillero no abre?</p>
+            <p className="mt-1 text-sm text-muted-foreground">Ten listo tu codigo de respaldo y contacta soporte desde aqui.</p>
             <Button asChild variant="outline" className="mt-sm bg-card">
               <Link href="/soporte">Necesito ayuda</Link>
             </Button>
           </div>
           <div className="border-t border-border pt-sm">
-            <p className="text-sm font-semibold">Bitácora</p>
-            {["Pedido apartado", "Producción confirmada", "Casillero asignado", "QR activado"].map((event) => (
+            <p className="text-sm font-semibold">Bitacora</p>
+            {["Pedido apartado", "Produccion confirmada", "Casillero asignado", "QR activado"].map((event) => (
               <div key={event} className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
                 {event}
@@ -1911,7 +1676,7 @@ function SubscriptionPanelV2({
             <div>
               <p className="text-caption font-semibold uppercase text-primary">Bolsa semanal activa</p>
               <CardTitle className="mt-1">Tu suscripcion queda bajo control.</CardTitle>
-              <p className="mt-2 text-sm text-muted-foreground">Se cobra el {chargeDate} · {formatCurrency(weeklyTotal)}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Se cobra el {chargeDate} - {formatCurrency(weeklyTotal)}</p>
             </div>
             <StatusPill tone={subscription.estado === "activa" ? "success" : "warning"} label={subscription.estado} />
           </CardHeader>
@@ -2053,15 +1818,6 @@ function SubscriptionPanelV2({
   );
 }
 
-function SubscriptionPanel({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
-  return (
-    <div className="grid gap-md lg:grid-cols-[1fr_360px]">
-      <Card className=""><CardHeader><CardTitle>Bolsa semanal</CardTitle></CardHeader><CardContent className="space-y-xs">{subscription.productos.map((item) => <ProductLine key={item.producto_id} product={getProduct(productos, item.producto_id)} quantity={item.cantidad} />)}</CardContent></Card>
-      <Card className=""><CardHeader><CardTitle>Control</CardTitle></CardHeader><CardContent className="space-y-xs"><StatusPill tone="success" label={subscription.estado} /><p className="text-sm text-muted-foreground">Próxima entrega: {shortDate(subscription.proxima_entrega)}</p><p className="text-h3 font-semibold">{formatCurrency(subscriptionTotal(productos, subscription))} / semana</p><Button asChild className="w-full"><Link href="/cuenta/suscripcion/editar">Editar</Link></Button><Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/pausar">Pausar</Link></Button></CardContent></Card>
-    </div>
-  );
-}
-
 function EditSubscription({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
   return (
     <Card className="">
@@ -2079,10 +1835,10 @@ function EditSubscription({ subscription, productos }: { subscription: Suscripci
 function PauseSubscription() {
   return (
     <Card className="max-w-2xl">
-      <CardHeader><CardTitle>Pausar suscripción</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Pausar suscripcion</CardTitle></CardHeader>
       <CardContent className="space-y-sm">
         {[1, 2, 4].map((weeks) => <Button key={weeks} variant="outline" className="w-full justify-between">Pausar {weeks} semana{weeks > 1 ? "s" : ""}<ChevronRight className="h-4 w-4" /></Button>)}
-        <p className="text-sm text-muted-foreground">La pausa no cancela tu cuenta ni elimina tu configuración.</p>
+        <p className="text-sm text-muted-foreground">La pausa no cancela tu cuenta ni elimina tu configuracion.</p>
       </CardContent>
     </Card>
   );
@@ -2106,7 +1862,7 @@ function ProfilePanel() {
         <Field label="Nombre" defaultValue="Mariana" />
         <Field label="Apellido" defaultValue="Soto" />
         <Field label="Correo" defaultValue="mariana@correo.com" />
-        <Field label="Teléfono" defaultValue="55 3200 7800" />
+        <Field label="Telefono" defaultValue="55 3200 7800" />
         <Field label="Hub principal" defaultValue="Hub Polanco" />
         <Field label="Colonia" defaultValue="Polanco" />
       </CardContent>
@@ -2118,10 +1874,10 @@ export function SupportPage() {
   return (
     <main className="storefront-shell py-lg">
       <Container className="grid gap-lg lg:grid-cols-[0.8fr_1.2fr]">
-        <SectionHeader eyebrow="Soporte" title="Ayuda clara antes, durante y después del retiro." body="La prioridad es resolver incidencias de casillero, cobro o pedido sin forzar llamadas innecesarias." />
+        <SectionHeader eyebrow="Soporte" title="Ayuda clara antes, durante y despues del retiro." body="La prioridad es resolver incidencias de casillero, cobro o pedido sin forzar llamadas innecesarias." />
         <div className="grid gap-sm">
           {[
-            [HelpCircle, "No puedo abrir mi casillero", "Valida código, hub y ventana de retiro."],
+            [HelpCircle, "No puedo abrir mi casillero", "Valida codigo, hub y ventana de retiro."],
             [Receipt, "Tengo un problema de cobro", "Revisa reintentos, recibos y tarjeta."],
             [PackageCheck, "Mi pedido no corresponde", "Levanta incidencia con foto y detalle."]
           ].map(([Icon, title, body]) => <Card key={String(title)} className=""><CardContent className="flex gap-sm p-md"><Icon className="h-5 w-5 text-primary" /><div><h2 className="font-semibold">{title as string}</h2><p className="mt-1 text-sm text-muted-foreground">{body as string}</p></div></CardContent></Card>)}
@@ -2146,7 +1902,7 @@ export function AuthPage({ mode }: { mode: "login" | "registro" }) {
           <CardContent className="space-y-sm">
             {!isLogin ? <Field label="Nombre" placeholder="Mariana Soto" /> : null}
             <Field label="Correo" type="email" placeholder="nombre@correo.com" />
-            <Field label="Contraseña" type="password" placeholder="••••••••" />
+            <Field label="Contrasena" type="password" placeholder="********" />
             <Button asChild className="w-full"><Link href="/cuenta">{isLogin ? "Entrar" : "Crear cuenta"}</Link></Button>
             <Button asChild variant="ghost" className="w-full"><Link href={isLogin ? "/registro" : "/login"}>{isLogin ? "Crear cuenta" : "Ya tengo cuenta"}</Link></Button>
           </CardContent>

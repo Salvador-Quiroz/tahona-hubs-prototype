@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --paper: #fbf8f3;
+    --paper: #f5efe4;
     --paper-raised: #ffffff;
-    --paper-sunken: #f4efe6;
+    --paper-sunken: #ece3d3;
 
     --ink: #1c1815;
     --ink-soft: #4a433c;
@@ -42,7 +42,7 @@
     --bg: var(--paper);
     --surface: var(--paper-raised);
     --surface-2: var(--paper-sunken);
-    --surface-3: #eee7dc;
+    --surface-3: #e6dcc9;
     --panel-bg: #f5f7fb;
     --panel-surface: #ffffff;
     --border: var(--line);
@@ -277,11 +277,13 @@
   }
 
   .enter-soft {
-    animation: enter-soft var(--dur-hero) var(--ease-out) both;
+    opacity: 1;
+    animation: enter-soft var(--dur-hero) var(--ease-out);
   }
 
   .enter-rise {
-    animation: enter-rise var(--dur-base) var(--ease-out) both;
+    opacity: 1;
+    animation: enter-rise var(--dur-base) var(--ease-out);
   }
 
   .safe-bottom {
@@ -295,18 +297,7 @@
   .skeleton-shimmer {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(90deg, var(--paper-sunken) 25%, #ece5d8 50%, var(--paper-sunken) 75%);
-    background-size: 200% 100%;
-    animation: shimmer-bg 1.4s infinite;
-  }
-
-  .skeleton-shimmer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-110%) skewX(-14deg);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.68), transparent);
-    animation: shimmer 1.4s var(--ease-out-soft) infinite;
+    background: var(--paper-sunken);
   }
 
   @keyframes enter-soft {
@@ -477,5 +468,19 @@
     75%, 100% {
       width: 86%;
     }
+  }
+}
+
+/* Seguro anti-pantalla-en-blanco: si Framer deja algo en opacity:0 inline y no lo anima, lo mostramos. */
+[style*="opacity:0"],
+[style*="opacity: 0"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-soft,
+  .enter-rise {
+    animation: none;
   }
 }
