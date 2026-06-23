@@ -34,12 +34,24 @@ Servidor local: `http://localhost:3000`
 ## Calidad
 
 ```bash
+npm run ci
+```
+
+El comando anterior ejecuta:
+
+```bash
 npm run typecheck
 npm run lint
 npm run build
 ```
 
 El repositorio incluye GitHub Actions en `.github/workflows/ci.yml` para ejecutar estas validaciones en pushes y pull requests.
+
+## GitHub
+
+- La guía de arranque está en `docs/github-setup.md`.
+- La guía para contribuir está en `CONTRIBUTING.md`.
+- Dependabot revisa dependencias npm y GitHub Actions cada semana.
 
 ## Estructura
 
