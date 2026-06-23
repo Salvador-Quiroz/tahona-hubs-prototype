@@ -28,7 +28,7 @@ export const tahonaBrand = {
     "pan fresco con oficio",
     "retail premium sin friccion",
     "operación vigilada",
-    "confianza para inversionistas"
+    "confianza para clientes y operación"
   ],
   designPrinciples: [
     "Cliente: fotografia, deseo, reticula azul y CTA claros.",

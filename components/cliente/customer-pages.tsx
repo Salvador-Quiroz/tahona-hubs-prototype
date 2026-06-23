@@ -29,7 +29,6 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   User,
-  Wallet,
   Wheat,
   X
 } from "lucide-react";
@@ -353,121 +352,406 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
 }
 
 export function LandingPage() {
-  const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
-  const hero = productos[0];
-  const featured = productos.slice(0, 4);
+  const { productos, hubs } = useTahonaStore();
+  const reduceMotion = useReducedMotion();
+  const hero = getProduct(productos, "prod-001");
+  const showcase = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-003"), getProduct(productos, "prod-010")];
+  const featured = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-002"), getProduct(productos, "prod-003")];
+  const marqueeItems = ["Hogazas de masa madre", "Pan dulce mexicano", "Bolleria & croissants", "Horneado cada manana", `${hubs.length} hubs en CDMX`, "Desde 1957"];
+  const steps = [
+    [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
+    [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
+    [CreditCard, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
+    [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde tu cuenta."]
+  ] as const;
 
   return (
-    <main className="storefront-shell text-foreground">
-      <section className="relative min-h-[86svh] overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-        <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="100vw" className="object-cover opacity-28" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--paper)_0%,rgba(251,248,243,.92)_40%,rgba(251,248,243,.36)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[var(--paper)] to-transparent" />
-        <Container className="relative flex min-h-[86svh] flex-col justify-between py-12 md:py-16">
-          <div className="max-w-4xl pt-lg">
-            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              TAHONA · Desde 1957
-            </p>
-            <h1 className="mt-4 max-w-[12ch] font-serif text-[clamp(3.5rem,11vw,8.5rem)] font-medium leading-[0.92] tracking-[-0.04em] text-[var(--ink)]">
-              Pan fresco, sin fila.
+    <main className="storefront-shell overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+      <nav className="sticky top-0 z-50 border-b border-[var(--line)] bg-[rgba(251,248,243,0.86)] backdrop-blur-[14px]">
+        <Container className="flex h-[72px] items-center justify-between gap-4">
+          <Link href="/" className="flex min-w-0 items-baseline gap-2 text-[var(--ink)] no-underline">
+            <span className="font-serif text-[1.65rem] font-semibold leading-none tracking-[-0.02em]">TAHONA</span>
+            <span className="hidden font-mono text-[0.65rem] uppercase tracking-[0.16em] text-[var(--ink-faint)] sm:inline">
+              Desde 1957
+            </span>
+          </Link>
+          <div className="hidden items-center gap-2 md:flex">
+            {[
+              ["/", "Inicio"],
+              ["/catalogo", "Catalogo"],
+              ["/hubs", "Hubs"],
+              ["/como-funciona", "Proceso"]
+            ].map(([href, label], index) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "rounded-[9px] px-3 py-2 text-sm font-semibold no-underline transition-colors",
+                  index === 0 ? "bg-[var(--paper-sunken)] text-[var(--ink)]" : "text-[var(--ink-soft)] hover:bg-[var(--paper-sunken)] hover:text-[var(--ink)]"
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button asChild className="h-11 rounded-[12px] bg-[var(--brand)] px-4 text-white hover:bg-[var(--brand-press)]">
+              <Link href="/suscribirme/productos">
+                <ShoppingBag className="h-4 w-4" aria-hidden />
+                <span className="hidden sm:inline">Apartar mi pan</span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-[12px] border-[var(--line)] bg-[var(--paper)]">
+              <Link href="/cuenta" aria-label="Mi cuenta">
+                <User className="h-5 w-5" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        </Container>
+      </nav>
+
+      <section id="top" className="relative overflow-hidden bg-[var(--brand)] text-white">
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,#2a4ce0_0%,#2040d0_38%,#16308f_75%,#0f2470_100%)] bg-[length:200%_200%] motion-safe:animate-[th-mesh_18s_ease_infinite]" aria-hidden />
+        <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:54px_54px] [mask-image:radial-gradient(120%_100%_at_30%_20%,black_40%,transparent_92%)]" aria-hidden />
+        <div className="absolute -left-44 top-[8%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,var(--accent),transparent_70%)] opacity-30 blur-[80px] motion-safe:animate-[th-float-slow_9s_ease-in-out_infinite]" aria-hidden />
+        <div className="absolute -right-28 bottom-[-140px] h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,#3a5cff,transparent_70%)] opacity-50 blur-[90px]" aria-hidden />
+
+        <Container className="relative grid min-h-[calc(100svh-72px)] gap-12 py-14 md:py-20 lg:grid-cols-[0.95fr_0.85fr] lg:items-center">
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-[620px]"
+          >
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-[0.72rem] font-bold uppercase tracking-[0.13em] text-[var(--ink)]">
+              <span className="h-2 w-2 rounded-full bg-[var(--ink)]" aria-hidden />
+              Pan recien horneado - CDMX
+            </span>
+            <h1 className="mt-6 font-serif text-[clamp(3.6rem,8.4vw,7.4rem)] font-medium leading-[0.9] tracking-[-0.035em] text-balance">
+              Pan fresco,
+              <br />
+              <span className="italic text-[var(--accent)]">sin fila.</span>
             </h1>
-            <p className="mt-6 max-w-2xl font-serif text-display font-medium text-[var(--brand)] text-balance">
-              Pan recién hecho, apartado sin hacer fila.
+            <p className="mt-7 max-w-[31rem] text-[1.08rem] leading-[1.65] text-white/82 md:text-[1.2rem]">
+              Hogazas, pan dulce, bolleria y mas: aparta tus piezas favoritas y retiralas en un hub con horario y casillero confirmados. Del horno a tu semana, sin vueltas.
             </p>
-            <p className="mt-4 max-w-xl font-sans text-[1.125rem] leading-[1.55] text-[var(--ink-soft)]">
-              Aparta piezas recién horneadas y retíralas en un hub con horario y casillero confirmados.
-            </p>
-            <div className="mt-lg flex flex-wrap gap-xs">
-              <Button asChild size="lg">
-                <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="motion-sheen h-14 rounded-full bg-[var(--accent)] px-7 text-base text-[var(--ink)] shadow-[0_18px_50px_rgba(255,207,90,0.34)] hover:bg-[#ffd976]">
+                <Link href="/suscribirme/productos">
+                  Apartar mi pan <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/catalogo">Ver catálogo</Link>
+              <Button asChild size="lg" variant="outline" className="h-14 rounded-full border-white/28 bg-white/8 px-7 text-base text-white backdrop-blur hover:bg-white/14 hover:text-white">
+                <Link href="/catalogo">Ver catalogo</Link>
               </Button>
             </div>
+            <div className="mt-12 grid max-w-[480px] grid-cols-3 gap-4 border-t border-white/20 pt-6">
+              {[
+                ["Corte", "Vie - 22:00"],
+                ["Retiro", "3 ventanas"],
+                ["Hubs", `${hubs.length} zonas`]
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">{label}</p>
+                  <p className="mt-1 font-mono text-sm text-white [font-variant-numeric:tabular-nums]">{value}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 32, rotate: 1.5 }}
+            animate={reduceMotion ? undefined : { opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto w-full max-w-[470px] lg:max-w-none"
+          >
+            <div className="absolute -right-6 -top-6 h-32 w-32 rounded-[28px] bg-[var(--accent)] motion-safe:animate-[th-float-slow_7s_ease-in-out_infinite]" aria-hidden />
+            <div className="absolute left-[38%] top-0 z-20 hidden sm:block" aria-hidden>
+              <span className="absolute h-5 w-5 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.2s_ease-in_infinite]" />
+              <span className="absolute left-7 h-4 w-4 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.6s_ease-in_.6s_infinite]" />
+              <span className="absolute -left-6 h-4 w-4 rounded-full bg-white blur-md motion-safe:animate-[th-steam_3.9s_ease-in_1.1s_infinite]" />
+            </div>
+            <div className="relative z-10 aspect-[4/5] overflow-hidden rounded-[28px] border border-white/22 shadow-[0_40px_100px_rgba(8,18,60,0.48)] motion-safe:animate-[th-float_8s_ease-in-out_infinite]">
+              <Image src={hero.imagen_url} alt={hero.nombre} fill priority sizes="(min-width: 1024px) 44vw, 88vw" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/48 to-transparent" />
+              <div className="absolute bottom-5 left-5 rounded-[16px] bg-white/95 px-4 py-3 shadow-[0_14px_36px_rgba(0,0,0,0.2)]">
+                <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Recien horneado</p>
+                <p className="mt-1 font-serif text-xl font-medium text-[var(--ink)]">{hero.nombre.replace(" de la Casa", "")}</p>
+              </div>
+              <div className="absolute right-5 top-5 rounded-full bg-[var(--accent)] px-4 py-2 font-mono text-sm font-semibold text-[var(--ink)]">
+                {formatCurrency(hero.precio_mxn)}
+              </div>
+            </div>
+            <div className="absolute left-[-1rem] top-8 z-20 hidden items-center gap-3 rounded-[18px] border border-white/22 bg-[rgba(16,26,46,0.62)] px-4 py-3 text-white shadow-[0_18px_45px_rgba(8,18,60,0.38)] backdrop-blur md:flex">
+              <span className="h-3 w-3 rounded-full bg-[var(--accent)] motion-safe:animate-[th-pulse_2s_ease_infinite]" aria-hidden />
+              <div>
+                <p className="text-[0.62rem] uppercase tracking-[0.12em] text-white/70">El corte cierra en</p>
+                <p className="mt-1 font-mono text-lg [font-variant-numeric:tabular-nums]">3d 23:13:06</p>
+              </div>
+            </div>
+          </motion.div>
+        </Container>
+      </section>
+
+      <div className="overflow-hidden whitespace-nowrap bg-[var(--ink)] py-4 text-white">
+        <div className="inline-flex motion-safe:animate-[th-marquee_28s_linear_infinite]">
+          {[0, 1].map((group) => (
+            <span key={group} className="inline-flex items-center font-serif text-xl italic">
+              {marqueeItems.map((item) => (
+                <span key={`${group}-${item}`} className="inline-flex items-center">
+                  <span className="px-7">{item}</span>
+                  <span className="text-[var(--accent)]">+</span>
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <section className="bg-[var(--paper)] py-[clamp(4rem,8vw,7rem)]">
+        <Container>
+          <motion.article
+            initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -120px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="relative min-h-[520px] overflow-hidden rounded-[28px] shadow-[0_40px_95px_rgba(15,26,46,0.26)] md:min-h-[640px]"
+          >
+            <Image src={showcase[1].imagen_url} alt={showcase[1].nombre} fill sizes="100vw" className="object-cover" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,16,40,.86)_0%,rgba(8,16,40,.58)_42%,rgba(8,16,40,.08)_74%),linear-gradient(0deg,rgba(8,16,40,.68),transparent_50%)]" />
+            <div className="absolute inset-0 flex flex-col justify-end p-7 text-white md:p-14">
+              <div className="mb-4 inline-flex items-center gap-3">
+                <span className="font-mono text-sm font-semibold text-[var(--accent)]">01</span>
+                <span className="h-px w-9 bg-[var(--accent)]" aria-hidden />
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/88">{showcase[1].categoria} - del horno de hoy</span>
+              </div>
+              <h2 className="max-w-[15ch] font-serif text-[clamp(2.7rem,5vw,4.8rem)] font-medium leading-none tracking-[-0.02em]">
+                {showcase[1].nombre}.
+              </h2>
+              <p className="mt-5 max-w-[46ch] text-base leading-[1.65] text-white/86 md:text-lg">
+                Capas doradas, miga tierna y ese primer crujido que avisa que acaba de salir del horno.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <p className="font-serif text-5xl font-medium">{formatCurrency(showcase[1].precio_mxn)}</p>
+                <Button asChild className="h-12 rounded-[12px] bg-[var(--accent)] px-6 text-[var(--ink)] hover:bg-[#ffd976]">
+                  <Link href={`/catalogo/${showcase[1].slug}`}>
+                    Apartar esta pieza <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="absolute bottom-8 right-8 hidden items-center gap-2 md:flex">
+              {showcase.map((product, index) => (
+                <span key={product.id} className={cn("h-2.5 rounded-full bg-white/45", index === 1 ? "w-8 bg-[var(--accent)]" : "w-2.5")} />
+              ))}
+            </div>
+          </motion.article>
+        </Container>
+      </section>
+
+      <section id="vitrina" className="bg-[var(--paper)] py-[clamp(4rem,8vw,7rem)]">
+        <Container>
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div>
+              <div className="mb-4 h-1 w-12 rounded-full bg-[var(--brand)]" aria-hidden />
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Vitrina semanal</p>
+              <h2 className="mt-3 max-w-[15ch] font-serif text-[clamp(2.25rem,4.3vw,3.7rem)] font-medium leading-[1.02] tracking-[-0.02em]">
+                Lo que sale del horno esta semana.
+              </h2>
+            </div>
+            <Button asChild variant="outline" className="h-12 rounded-full border-[var(--ink)] bg-transparent px-6 text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white">
+              <Link href="/catalogo">
+                Abrir catalogo <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
           </div>
-          <div className="grid max-w-3xl grid-cols-3 gap-2 border-t border-[var(--line)] pt-6">
+          <motion.div
+            variants={gridStagger}
+            initial={reduceMotion ? false : "hidden"}
+            whileInView={reduceMotion ? undefined : "show"}
+            viewport={{ once: true, margin: "0px 0px -120px" }}
+            className="mt-11 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {featured.map((product, index) => (
+              <motion.div key={product.id} variants={fadeUp}>
+                <Link href={`/catalogo/${product.slug}`} className="group block overflow-hidden rounded-[20px] border border-[var(--line)] bg-white text-[var(--ink)] no-underline shadow-[0_1px_2px_rgba(15,26,46,0.04)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,26,46,0.10)]">
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <Image src={product.imagen_url} alt={product.nombre} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <span className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1.5 text-xs font-semibold text-[var(--ink-soft)] shadow-sm">
+                      {index === 1 ? "Pocas horneadas" : index === 2 ? "Disponible esta semana" : "Disponible diario"}
+                    </span>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">{product.categoria}</p>
+                    <h3 className="mt-2 min-h-[3.4rem] font-serif text-[1.55rem] font-medium leading-[1.08]">{product.nombre.replace(" de la Casa", "")}</h3>
+                    <p className="mt-4 font-mono text-base font-semibold">{formatCurrency(product.precio_mxn)}</p>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </Container>
+      </section>
+
+      <section className="relative overflow-hidden bg-[var(--brand)] py-[clamp(4.5rem,8vw,8rem)] text-white">
+        <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:54px_54px]" aria-hidden />
+        <Container className="relative">
+          <div className="max-w-[650px]">
+            <div className="mb-5 h-1 w-12 rounded-full bg-[var(--accent)]" aria-hidden />
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Pedido con retiro</p>
+            <h2 className="mt-4 font-serif text-[clamp(2.5rem,4.8vw,4.1rem)] font-medium leading-[1.02] tracking-[-0.02em]">
+              Tu bolsa lista, tu casillero esperando.
+            </h2>
+            <p className="mt-5 max-w-[52ch] text-base leading-[1.65] text-white/78 md:text-lg">
+              Sabes que pediste, cuanto pagas y donde retiras. Cuatro pasos y el pan es tuyo.
+            </p>
+          </div>
+          <div className="relative mt-14">
+            <div className="absolute left-[7%] right-[7%] top-9 hidden h-px bg-white/18 md:block" aria-hidden />
+            <div className="absolute left-[7%] top-9 hidden h-px rounded-full bg-[var(--accent)] shadow-[0_0_18px_rgba(255,207,90,.8)] motion-safe:animate-[th-step-fill_9s_ease-in-out_infinite] md:block" aria-hidden />
+            <div className="absolute top-[29px] hidden h-5 w-5 rounded-full bg-[var(--accent)] shadow-[0_0_0_7px_rgba(255,207,90,.22)] motion-safe:animate-[th-step-travel_9s_ease-in-out_infinite] md:block" aria-hidden />
+            <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map(([Icon, title, body], index) => (
+                <motion.div
+                  key={title}
+                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
+                  whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -120px" }}
+                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-center"
+                >
+                  <span className="mx-auto flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 border-[var(--accent)] bg-[#16308f] text-[var(--accent)] shadow-[0_18px_40px_rgba(8,18,60,.35)]">
+                    <Icon className="h-7 w-7" aria-hidden />
+                  </span>
+                  <span className="mt-5 block font-mono text-[0.7rem] uppercase tracking-[0.16em] text-[var(--accent)]">Paso {String(index + 1).padStart(2, "0")}</span>
+                  <h3 className="mt-2 font-serif text-2xl font-medium text-white">{title}</h3>
+                  <p className="mx-auto mt-3 max-w-[25ch] text-sm leading-[1.6] text-white/72">{body}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="bg-[var(--paper-sunken)] py-[clamp(4.5rem,8vw,7.5rem)]">
+        <Container className="grid gap-12 lg:grid-cols-[0.9fr_1fr] lg:items-center">
+          <div>
+            <div className="mb-5 h-1 w-12 rounded-full bg-[var(--brand)]" aria-hidden />
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">Red Tahona - CDMX</p>
+            <h2 className="mt-4 max-w-[13ch] font-serif text-[clamp(2.4rem,4.8vw,4.1rem)] font-medium leading-[1.02] tracking-[-0.02em]">
+              Tres barrios, una rutina mas facil.
+            </h2>
+            <p className="mt-6 max-w-[34rem] text-lg leading-[1.65] text-[var(--ink-soft)]">
+              Casilleros refrigerados a pasos de tu casa u oficina. Llegas, escaneas y te llevas el pan tibio.
+            </p>
+            <div className="mt-8 grid gap-4">
+              {hubs.map((hub, index) => (
+                <Link key={hub.id} href={`/hubs/${hub.slug}`} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-[18px] border border-[var(--line)] bg-white p-5 text-[var(--ink)] no-underline shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="flex items-start gap-4">
+                    <span className="mt-2 h-3 w-3 rounded-full bg-[var(--brand)]" aria-hidden />
+                    <div>
+                      <h3 className="font-serif text-2xl font-medium">{hub.nombre}</h3>
+                      <p className="mt-1 text-sm text-[var(--ink-soft)]">{hub.direccion}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-lg font-semibold">{[82, 74, 69][index] ?? 70}%</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.1em] text-[var(--ink-faint)]">ocupacion</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative min-h-[430px] overflow-hidden rounded-[28px] bg-[var(--brand)] p-8 shadow-[0_28px_80px_rgba(32,64,208,.22)]">
+            <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,.72)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.72)_1px,transparent_1px)] [background-size:48px_48px]" aria-hidden />
+            <div className="relative z-10 inline-flex items-center gap-2 rounded-full bg-[#0f1a2e]/78 px-4 py-2 text-sm font-bold text-white">
+              <span className="h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden />
+              {hubs.length} sucursales - CDMX
+            </div>
             {[
-              ["Corte", "Jueves 18:00"],
-              ["Retiro", "3 ventanas"],
-              ["Hubs", `${hubs.length} zonas`]
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="font-sans text-xs uppercase tracking-[0.08em] text-[var(--ink-faint)]">{label}</p>
-                <p className="mt-1 font-mono text-sm font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{value}</p>
+              ["Polanco", "left-[32%] top-[27%]"],
+              ["Condesa", "left-[55%] top-[48%]"],
+              ["Del Valle", "left-[46%] top-[70%]"]
+            ].map(([label, position]) => (
+              <div key={label} className={cn("absolute", position)}>
+                <span className="block h-5 w-5 rounded-full border-4 border-white bg-[var(--accent)] shadow-[0_0_0_8px_rgba(255,207,90,.14)]" aria-hidden />
+                <span className="absolute left-7 top-[-3px] whitespace-nowrap rounded-full bg-[#0f1a2e]/90 px-3 py-1 text-sm font-semibold text-white">{label}</span>
               </div>
             ))}
           </div>
         </Container>
       </section>
 
-      <section className="py-xl">
+      <section className="bg-[var(--paper)] py-[clamp(4.5rem,8vw,7rem)]">
         <Container>
-          <SectionHeader
-            eyebrow="Vitrina semanal"
-            title="Lo que sale del horno esta semana."
-            body="Una selección corta en portada. El catálogo completo queda para comparar, elegir y apartar sin perderse."
-            action={<Button asChild variant="outline"><Link href="/catalogo">Abrir catálogo</Link></Button>}
-          />
-          <div className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((product) => (
-              <CatalogProductCard
-                key={product.id}
-                href={`/catalogo/${product.slug}`}
-                imageUrl={product.imagen_url}
-                name={product.nombre}
-                category={product.categoria}
-                price={product.precio_mxn}
-                quantity={cart[product.id] ?? 0}
-                onIncrement={() => addToCart(product.id)}
-                onDecrement={() => removeFromCart(product.id)}
-                availability={availabilityLabel(product.disponibilidad.length)}
-              />
-            ))}
+          <div className="overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,var(--accent),#ffe7a3)] p-8 text-[var(--ink)] md:p-14 lg:p-16">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--brand)]">Tahona Hubs</p>
+            <h2 className="mt-5 max-w-[18ch] font-serif text-[clamp(2.5rem,5vw,4.4rem)] font-medium leading-[1.02] tracking-[-0.02em]">
+              Empieza tu semana con pan recien horneado.
+            </h2>
+            <p className="mt-6 max-w-[38rem] text-lg leading-[1.65] text-[var(--ink-soft)]">
+              Aparta hoy, recoge esta semana. Sin filas, sin compromisos largos, cancela cuando quieras.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-4">
+              <Button asChild size="lg" className="h-14 rounded-full bg-[var(--ink)] px-7 text-white hover:bg-[#18243a]">
+                <Link href="/suscribirme/productos">
+                  Apartar mi pan <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="h-14 rounded-full border-[rgba(15,26,46,.32)] bg-transparent px-7 text-[var(--ink)] hover:bg-white/45">
+                <Link href="/como-funciona">Como funciona</Link>
+              </Button>
+            </div>
           </div>
         </Container>
       </section>
 
-      <section className="border-y border-[var(--line)] bg-[color-mix(in_srgb,var(--paper-raised)_76%,transparent)] py-xl backdrop-blur">
-        <Container className="grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-          <SectionHeader
-            eyebrow="Pedido con retiro"
-            title="El flujo crítico es corto, verificable y con estados claros."
-            body="El cliente debe saber qué pidió, cuánto paga, dónde retira y qué pasa si hay una excepción."
-          />
-          <div className="grid gap-xs sm:grid-cols-2">
-            {[
-              [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
-              [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
-              [Wallet, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
-              [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde cuenta."]
-            ].map(([Icon, title, body]) => (
-              <Card key={String(title)} className="">
-                <CardContent className="p-md">
-                  <Icon className="h-6 w-6 text-[var(--brand)]" aria-hidden />
-                  <h3 className="mt-sm font-serif text-[1.5rem] font-medium text-[var(--ink)]">{title as string}</h3>
-                  <p className="mt-2 font-sans text-sm leading-6 text-[var(--ink-soft)]">{body as string}</p>
-                </CardContent>
-              </Card>
-            ))}
+      <footer className="bg-[var(--ink)] py-14 text-white">
+        <Container className="grid gap-10 md:grid-cols-[1.1fr_0.7fr_0.7fr_0.8fr]">
+          <div>
+            <p className="font-serif text-3xl font-semibold tracking-[-0.02em]">TAHONA</p>
+            <p className="mt-2 font-semibold text-[var(--accent)]">Desde 1957.</p>
+            <p className="mt-6 max-w-[28ch] text-sm leading-6 text-white/64">
+              Panaderia mexicana con pedido semanal, hubs de retiro y casilleros inteligentes.
+            </p>
+            <p className="mt-8 font-mono text-xs uppercase tracking-[0.14em] text-white/42">Hecho en CDMX</p>
+          </div>
+          <div>
+            <p className="font-semibold">Cliente</p>
+            <div className="mt-5 grid gap-3 text-sm text-white/64">
+              <Link href="/" className="hover:text-white">Inicio</Link>
+              <Link href="/catalogo" className="hover:text-white">Catalogo</Link>
+              <Link href="/hubs" className="hover:text-white">Hubs</Link>
+              <Link href="/como-funciona" className="hover:text-white">Proceso</Link>
+            </div>
+          </div>
+          <div>
+            <p className="font-semibold">Hubs</p>
+            <div className="mt-5 grid gap-3 text-sm text-white/64">
+              {hubs.map((hub) => (
+                <Link key={hub.id} href={`/hubs/${hub.slug}`} className="hover:text-white">
+                  {hub.nombre.replace("Hub ", "")}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="font-semibold">Cuenta</p>
+            <div className="mt-5 grid gap-3 text-sm text-white/64">
+              <Link href="/login" className="hover:text-white">Entrar</Link>
+              <Link href="/registro" className="hover:text-white">Crear cuenta</Link>
+              <Link href="/soporte" className="hover:text-white">Soporte</Link>
+            </div>
+          </div>
+          <div className="border-t border-white/12 pt-6 text-sm text-white/45 md:col-span-4">
+            <div className="flex flex-col justify-between gap-3 md:flex-row">
+              <span>© 2026 Tahona. Todos los derechos reservados.</span>
+              <span className="font-mono">Hecho con oficio en CDMX</span>
+            </div>
           </div>
         </Container>
-      </section>
-
-      <section className="py-xl">
-        <Container>
-          <SectionHeader
-            eyebrow="Red Tahona"
-            title="Tres barrios, una rutina más fácil."
-            action={<Button asChild variant="outline"><Link href="/hubs">Ver hubs</Link></Button>}
-          />
-          <div className="mt-lg grid gap-sm md:grid-cols-3">
-            {hubs.map((hub) => (
-              <HubCard key={hub.id} hub={hub} />
-            ))}
-          </div>
-        </Container>
-      </section>
+      </footer>
     </main>
   );
 }

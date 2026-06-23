@@ -383,4 +383,99 @@
       transform: translateY(-12px);
     }
   }
+
+  @keyframes th-mesh {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes th-float {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-16px) rotate(-0.6deg);
+    }
+  }
+
+  @keyframes th-float-slow {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(10px);
+    }
+  }
+
+  @keyframes th-steam {
+    0% {
+      opacity: 0;
+      transform: translateY(8px) scale(0.7);
+    }
+    30% {
+      opacity: 0.55;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-46px) scale(1.5);
+    }
+  }
+
+  @keyframes th-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 207, 90, 0.55);
+    }
+    70% {
+      box-shadow: 0 0 0 16px rgba(255, 207, 90, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 207, 90, 0);
+    }
+  }
+
+  @keyframes th-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes th-step-travel {
+    0%, 8% {
+      left: 7%;
+    }
+    25%, 33% {
+      left: 35.67%;
+    }
+    50%, 58% {
+      left: 64.33%;
+    }
+    75%, 100% {
+      left: 93%;
+    }
+  }
+
+  @keyframes th-step-fill {
+    0%, 8% {
+      width: 0;
+    }
+    25%, 33% {
+      width: 28.67%;
+    }
+    50%, 58% {
+      width: 57.33%;
+    }
+    75%, 100% {
+      width: 86%;
+    }
+  }
 }
