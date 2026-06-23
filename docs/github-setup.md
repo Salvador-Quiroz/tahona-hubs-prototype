@@ -8,6 +8,7 @@ Esta guía deja el proyecto listo para colaborar con pull requests y validacione
 - Rama base: `main`
 - Rama de preparación: `codex/github-readiness`
 - Validación local: `npm run ci`
+- Runtime: Node.js 20
 
 ## Crear el pull request inicial
 
@@ -45,6 +46,8 @@ En GitHub, revisa estas opciones cuando el PR inicial quede listo:
 git switch main
 git pull
 git switch -c nombre-de-rama
+nvm use
+npm install
 npm run dev
 npm run ci
 ```

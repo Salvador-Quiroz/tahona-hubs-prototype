@@ -25,3 +25,5 @@ npm run ci
 ```
 
 `npm run ci` ejecuta typecheck, lint y build de producción.
+
+Usa Node.js 20 para coincidir con GitHub Actions y Vercel.

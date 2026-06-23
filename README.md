@@ -1,5 +1,7 @@
 # Tahona Hubs Prototype
 
+[![CI](https://github.com/Salvador-Quiroz/tahona-hubs-prototype/actions/workflows/ci.yml/badge.svg)](https://github.com/Salvador-Quiroz/tahona-hubs-prototype/actions/workflows/ci.yml)
+
 Prototipo Next.js para una red de hubs de retiro de pan fresco de Tahona. Incluye app cliente PWA, panel operador y dashboard ejecutivo con datos mockeados coherentes entre vistas.
 
 ## Estado del proyecto
@@ -30,6 +32,8 @@ npm run dev
 ```
 
 Servidor local: `http://localhost:3000`
+
+Runtime recomendado: Node.js 20.
 
 ## Calidad
 
