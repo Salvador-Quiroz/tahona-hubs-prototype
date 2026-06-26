@@ -350,25 +350,50 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
     </div>
   );
 }
+/* ------------------------------------------------------------------ *
+ *  Tahona — LandingPage (reemplazo directo)
+ *
+ *  CÓMO INTEGRAR (copiar y pegar dentro de tu proyecto actual):
+ *  En  components/cliente/customer-pages.tsx :
+ *    1. Sustituye TODA tu función  export function LandingPage() { ... }
+ *       por el bloque  LandingPage  de abajo.
+ *    2. Pega los 3 subcomponentes auxiliares ( ShowcaseCarousel,
+ *       ProcessTimeline, HubsMapEmbed ) en el mismo archivo, justo
+ *       debajo de LandingPage.
+ *
+ *  NO necesitas imports nuevos: todo lo que se usa aquí
+ *  (Image, Link, motion, AnimatePresence, useEffect, useState,
+ *   ArrowRight, CalendarDays, CreditCard, PackageCheck, ShoppingBag,
+ *   Clock, Button, Container, SectionHeader, CatalogProductCard,
+ *   HubCard, useWeeklyCutoffCountdown, availabilityLabel,
+ *   useTahonaStore, formatCurrency, easeOutSoft, cn, type Hub, Producto)
+ *  ya está importado en customer-pages.tsx.
+ *
+ *  Mapa: usa el embed público de Google Maps (sin API key). Cuando
+ *  tengas key y quieras marcadores reales interactivos, avísame y te
+ *  paso un <HubsMapLive/> con la JS API y estilo de marca.
+ * ------------------------------------------------------------------ */
+
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
-  const reduceMotion = useReducedMotion();
-  const hero = getProduct(productos, "prod-001");
-  const showcase = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-003"), getProduct(productos, "prod-010")];
-  const featured = [getProduct(productos, "prod-001"), getProduct(productos, "prod-004"), getProduct(productos, "prod-002"), getProduct(productos, "prod-003")];
-  const marqueeItems = ["Hogazas de masa madre", "Pan dulce mexicano", "Bolleria & croissants", "Horneado cada manana", `${hubs.length} hubs en CDMX`, "Desde 1957"];
-  const steps = [
-    [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
-    [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
-    [CreditCard, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
-    [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde tu cuenta."]
-  ] as const;
+  const hero = productos[0];
+  const featured = productos.slice(0, 4);
+  const showcase = productos.slice(0, 4);
+  const countdown = useWeeklyCutoffCountdown();
+
+  const marquee = [
+    "Hogazas de masa madre",
+    "Pan dulce mexicano",
+    "Bollería & hojaldres",
+    "Horneado cada mañana",
+    `${hubs.length} hubs en CDMX`,
+    "Desde 1957"
+  ];
 
   return (
     <main className="bg-[var(--paper)] text-[var(--ink)]">
-      {/* ============ HERO: AZUL CON PROFUNDIDAD + FOTO DE PAN ============ */}
+      {/* ============ HERO ============ */}
       <section className="relative overflow-hidden">
-        {/* Capa 1: gradiente azul con profundidad (no plano) */}
         <div
           className="absolute inset-0"
           style={{
@@ -377,72 +402,110 @@ export function LandingPage() {
           }}
           aria-hidden
         />
-        {/* Capa 2: halo amarillo calido */}
-        <div
+        <motion.div
           className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-30 blur-[90px]"
           style={{ background: "radial-gradient(circle, var(--accent), transparent 70%)" }}
+          animate={{ y: [0, 18, 0] }}
+          transition={{ duration: 9, ease: "easeInOut", repeat: Infinity }}
           aria-hidden
         />
-        {/* Capa 3: textura de cuadricula fina */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.10]"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.7) 1px, transparent 1px)",
-            backgroundSize: "52px 52px"
+            backgroundSize: "52px 52px",
+            maskImage: "radial-gradient(120% 100% at 30% 20%, #000 40%, transparent 92%)"
           }}
           aria-hidden
         />
-        {/* Capa 4: grano sutil */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+            backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
             backgroundSize: "4px 4px"
           }}
           aria-hidden
         />
 
         <Container className="relative grid min-h-[88svh] items-center gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
-          {/* Columna texto */}
-          <div className="max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--ink)]">
-              Tahona · Desde 1957
-            </span>
-            <h1 className="mt-6 font-serif text-[clamp(2.75rem,7vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.03em] text-white">
-              Pan fresco,
-              <br />
-              <span className="text-[var(--accent)]">sin fila.</span>
-            </h1>
-            <p className="mt-6 max-w-md font-sans text-[1.0625rem] leading-[1.6] text-white/80">
-              Aparta piezas recien horneadas y retiralas en un hub con horario y casillero confirmados. Sin filas, sin vueltas.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="accent" className="shadow-[0_10px_34px_rgba(0,0,0,.25)]">
-                <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-              <Button asChild size="lg" className="border border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20">
-                <Link href="/catalogo">Ver catalogo</Link>
-              </Button>
-            </div>
-            <div className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-6">
-              {[
-                ["Corte", "Jueves 18:00"],
-                ["Retiro", "3 ventanas"],
-                ["Hubs", `${hubs.length} zonas`]
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <p className="font-sans text-[0.7rem] uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
-                  <p className="mt-1 font-mono text-sm font-medium text-white [font-variant-numeric:tabular-nums]">{value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Texto */}
+          <motion.div
+            className="max-w-xl"
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
+          >
+            {[
+              <span
+                key="badge"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[var(--ink)]"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--ink)]" /> Pan recién horneado · CDMX
+              </span>,
+              <h1
+                key="h1"
+                className="mt-6 font-serif text-[clamp(2.75rem,7vw,5.5rem)] font-medium leading-[0.96] tracking-[-0.03em] text-white"
+              >
+                Pan fresco,
+                <br />
+                <span className="italic text-[var(--accent)]">sin fila.</span>
+              </h1>,
+              <p key="p" className="mt-6 max-w-md font-sans text-[1.0625rem] leading-[1.6] text-white/80">
+                Hogazas, pan dulce, bollería y más: aparta tus piezas favoritas y retíralas en un hub con horario y
+                casillero confirmados. Del horno a tu semana, sin filas ni vueltas.
+              </p>,
+              <div key="cta" className="mt-9 flex flex-wrap gap-3">
+                <Button asChild size="lg" variant="accent" className="shadow-[0_10px_34px_rgba(255,207,90,.34)]">
+                  <Link href="/suscribirme/productos">
+                    Apartar mi pan <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  className="border border-white/25 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                >
+                  <Link href="/catalogo">Ver catálogo</Link>
+                </Button>
+              </div>,
+              <div key="stats" className="mt-12 grid max-w-md grid-cols-3 gap-4 border-t border-white/20 pt-6">
+                {([
+                  ["Corte", "Vie · 22:00"],
+                  ["Retiro", "3 ventanas"],
+                  ["Hubs", `${hubs.length} zonas`]
+                ] as const).map(([label, value]) => (
+                  <div key={label}>
+                    <p className="font-sans text-[0.7rem] uppercase tracking-[0.1em] text-[var(--accent)]">{label}</p>
+                    <p className="mt-1 font-mono text-sm font-medium text-white [font-variant-numeric:tabular-nums]">
+                      {value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ].map((child, i) => (
+              <motion.div
+                key={i}
+                variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: easeOutSoft } } }}
+              >
+                {child}
+              </motion.div>
+            ))}
+          </motion.div>
 
-          {/* Columna foto de pan */}
+          {/* Foto */}
           <div className="relative hidden lg:block">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(0,0,0,.4)]">
+            <motion.div
+              className="absolute -right-5 -top-5 -z-10 h-28 w-28 rounded-[22px] bg-[var(--accent)]"
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 7, ease: "easeInOut", repeat: Infinity }}
+              aria-hidden
+            />
+            <motion.div
+              className="relative aspect-[4/5] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(8,18,60,.5)]"
+              animate={{ y: [0, -14, 0] }}
+              transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
+            >
               <Image
                 src={hero.imagen_url}
                 alt={hero.nombre}
@@ -451,96 +514,111 @@ export function LandingPage() {
                 sizes="(max-width: 1024px) 0px, 540px"
                 className="object-cover"
               />
-              {/* viñeta calida sobre la foto para fundirla con el azul */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/40 via-transparent to-transparent" aria-hidden />
-              {/* etiqueta flotante */}
-              <div className="absolute bottom-5 left-5 rounded-[14px] bg-[var(--paper-raised)]/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur-sm">
-                <p className="font-sans text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[var(--brand)]">Recien horneado</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/45 via-transparent to-transparent" aria-hidden />
+              <div className="absolute bottom-5 left-5 rounded-[14px] bg-white/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur-sm">
+                <p className="font-sans text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[var(--brand)]">
+                  Recién horneado
+                </p>
                 <p className="mt-0.5 font-serif text-[1.05rem] font-medium text-[var(--ink)]">{hero.nombre}</p>
               </div>
-            </div>
-            {/* acento amarillo detras de la foto */}
-            <div className="absolute -right-5 -top-5 -z-10 h-24 w-24 rounded-[20px] bg-[var(--accent)]" aria-hidden />
+              <div className="absolute right-4 top-4 rounded-full bg-[var(--accent)] px-3 py-1.5 font-mono text-sm font-medium text-[var(--ink)] shadow-[0_8px_22px_rgba(0,0,0,.2)]">
+                {formatCurrency(hero.precio_mxn)}
+              </div>
+            </motion.div>
+
+            {/* Chip de cuenta regresiva — flotante a la altura del título */}
+            <motion.div
+              className="absolute -left-10 top-6 z-10 flex items-center gap-3 rounded-2xl border border-white/20 bg-[rgba(16,26,46,.62)] px-4 py-3 shadow-[0_18px_40px_rgba(8,18,60,.4)] backdrop-blur-md"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: easeOutSoft, delay: 0.4 }}
+            >
+              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[var(--accent)]" />
+              <div className="min-w-0">
+                <p className="font-sans text-[0.625rem] uppercase tracking-[0.1em] text-white/70">El corte cierra en</p>
+                <p className="mt-0.5 font-mono text-[1.2rem] font-medium text-white [font-variant-numeric:tabular-nums]">
+                  {countdown}
+                </p>
+              </div>
+            </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* ============ VITRINA SEMANAL ============ */}
+      {/* ============ MARQUEE ============ */}
+      <div className="overflow-hidden bg-[var(--ink)] py-4 text-white">
+        <motion.div
+          className="flex w-max whitespace-nowrap"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ duration: 28, ease: "linear", repeat: Infinity }}
+        >
+          {[0, 1].map((dup) => (
+            <span key={dup} className="flex items-center" aria-hidden={dup === 1}>
+              {marquee.map((item, i) => (
+                <span key={`${dup}-${i}`} className="flex items-center">
+                  <span className="px-7 font-serif text-xl italic">{item}</span>
+                  <span className="text-[var(--accent)]">✦</span>
+                </span>
+              ))}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* ============ SHOWCASE ROTATIVO (imagen full-bleed, título encima) ============ */}
       <section className="py-xl">
+        <Container>
+          <ShowcaseCarousel items={showcase} />
+        </Container>
+      </section>
+
+      {/* ============ VITRINA SEMANAL (antes de los pasos) ============ */}
+      <section className="pb-xl">
         <Container>
           <SectionHeader
             eyebrow="Vitrina semanal"
             title="Lo que sale del horno esta semana."
-            body="Una seleccion corta en portada. El catalogo completo queda para comparar, elegir y apartar sin perderse."
-            action={<Button asChild variant="accent"><Link href="/catalogo">Abrir catalogo</Link></Button>}
+            body="Una selección corta en portada. El catálogo completo queda para comparar, elegir y apartar sin perderse."
+            action={
+              <Button asChild variant="accent">
+                <Link href="/catalogo">Abrir catálogo</Link>
+              </Button>
+            }
           />
-          <div className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            className="mt-lg grid gap-sm sm:grid-cols-2 lg:grid-cols-4"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-10%" }}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+          >
             {featured.map((product) => (
-              <CatalogProductCard
+              <motion.div
                 key={product.id}
-                href={`/catalogo/${product.slug}`}
-                imageUrl={product.imagen_url}
-                name={product.nombre}
-                category={product.categoria}
-                price={product.precio_mxn}
-                quantity={cart[product.id] ?? 0}
-                onIncrement={() => addToCart(product.id)}
-                onDecrement={() => removeFromCart(product.id)}
-                availability={availabilityLabel(product.disponibilidad.length)}
-              />
+                variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easeOutSoft } } }}
+              >
+                <CatalogProductCard
+                  href={`/catalogo/${product.slug}`}
+                  imageUrl={product.imagen_url}
+                  name={product.nombre}
+                  category={product.categoria}
+                  price={product.precio_mxn}
+                  quantity={cart[product.id] ?? 0}
+                  onIncrement={() => addToCart(product.id)}
+                  onDecrement={() => removeFromCart(product.id)}
+                  availability={availabilityLabel(product.disponibilidad.length)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </Container>
       </section>
 
-      <section className="relative overflow-hidden bg-[var(--brand)] py-[clamp(4.5rem,8vw,8rem)] text-white">
-        <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:54px_54px]" aria-hidden />
-        <Container className="relative">
-          <div className="max-w-[650px]">
-            <div className="mb-5 h-1 w-12 rounded-full bg-[var(--accent)]" aria-hidden />
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Pedido con retiro</p>
-            <h2 className="mt-4 font-serif text-[clamp(2.5rem,4.8vw,4.1rem)] font-medium leading-[1.02] tracking-[-0.02em]">
-              Tu bolsa lista, tu casillero esperando.
-            </h2>
-            <p className="mt-5 max-w-[52ch] text-base leading-[1.65] text-white/78 md:text-lg">
-              Sabes que pediste, cuanto pagas y donde retiras. Cuatro pasos y el pan es tuyo.
-            </p>
-          </div>
-          <div className="relative mt-14">
-            <div className="absolute left-[7%] right-[7%] top-9 hidden h-px bg-white/18 md:block" aria-hidden />
-            <div className="absolute left-[7%] top-9 hidden h-px rounded-full bg-[var(--accent)] shadow-[0_0_18px_rgba(255,207,90,.8)] motion-safe:animate-[th-step-fill_9s_ease-in-out_infinite] md:block" aria-hidden />
-            <div className="absolute top-[29px] hidden h-5 w-5 rounded-full bg-[var(--accent)] shadow-[0_0_0_7px_rgba(255,207,90,.22)] motion-safe:animate-[th-step-travel_9s_ease-in-out_infinite] md:block" aria-hidden />
-            <div className="relative z-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map(([Icon, title, body], index) => (
-                <motion.div
-                  key={title}
-                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-                  whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -120px" }}
-                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-center"
-                >
-                  <span className="mx-auto flex h-[74px] w-[74px] items-center justify-center rounded-full border-2 border-[var(--accent)] bg-[#16308f] text-[var(--accent)] shadow-[0_18px_40px_rgba(8,18,60,.35)]">
-                    <Icon className="h-7 w-7" aria-hidden />
-                  </span>
-                  <span className="mt-5 block font-mono text-[0.7rem] uppercase tracking-[0.16em] text-[var(--accent)]">Paso {String(index + 1).padStart(2, "0")}</span>
-                  <h3 className="mt-2 font-serif text-2xl font-medium text-white">{title}</h3>
-                  <p className="mx-auto mt-3 max-w-[25ch] text-sm leading-[1.6] text-white/72">{body}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* ============ BANDA AZUL CON PROFUNDIDAD: PEDIDO CON RETIRO ============ */}
+      {/* ============ CÓMO FUNCIONA (proceso conectado) ============ */}
       <section className="relative overflow-hidden py-xl text-white">
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(120% 120% at 85% 0%, #2a4ce0 0%, #2040d0 42%, #16308f 100%)"
-          }}
+          style={{ background: "radial-gradient(120% 120% at 85% 0%, #2a4ce0 0%, #2040d0 42%, #16308f 100%)" }}
           aria-hidden
         />
         <div
@@ -552,49 +630,90 @@ export function LandingPage() {
           }}
           aria-hidden
         />
-        <Container className="relative grid gap-lg lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-          <div className="max-w-xl">
+        <Container className="relative">
+          <motion.div
+            className="max-w-xl"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.6, ease: easeOutSoft }}
+          >
             <div className="mb-4 h-1 w-10 rounded-full bg-[var(--accent)]" aria-hidden />
-            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">Pedido con retiro</p>
-            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-white text-balance">
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
+              Pedido con retiro
+            </p>
+            <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-balance text-white">
               Tu bolsa lista, tu casillero esperando.
             </h2>
-            <p className="mt-4 max-w-[46ch] font-sans text-[0.95rem] leading-[1.6] text-white/80">
-              El cliente debe saber que pidio, cuanto paga, donde retira y que pasa si hay una excepcion. Todo en cuatro pasos.
+            <p className="mt-4 max-w-[50ch] font-sans text-[0.95rem] leading-[1.6] text-white/80">
+              Sabes qué pediste, cuánto pagas y dónde retiras. Cuatro pasos y el pan es tuyo.
             </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
-              [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
-              [Wallet, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
-              [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde cuenta."]
-            ].map(([Icon, title, body]) => (
-              <div key={String(title)} className="rounded-[16px] border border-white/15 bg-white/[0.07] p-5 backdrop-blur-sm transition-colors duration-[200ms] hover:bg-white/[0.12]">
-                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[var(--accent)] text-[var(--ink)]">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <h3 className="mt-4 font-serif text-[1.35rem] font-medium text-white">{title as string}</h3>
-                <p className="mt-2 font-sans text-sm leading-6 text-white/70">{body as string}</p>
-              </div>
-            ))}
-          </div>
+          </motion.div>
+          <ProcessTimeline />
         </Container>
       </section>
 
-      {/* ============ RED TAHONA ============ */}
-      <section className="py-xl">
-        <Container>
-          <SectionHeader
-            eyebrow="Red Tahona"
-            title="Tres barrios, una rutina mas facil."
-            action={<Button asChild variant="accent"><Link href="/hubs">Ver hubs</Link></Button>}
-          />
-          <div className="mt-lg grid gap-sm md:grid-cols-3">
-            {hubs.map((hub) => (
-              <HubCard key={hub.id} hub={hub} />
-            ))}
+      {/* ============ RED TAHONA (hubs + mapa Google) ============ */}
+      <section className="bg-[var(--paper-sunken)] py-xl">
+        <Container className="grid items-center gap-lg lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.6, ease: easeOutSoft }}
+            >
+              <div className="mb-4 h-1 w-9 rounded-full bg-[var(--brand)]" aria-hidden />
+              <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-[var(--ink-soft)]">
+                Red Tahona · CDMX
+              </p>
+              <h2 className="mt-3 max-w-[18ch] font-serif text-display font-medium leading-[1.05] text-balance">
+                Tres barrios, una rutina más fácil.
+              </h2>
+              <p className="mt-4 max-w-[46ch] font-sans text-[0.95rem] leading-[1.6] text-[var(--ink-soft)]">
+                Casilleros refrigerados a pasos de tu casa o tu oficina. Llegas, escaneas y te llevas el pan tibio.
+              </p>
+            </motion.div>
+
+            <div className="mt-md grid gap-3">
+              {hubs.map((hub, i) => {
+                const occupation = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+                return (
+                  <motion.div
+                    key={hub.id}
+                    className="flex items-center gap-4 rounded-2xl border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-4"
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-10%" }}
+                    transition={{ duration: 0.55, ease: easeOutSoft, delay: i * 0.08 }}
+                  >
+                    <span className="h-3 w-3 shrink-0 rounded-full bg-[var(--brand)]" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-serif text-[1.125rem] font-medium">{hub.nombre}</p>
+                      <p className="mt-0.5 font-sans text-[0.8125rem] text-[var(--ink-soft)]">{hub.direccion}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-[0.9375rem] font-medium [font-variant-numeric:tabular-nums]">
+                        {occupation}%
+                      </p>
+                      <p className="mt-px font-sans text-[0.6875rem] uppercase tracking-[0.06em] text-[var(--ink-faint)]">
+                        ocupación
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.7, ease: easeOutSoft }}
+          >
+            <HubsMapEmbed hubs={hubs} />
+          </motion.div>
         </Container>
       </section>
 
@@ -607,20 +726,194 @@ export function LandingPage() {
             aria-hidden
           />
           <div className="relative max-w-2xl">
-            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">Tahona Hubs</p>
+            <p className="font-sans text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--brand)]">
+              Tahona Hubs
+            </p>
             <h2 className="mt-3 font-serif text-display font-medium leading-[1.05] text-balance">
-              Empieza tu semana con pan recien horneado.
+              Empieza tu semana con pan recién horneado.
             </h2>
             <p className="mt-4 max-w-[44ch] font-sans text-[1rem] leading-[1.6] text-[var(--ink)]/75">
               Aparta hoy, recoge esta semana. Sin filas, sin compromisos largos, cancela cuando quieras.
             </p>
             <Button asChild size="lg" className="mt-8">
-              <Link href="/suscribirme/productos">Apartar mi pan <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/suscribirme/productos">
+                Apartar mi pan <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </Container>
       </section>
     </main>
+  );
+}
+
+/* ---------- Subcomponentes auxiliares (pegar debajo de LandingPage) ---------- */
+
+function ShowcaseCarousel({ items }: { items: Producto[] }) {
+  const [cur, setCur] = useState(0);
+
+  useEffect(() => {
+    const t = window.setInterval(() => setCur((c) => (c + 1) % items.length), 5000);
+    return () => window.clearInterval(t);
+  }, [items.length]);
+
+  const p = items[cur];
+
+  return (
+    <div className="relative min-h-[clamp(440px,62vh,640px)] overflow-hidden rounded-[26px] shadow-editorial">
+      <AnimatePresence>
+        <motion.div
+          key={p.id}
+          className="absolute inset-0"
+          initial={{ opacity: 0, scale: 1.04 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: easeOutSoft }}
+        >
+          <Image src={p.imagen_url} alt={p.nombre} fill sizes="(max-width: 1024px) 100vw, 1100px" className="object-cover" />
+        </motion.div>
+      </AnimatePresence>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(8,16,40,.84) 0%, rgba(8,16,40,.55) 40%, rgba(8,16,40,.08) 72%), linear-gradient(0deg, rgba(8,16,40,.7), transparent 48%)"
+        }}
+        aria-hidden
+      />
+
+      <div className="absolute inset-0 flex flex-col justify-end p-7 md:p-14">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: easeOutSoft }}
+          >
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="font-mono text-sm font-medium text-[var(--accent)]">
+                {String(cur + 1).padStart(2, "0")}
+              </span>
+              <span className="h-px w-9 bg-[var(--accent)]" />
+              <span className="font-sans text-xs font-semibold uppercase tracking-[0.1em] text-white/85">
+                {p.categoria}
+              </span>
+            </div>
+            <h2 className="max-w-[16ch] font-serif text-[clamp(2rem,4.6vw,3.8rem)] font-medium leading-[1.02] tracking-[-0.02em] text-white [text-shadow:0_2px_30px_rgba(8,16,40,.5)]">
+              {p.nombre}
+            </h2>
+            <p className="mt-4 max-w-[46ch] font-sans text-[0.95rem] leading-[1.6] text-white/85">
+              {p.descripcion_premium}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-5">
+              <span className="font-serif text-3xl font-medium text-white">{formatCurrency(p.precio_mxn)}</span>
+              <Button asChild variant="accent">
+                <Link href={`/catalogo/${p.slug}`}>
+                  Apartar esta pieza <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="absolute bottom-7 right-7 flex items-center gap-2.5 md:bottom-14 md:right-14">
+        {items.map((item, k) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-label={`Pieza ${k + 1}`}
+            onClick={() => setCur(k)}
+            className="h-2.5 rounded-full transition-all duration-base ease-out-soft"
+            style={{ width: k === cur ? 30 : 10, background: k === cur ? "var(--accent)" : "rgba(255,255,255,.45)" }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProcessTimeline() {
+  const steps = [
+    [ShoppingBag, "Arma tu bolsa", "Precios y cantidades visibles desde el primer paso."],
+    [CalendarDays, "Elige ventana", "Hub, horario y capacidad aparecen antes del pago."],
+    [CreditCard, "Pago protegido", "Resumen, tarjeta y opciones secundarias sin ruido."],
+    [PackageCheck, "Retira con pase", "QR, casillero, estado y soporte desde tu cuenta."]
+  ] as const;
+
+  return (
+    <div className="relative mt-12">
+      {/* Línea conectora (solo en lg, donde hay 4 columnas) */}
+      <div className="pointer-events-none absolute inset-x-[12.5%] top-9 hidden h-0.5 lg:block" aria-hidden>
+        <div className="absolute inset-0 rounded-full bg-white/20" />
+        <motion.div
+          className="absolute inset-y-0 left-0 rounded-full bg-[var(--accent)]"
+          style={{ boxShadow: "0 0 12px var(--accent)" }}
+          initial={{ width: 0 }}
+          whileInView={{ width: "100%" }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.4, ease: easeOutSoft }}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map(([Icon, title, body], i) => (
+          <motion.div
+            key={title}
+            className="flex flex-col items-center text-center"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.5, ease: easeOutSoft, delay: i * 0.08 }}
+          >
+            <span className="relative z-[2] flex h-[72px] w-[72px] items-center justify-center rounded-full border-2 border-[var(--accent)] bg-[#16308f] text-[var(--accent)] shadow-[0_14px_32px_rgba(8,18,60,.45)]">
+              <Icon className="h-6 w-6" aria-hidden />
+            </span>
+            <span className="mt-5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-[var(--accent)]">
+              Paso 0{i + 1}
+            </span>
+            <h3 className="mt-2 font-serif text-[1.35rem] font-medium text-white">{title}</h3>
+            <p className="mt-2.5 max-w-[25ch] font-sans text-sm leading-[1.55] text-white/70">{body}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HubsMapEmbed({ hubs }: { hubs: Hub[] }) {
+  // Posiciones aproximadas de los pines sobre el embed (Polanco / Condesa / Del Valle).
+  const pinPos = [
+    { left: "30%", top: "26%" },
+    { left: "52%", top: "46%" },
+    { left: "44%", top: "70%" }
+  ];
+
+  return (
+    <div className="relative aspect-square overflow-hidden rounded-[24px] bg-[#16308f] shadow-editorial">
+      <iframe
+        title="Hubs Tahona en CDMX"
+        src="https://www.google.com/maps?q=19.4075,-99.179&z=12&output=embed"
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        className="absolute inset-0 h-full w-full border-0"
+      />
+      <div className="pointer-events-none absolute inset-0">
+        {hubs.slice(0, 3).map((hub, i) => (
+          <div key={hub.id} className="absolute" style={pinPos[i]}>
+            <span className="block h-[18px] w-[18px] animate-pulse rounded-full border-[3px] border-white bg-[var(--accent)] shadow-[0_4px_12px_rgba(8,16,40,.45)]" />
+            <span className="absolute -top-0.5 left-6 whitespace-nowrap rounded-full bg-[rgba(16,26,46,.9)] px-2.5 py-0.5 font-sans text-[11px] font-semibold text-white">
+              {hub.colonia}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="pointer-events-none absolute left-3.5 top-3.5 flex items-center gap-1.5 rounded-full bg-[rgba(16,26,46,.78)] px-2.5 py-1.5 font-sans text-[11px] font-semibold text-white backdrop-blur-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" /> {hubs.length} sucursales · CDMX
+      </div>
+    </div>
   );
 }
 export function CatalogoPage() {
