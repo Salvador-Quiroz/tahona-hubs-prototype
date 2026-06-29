@@ -354,30 +354,6 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
     </div>
   );
 }
-/* ------------------------------------------------------------------ *
- *  Tahona — LandingPage (reemplazo directo)
- *
- *  CÓMO INTEGRAR (copiar y pegar dentro de tu proyecto actual):
- *  En  components/cliente/customer-pages.tsx :
- *    1. Sustituye TODA tu función  export function LandingPage() { ... }
- *       por el bloque  LandingPage  de abajo.
- *    2. Pega los 3 subcomponentes auxiliares ( ShowcaseCarousel,
- *       ProcessTimeline, HubsMapEmbed ) en el mismo archivo, justo
- *       debajo de LandingPage.
- *
- *  NO necesitas imports nuevos: todo lo que se usa aquí
- *  (Image, Link, motion, AnimatePresence, useEffect, useState,
- *   ArrowRight, CalendarDays, CreditCard, PackageCheck, ShoppingBag,
- *   Clock, Button, Container, SectionHeader, CatalogProductCard,
- *   HubCard, useWeeklyCutoffCountdown, availabilityLabel,
- *   useTahonaStore, formatCurrency, easeOutSoft, cn, type Hub, Producto)
- *  ya está importado en customer-pages.tsx.
- *
- *  Mapa: usa el embed público de Google Maps (sin API key). Cuando
- *  tengas key y quieras marcadores reales interactivos, avísame y te
- *  paso un <HubsMapLive/> con la JS API y estilo de marca.
- * ------------------------------------------------------------------ */
-
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const hero = productos[0];
@@ -2039,6 +2015,251 @@ function CheckoutPaymentFields({ total }: { total: number }) {
         </AccordionItem>
       </Accordion>
     </div>
+  );
+}
+
+export function BagPage() {
+  const { productos, cart, addToCart, removeFromCart, setCartQuantity } = useTahonaStore();
+  const hub = useSelectedHub();
+  const countdown = useWeeklyCutoffCountdown();
+  const [toast, setToast] = useState("");
+
+  function flash(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2000);
+  }
+
+  const items = productos
+    .map((product) => ({ product, qty: cart[product.id] ?? 0 }))
+    .filter((item) => item.qty > 0);
+  const count = items.reduce((sum, item) => sum + item.qty, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.product.precio_mxn * item.qty, 0);
+  const empty = items.length === 0;
+
+  // "Bolsa de la casa": una pieza por categoría (hasta 4) para no empezar de cero
+  const houseBag = (() => {
+    const seen = new Set<string>();
+    const picks: Producto[] = [];
+    for (const p of productos) {
+      if (!seen.has(p.categoria)) {
+        seen.add(p.categoria);
+        picks.push(p);
+      }
+      if (picks.length >= 4) break;
+    }
+    return picks;
+  })();
+
+  const suggestions = productos.filter((p) => !(cart[p.id] > 0)).slice(0, 8);
+
+  function addHouseBag() {
+    houseBag.forEach((p) => setCartQuantity(p.id, Math.max(cart[p.id] ?? 0, 1)));
+    flash("Bolsa de la casa agregada");
+  }
+  function addOne(product: Producto) {
+    addToCart(product.id);
+    flash(`${product.nombre} agregado`);
+  }
+
+  return (
+    <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
+      <div className="mx-auto w-full max-w-[1240px] px-4 pb-32 pt-8 md:px-6 lg:pb-16">
+        {/* Encabezado */}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-display font-medium text-[var(--ink)]">Mi bolsa</h1>
+            <p className="mt-2 font-sans text-[0.9375rem] text-[var(--ink-soft)]">
+              {empty ? "Aún no agregas piezas." : `${count} ${count === 1 ? "pieza" : "piezas"} en tu bolsa.`}
+            </p>
+          </div>
+          {hub ? (
+            <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
+              <p className="flex items-center gap-1.5 font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
+                <MapPin className="h-3.5 w-3.5 text-[var(--brand)]" aria-hidden />
+                Retiras en
+              </p>
+              <p className="mt-1 font-serif text-[1rem] font-medium text-[var(--ink)]">{hub.nombre}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 font-mono text-[0.75rem] text-[var(--brand)]">
+                <Clock className="h-3 w-3" aria-hidden /> Corte vie · cierra en {countdown}
+              </p>
+            </div>
+          ) : null}
+        </div>
+
+        {empty ? (
+          /* ── Estado vacío con bolsa sugerida ─────────────────────────── */
+          <div className="mt-8">
+            <div className="rounded-[20px] border border-dashed border-[var(--line-strong)] bg-[var(--paper-raised)] px-6 py-12 text-center">
+              <ShoppingBag className="mx-auto h-9 w-9 text-[var(--ink-faint)]" aria-hidden />
+              <h2 className="mt-4 font-serif text-2xl font-medium text-[var(--ink)]">Tu bolsa está vacía</h2>
+              <p className="mx-auto mt-2 max-w-[42ch] font-sans text-sm text-[var(--ink-soft)]">
+                Empieza con nuestra bolsa de la casa o explora la vitrina semanal.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Button type="button" onClick={addHouseBag}>
+                  <Sparkles className="mr-1 h-4 w-4" aria-hidden />
+                  Agregar bolsa de la casa
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/catalogo">Explorar catálogo</Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {houseBag.map((p) => (
+                <div key={p.id} className="overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)]">
+                  <div className="relative aspect-[4/3]">
+                    <Image src={p.imagen_url} alt={p.nombre} fill sizes="240px" className="object-cover" />
+                  </div>
+                  <div className="p-3">
+                    <p className="line-clamp-1 font-sans text-[0.8125rem] font-semibold text-[var(--ink)]">{p.nombre}</p>
+                    <p className="mt-0.5 font-mono text-[0.8125rem] text-[var(--ink-faint)]">{formatCurrency(p.precio_mxn)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* ── Bolsa con piezas ────────────────────────────────────────── */
+          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+            <section>
+              <div className="overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)]">
+                <AnimatePresence initial={false}>
+                  {items.map(({ product, qty }, i) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2, ease: easeOutSoft }}
+                      className="overflow-hidden"
+                    >
+                      <div className={cn("flex items-center gap-4 p-4", i > 0 && "border-t border-[var(--line)]")}>
+                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[12px] bg-[var(--paper-sunken)]">
+                          <Image src={product.imagen_url} alt={product.nombre} fill sizes="64px" className="object-cover" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{product.nombre}</p>
+                          <p className="mt-0.5 font-mono text-[0.8125rem] text-[var(--ink-faint)] [font-variant-numeric:tabular-nums]">
+                            {formatCurrency(product.precio_mxn)} c/u
+                          </p>
+                          <p className="mt-1 font-mono text-[0.9375rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                            {formatCurrency(product.precio_mxn * qty)}
+                          </p>
+                        </div>
+                        <div className="flex items-center rounded-full bg-[var(--paper-sunken)]">
+                          <button type="button" className="flex h-9 w-9 items-center justify-center text-[var(--ink-soft)]" onClick={() => removeFromCart(product.id)} aria-label="Quitar pieza">
+                            <Minus className="h-4 w-4" aria-hidden />
+                          </button>
+                          <span className="min-w-8 text-center font-mono text-sm font-medium [font-variant-numeric:tabular-nums]">{qty}</span>
+                          <button type="button" className="flex h-9 w-9 items-center justify-center text-[var(--brand)]" onClick={() => addToCart(product.id)} aria-label="Agregar pieza">
+                            <Plus className="h-4 w-4" aria-hidden />
+                          </button>
+                        </div>
+                        <button type="button" className="flex h-9 w-9 items-center justify-center text-[var(--ink-faint)] transition-colors hover:text-[var(--danger)]" onClick={() => setCartQuantity(product.id, 0)} aria-label="Eliminar producto">
+                          <X className="h-4 w-4" aria-hidden />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              <Link href="/catalogo" className="mt-4 inline-flex items-center gap-1.5 font-sans text-sm font-semibold text-[var(--brand)] hover:underline">
+                <Plus className="h-4 w-4" aria-hidden /> Seguir agregando del catálogo
+              </Link>
+
+              {/* Antojos para sumar */}
+              {suggestions.length > 0 ? (
+                <div className="mt-8">
+                  <h2 className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">¿Se te antoja algo más?</h2>
+                  <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {suggestions.map((p) => (
+                      <div key={p.id} className="w-[160px] shrink-0 overflow-hidden rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)]">
+                        <div className="relative aspect-[4/3]">
+                          <Image src={p.imagen_url} alt={p.nombre} fill sizes="160px" className="object-cover" />
+                        </div>
+                        <div className="p-3">
+                          <p className="line-clamp-1 font-sans text-[0.8125rem] font-semibold text-[var(--ink)]">{p.nombre}</p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="font-mono text-[0.8125rem] text-[var(--ink-faint)]">{formatCurrency(p.precio_mxn)}</span>
+                            <button type="button" onClick={() => addOne(p)} aria-label={`Agregar ${p.nombre}`} className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand)] text-white transition-colors hover:bg-[var(--brand-press)]">
+                              <Plus className="h-4 w-4" aria-hidden />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            {/* Resumen */}
+            <aside className="h-fit lg:sticky lg:top-24">
+              <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+                <h2 className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Resumen</h2>
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between font-sans text-sm text-[var(--ink-soft)]">
+                    <span>Subtotal · {count} piezas</span>
+                    <span className="font-mono [font-variant-numeric:tabular-nums]">{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between font-sans text-sm text-[var(--ink-soft)]">
+                    <span>Retiro en hub</span>
+                    <span className="text-[var(--ok)]">Incluido</span>
+                  </div>
+                </div>
+                <div className="my-4 h-px bg-[var(--line)]" />
+                <div className="flex items-baseline justify-between">
+                  <span className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Total</span>
+                  <span className="font-mono text-[1.25rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(subtotal)}</span>
+                </div>
+                <Button asChild size="lg" className="mt-5 w-full rounded-[14px]">
+                  <Link href="/suscribirme/horarios">
+                    Continuar al retiro <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+                  </Link>
+                </Button>
+                <p className="mt-3 font-sans text-xs leading-5 text-[var(--ink-faint)]">
+                  Se cobra cada viernes antes de tu retiro. Pausa, salta o cancela cuando quieras.
+                </p>
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
+
+      {/* CTA fija móvil */}
+      {!empty ? (
+        <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 border-t border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 shadow-[var(--shadow-lg)] lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-mono text-[0.8125rem] text-[var(--ink-soft)] [font-variant-numeric:tabular-nums]">{count} piezas</p>
+              <p className="font-mono text-[1.0625rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(subtotal)}</p>
+            </div>
+            <Button asChild className="rounded-[14px]">
+              <Link href="/suscribirme/horarios">
+                Continuar <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <AnimatePresence>
+        {toast ? (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            transition={{ duration: 0.24, ease: easeOutSoft }}
+            className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
+          >
+            {toast}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </main>
   );
 }
 
