@@ -34,6 +34,7 @@ import {
   Flame,
   RefreshCw,
   Sparkles,
+  ArrowLeft,
   X
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -1638,60 +1639,236 @@ function MobileCatalogBar({ count, total, onOpen }: { count: number; total: numb
     </AnimatePresence>
   );
 }
-
 export function ProductDetailPage({ slug }: { slug: string }) {
-  const { productos } = useTahonaStore();
+  const { productos, cart, addToCart, removeFromCart, setCartQuantity } = useTahonaStore();
+  const hub = useSelectedHub();
   const product = productos.find((item) => item.slug === slug) ?? productos[0];
-  const related = productos.filter((item) => item.categoria === product.categoria && item.id !== product.id).slice(0, 3);
+  const related = productos
+    .filter((item) => item.categoria === product.categoria && item.id !== product.id)
+    .slice(0, 6);
+  const qty = cart[product.id] ?? 0;
+  const freshToday = product.disponibilidad.includes("viernes");
+  const [toast, setToast] = useState("");
+
+  function flash(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2000);
+  }
+  function add() {
+    addToCart(product.id);
+    flash(`${product.nombre} agregado a tu bolsa`);
+  }
+
+  const AddControl = ({ size = "default" }: { size?: "default" | "lg" }) =>
+    qty > 0 ? (
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex items-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+          <button
+            type="button"
+            onClick={() => removeFromCart(product.id)}
+            aria-label="Quitar pieza"
+            className={cn("flex items-center justify-center", size === "lg" ? "h-12 w-12" : "h-11 w-11")}
+          >
+            <Minus className="h-4 w-4" aria-hidden />
+          </button>
+          <span className="min-w-10 text-center font-mono text-base font-medium [font-variant-numeric:tabular-nums]">
+            {qty}
+          </span>
+          <button
+            type="button"
+            onClick={add}
+            aria-label="Agregar pieza"
+            className={cn("flex items-center justify-center", size === "lg" ? "h-12 w-12" : "h-11 w-11")}
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+        <Button asChild size={size === "lg" ? "lg" : "default"} className="flex-1 rounded-[14px]">
+          <Link href="/suscribirme/productos">
+            Ir a mi bolsa · {formatCurrency(product.precio_mxn * qty)}
+          </Link>
+        </Button>
+      </div>
+    ) : (
+      <Button
+        type="button"
+        size={size === "lg" ? "lg" : "default"}
+        className="w-full rounded-[14px]"
+        onClick={add}
+      >
+        <ShoppingBag className="mr-1 h-4 w-4" aria-hidden />
+        Agregar a mi bolsa · {formatCurrency(product.precio_mxn)}
+      </Button>
+    );
 
   return (
-    <main className="storefront-shell py-lg">
-      <Container className="grid gap-lg lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-muted shadow-lg lg:sticky lg:top-28">
-          <Image src={product.imagen_url} alt={product.nombre} fill priority sizes="(max-width: 1024px) 100vw, 560px" className="object-cover" />
+    <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
+      <div className="mx-auto w-full max-w-[1240px] px-4 pb-32 pt-6 md:px-6 lg:pb-16">
+        <Link
+          href="/catalogo"
+          className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[var(--ink-soft)] transition-colors hover:text-[var(--brand)]"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Volver al catálogo
+        </Link>
+
+        <div className="mt-4 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[20px] bg-[var(--paper-sunken)] shadow-[var(--shadow-md)]">
+              <Image
+                src={product.imagen_url}
+                alt={product.nombre}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 560px"
+                className="object-cover"
+              />
+              <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-white/85 px-3 py-1 font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)] backdrop-blur-[8px]">
+                {product.categoria}
+              </span>
+              {freshToday ? (
+                <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.75rem] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">
+                  <Flame className="h-3.5 w-3.5" aria-hidden />
+                  Recién horneado
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <section>
+            {hub ? (
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-tint)] px-3 py-1 font-sans text-[0.75rem] font-semibold text-[var(--brand)]">
+                <MapPin className="h-3.5 w-3.5" aria-hidden />
+                Retiras en {hub.nombre}
+              </p>
+            ) : null}
+
+            <h1 className="mt-3 font-serif text-[clamp(2rem,4vw,3rem)] font-medium leading-[1.04] tracking-[-0.02em] text-[var(--ink)]">
+              {product.nombre}
+            </h1>
+            <p className="mt-2 font-mono text-[1.5rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+              {formatCurrency(product.precio_mxn)}
+            </p>
+            <p className="mt-4 max-w-[52ch] font-sans text-[1rem] leading-[1.6] text-[var(--ink-soft)]">
+              {product.descripcion_premium}
+            </p>
+
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
+                <Clock className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <p className="mt-2 font-mono text-[1.0625rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                  {product.tiempo_horneado_min} min
+                </p>
+                <p className="mt-0.5 font-sans text-[0.6875rem] uppercase tracking-[0.06em] text-[var(--ink-faint)]">
+                  Horneado
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
+                <Flame className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <p className="mt-2 font-mono text-[1.0625rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                  {product.calorias ? `${product.calorias}` : "—"}
+                </p>
+                <p className="mt-0.5 font-sans text-[0.6875rem] uppercase tracking-[0.06em] text-[var(--ink-faint)]">
+                  Calorías
+                </p>
+              </div>
+              <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
+                <Check className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <p className="mt-2 font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">
+                  {availabilityTone(product.disponibilidad.length)}
+                </p>
+                <p className="mt-0.5 font-sans text-[0.6875rem] uppercase tracking-[0.06em] text-[var(--ink-faint)]">
+                  Disponible
+                </p>
+              </div>
+            </div>
+
+            {/* Control de agregar — visible en desktop (en móvil va en la barra fija) */}
+            <div className="mt-6 hidden rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] p-4 shadow-[var(--shadow-sm)] lg:block">
+              <AddControl size="lg" />
+              <p className="mt-3 text-center font-sans text-[0.8125rem] text-[var(--ink-faint)]">
+                Ajusta cantidades cuando quieras antes del corte del viernes.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <h2 className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Ingredientes</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {product.ingredientes.map((ingredient) => (
+                  <span
+                    key={ingredient}
+                    className="rounded-full border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-1.5 font-sans text-[0.8125rem] font-medium text-[var(--ink)]"
+                  >
+                    {ingredient}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <h2 className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Días disponibles</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {product.disponibilidad.map((day) => (
+                  <span
+                    key={day}
+                    className="rounded-full bg-[var(--brand-tint)] px-3 py-1.5 font-sans text-[0.8125rem] font-medium capitalize text-[var(--brand)]"
+                  >
+                    {day}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
-        <section>
-          <Badge variant="info">{product.categoria}</Badge>
-          <h1 className="mt-sm font-display text-display font-black text-foreground">{product.nombre}</h1>
-          <p className="mt-sm text-body-l text-muted-foreground">{product.descripcion_premium}</p>
-          <div className="mt-md grid gap-xs sm:grid-cols-3">
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Precio</p><p className="mt-1 text-h2 font-semibold">{formatCurrency(product.precio_mxn)}</p></CardContent></Card>
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Horneado</p><p className="mt-1 text-h2 font-semibold">6:00 AM</p></CardContent></Card>
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Disponible</p><p className="mt-1 text-h2 font-semibold">{availabilityTone(product.disponibilidad.length)}</p></CardContent></Card>
-          </div>
-          <div className="mt-md rounded-lg border border-border bg-card p-md">
-            <div className="flex flex-col gap-sm md:flex-row md:items-center md:justify-between">
+
+        {related.length > 0 ? (
+          <section className="mt-12">
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+                <Sparkles className="h-[18px] w-[18px]" aria-hidden />
+              </span>
               <div>
-                <p className="text-sm font-semibold">Agregar a bolsa semanal</p>
-                <p className="mt-1 text-sm text-muted-foreground">Puedes ajustar cantidades antes del pago.</p>
-              </div>
-              <Button asChild size="lg"><Link href="/suscribirme/productos">Apartar pieza</Link></Button>
-            </div>
-          </div>
-          <div className="mt-md grid gap-xs md:grid-cols-2">
-            <Card className="">
-              <CardHeader><CardTitle>Ingredientes</CardTitle></CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                {product.ingredientes.map((ingredient) => <Badge key={ingredient} variant="soft">{ingredient}</Badge>)}
-              </CardContent>
-            </Card>
-            <Card className="">
-              <CardHeader><CardTitle>Disponibilidad</CardTitle></CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                {product.disponibilidad.map((day) => <Badge key={day} variant="outline" className="capitalize">{day}</Badge>)}
-              </CardContent>
-            </Card>
-          </div>
-          {related.length > 0 ? (
-            <div className="mt-lg">
-              <SectionHeader eyebrow="Tambien puede interesarte" title="Misma familia, otra textura." compact />
-              <div className="mt-sm grid gap-xs md:grid-cols-3">
-                {related.map((item) => <ProductLine key={item.id} product={item} quantity={1} action={<Button asChild variant="outline" size="sm"><Link href={`/catalogo/${item.slug}`}>Ver</Link></Button>} />)}
+                <h2 className="font-serif text-[1.25rem] font-medium leading-tight text-[var(--ink)]">Va bien con</h2>
+                <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">Misma familia, otra textura</p>
               </div>
             </div>
-          ) : null}
-        </section>
-      </Container>
+            <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {related.map((item) => (
+                <div key={item.id} className="w-[230px] shrink-0 sm:w-[250px]">
+                  <TahonaCatalogCard
+                    product={item}
+                    quantity={cart[item.id] ?? 0}
+                    onAdd={() => {
+                      addToCart(item.id);
+                      flash(`${item.nombre} agregado a tu bolsa`);
+                    }}
+                    onRemove={() => removeFromCart(item.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </div>
+
+      {/* Barra fija de agregar — solo móvil */}
+      <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 border-t border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 shadow-[var(--shadow-lg)] lg:hidden">
+        <AddControl />
+      </div>
+
+      <AnimatePresence>
+        {toast ? (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            transition={{ duration: 0.24, ease: easeOutSoft }}
+            className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
+          >
+            {toast}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }
