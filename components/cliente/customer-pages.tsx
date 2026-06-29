@@ -31,6 +31,9 @@ import {
   User,
   Wallet,
   Wheat,
+  Flame,
+  RefreshCw,
+  Sparkles,
   X
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -925,7 +928,6 @@ function availabilityLabel(days: number) {
   if (days >= 4) return "Disponible esta semana";
   return "Pocas horneadas";
 }
-
 function CatalogoExactPage() {
   const { productos, suscripciones, clientes, currentClientId, cart, addToCart, removeFromCart, setCartQuantity } =
     useTahonaStore();
@@ -948,20 +950,16 @@ function CatalogoExactPage() {
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.precio_mxn * item.qty, 0);
 
-  // ── Rieles de descubrimiento ──────────────────────────────────────────
-  // "Lo de siempre": las piezas de tu suscripción
   const loDeSiempre = (suscripcion?.productos ?? [])
     .map((item) => ({ product: productos.find((p) => p.id === item.producto_id), cantidad: item.cantidad }))
     .filter((x): x is { product: Producto; cantidad: number } => Boolean(x.product));
 
-  // "Especial del panadero": rota cada semana (prioriza categoría Especiales)
   const especiales = productos.filter((p) => p.categoria === "Especiales");
   const weekIndex = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
   const especial = especiales.length
     ? especiales[weekIndex % especiales.length]
     : productos[weekIndex % productos.length];
 
-  // "Recién horneado hoy": disponibles el día de hoy
   const dayNames = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   const today = dayNames[new Date().getDay()];
   const recienHoy = productos.filter((p) => (p.disponibilidad as string[]).includes(today)).slice(0, 8);
@@ -984,7 +982,6 @@ function CatalogoExactPage() {
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <div className="mx-auto w-full max-w-[1240px] px-4 pb-28 pt-10 md:px-6 lg:pb-16">
-        {/* ── Intro personalizada ─────────────────────────────────────── */}
         <section className="grid gap-6 pb-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
           <div>
             {hub ? (
@@ -1016,7 +1013,6 @@ function CatalogoExactPage() {
           </div>
         </section>
 
-        {/* ── "Lo de siempre" (solo suscriptores) ─────────────────────── */}
         {isSubscriber && loDeSiempre.length > 0 ? (
           <CatalogRail
             icon={RefreshCw}
@@ -1034,7 +1030,6 @@ function CatalogoExactPage() {
           />
         ) : null}
 
-        {/* ── Especial del panadero ───────────────────────────────────── */}
         {especial ? (
           <PanaderoSpecial
             product={especial}
@@ -1044,7 +1039,6 @@ function CatalogoExactPage() {
           />
         ) : null}
 
-        {/* ── Recién horneado hoy ─────────────────────────────────────── */}
         {recienHoy.length > 0 ? (
           <CatalogRail
             icon={Flame}
@@ -1057,7 +1051,6 @@ function CatalogoExactPage() {
           />
         ) : null}
 
-        {/* ── Filtro de categorías (pegajoso) ─────────────────────────── */}
         <section className="mt-8 sticky top-[calc(64px+env(safe-area-inset-top))] z-20 -mx-4 border-y border-[var(--line)] bg-[rgba(251,248,243,.86)] px-4 py-4 backdrop-blur-[12px] md:-mx-6 md:px-6">
           <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
@@ -1086,7 +1079,6 @@ function CatalogoExactPage() {
           </div>
         </section>
 
-        {/* ── Grid + bolsa (intacto) ──────────────────────────────────── */}
         <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((product) => (
@@ -1143,6 +1135,7 @@ function CatalogoExactPage() {
     </main>
   );
 }
+
 function useSelectedHub() {
   const hubs = useTahonaStore((s) => s.hubs);
   const clientes = useTahonaStore((s) => s.clientes);
@@ -1212,6 +1205,7 @@ function CatalogRail({
     </section>
   );
 }
+
 function PanaderoSpecial({
   product,
   quantity,
@@ -1275,131 +1269,6 @@ function PanaderoSpecial({
         </div>
       </div>
     </section>
-  );
-}
-
-  function showToast(productName: string) {
-    setToast(`${productName} agregado a tu bolsa`);
-    window.setTimeout(() => setToast(""), 2000);
-  }
-
-  function handleAdd(product: Producto) {
-    addToCart(product.id);
-    showToast(product.nombre);
-  }
-
-  return (
-    <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <div className="mx-auto w-full max-w-[1240px] px-4 pb-28 pt-12 md:px-6 lg:pb-16">
-        <section className="grid gap-6 pb-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-          <div>
-            <div className="mb-4 h-0.5 w-8 bg-[var(--brand)]" />
-            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              Vitrina semanal
-            </p>
-            <h1 className="mt-3 max-w-[16ch] font-serif text-display font-medium text-[var(--ink)]">
-              Pan recien horneado, listo para tu semana.
-            </h1>
-            <p className="mt-4 max-w-[48ch] font-sans text-[0.875rem] leading-[1.5] text-[var(--ink-soft)] md:text-base">
-              Elige tus piezas y arma la bolsa.
-            </p>
-          </div>
-          <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-5 py-4 shadow-[var(--shadow-sm)]">
-            <p className="flex items-center gap-2 font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
-              <Clock className="h-4 w-4" aria-hidden />
-              Corte semanal
-            </p>
-            <p className="mt-2 font-serif text-[1.125rem] font-medium text-[var(--ink)]">
-              Viernes - 10:00 PM
-            </p>
-            <p className="mt-1 font-mono text-sm font-medium text-[var(--brand)] [font-variant-numeric:tabular-nums]">
-              Cierra en {countdown}
-            </p>
-          </div>
-        </section>
-
-        <section className="sticky top-[calc(64px+env(safe-area-inset-top))] z-20 -mx-4 border-y border-[var(--line)] bg-[rgba(251,248,243,.86)] px-4 py-4 backdrop-blur-[12px] md:-mx-6 md:px-6">
-          <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4">
-            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
-              {categories.map((item) => {
-                const active = item === category;
-                return (
-                  <button
-                    key={item}
-                    type="button"
-                    className={cn(
-                      "h-10 shrink-0 rounded-full px-4 font-sans text-[0.875rem] font-medium transition-all duration-base ease-out-soft",
-                      active
-                        ? "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)]"
-                        : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:bg-[var(--paper-raised)] hover:text-[var(--ink)]"
-                    )}
-                    onClick={() => setCategory(item)}
-                  >
-                    {item}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="hidden shrink-0 font-mono text-sm font-medium text-[var(--ink-faint)] [font-variant-numeric:tabular-nums] sm:block">
-              {filtered.length} piezas
-            </p>
-          </div>
-        </section>
-
-        <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((product) => (
-              <TahonaCatalogCard
-                key={product.id}
-                product={product}
-                quantity={cart[product.id] ?? 0}
-                onAdd={() => handleAdd(product)}
-                onRemove={() => removeFromCart(product.id)}
-              />
-            ))}
-            {!filtered.length ? <CatalogEmptyState onReset={() => setCategory("Todo")} /> : null}
-          </div>
-          <CatalogBag
-            items={cartItems}
-            count={cartCount}
-            total={cartTotal}
-            onIncrement={(product) => handleAdd(product)}
-            onDecrement={(product) => removeFromCart(product.id)}
-            onRemove={(product) => setCartQuantity(product.id, 0)}
-          />
-        </section>
-      </div>
-
-      <MobileCatalogBar count={cartCount} total={cartTotal} onOpen={() => setSheetOpen(true)} />
-      <BottomSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        title="Tu bolsa"
-        description={`${cartCount} piezas seleccionadas`}
-      >
-        <CatalogBagContent
-          items={cartItems}
-          count={cartCount}
-          total={cartTotal}
-          onIncrement={(product) => handleAdd(product)}
-          onDecrement={(product) => removeFromCart(product.id)}
-          onRemove={(product) => setCartQuantity(product.id, 0)}
-        />
-      </BottomSheet>
-      <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
-          >
-            {toast}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </main>
   );
 }
 
