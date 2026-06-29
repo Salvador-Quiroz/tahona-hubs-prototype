@@ -21,11 +21,6 @@ import {
   User,
   Users,
   Wheat,
-  Clock,
-  Flame,        
-  RefreshCw,    
-  Sparkles,     
-  ShoppingBag,
   type LucideIcon
 } from "lucide-react";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
@@ -126,7 +121,6 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
             collapsed && "h-[56px]"
           )}
         >
-          {/* Marca — compacta en móvil y al colapsar */}
           <div className="shrink-0">
             <span className="lg:hidden">
               <TahonaWordmark compact />
@@ -136,12 +130,10 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
             </span>
           </div>
 
-          {/* Selector de hub — el "¿dónde retiras?" siempre visible */}
           <div className="min-w-0 flex-1 lg:flex-none">
             <HubSwitcher />
           </div>
 
-          {/* Navegación desktop */}
           <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Navegación cliente">
             {customerNav.map((item) => (
               <Link
@@ -157,9 +149,7 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          {/* Acciones derecha */}
           <div className="flex shrink-0 items-center gap-2">
-            {/* Botón de bolsa que se adapta: vacío → Apartar; con items → Mi bolsa · N */}
             <Button asChild size="sm" className="hidden h-10 rounded-[12px] lg:inline-flex">
               <Link href="/suscribirme">
                 <ShoppingBag className="mr-2 h-4 w-4" aria-hidden />
@@ -176,7 +166,6 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
               </Link>
             </Button>
 
-            {/* Notificaciones — solo suscriptores (algo cambia cada semana) */}
             {isSubscriber ? (
               <Button asChild size="icon" variant="outline" className="relative hidden lg:inline-flex" aria-label="Avisos">
                 <Link href="/cuenta">
@@ -186,16 +175,13 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
               </Button>
             ) : null}
 
-            {/* Cuenta — con saludo personalizado si hay suscripción */}
             {isSubscriber && cliente ? (
               <Button asChild variant="outline" className="h-10 gap-2 rounded-[12px] pl-2.5 pr-3">
                 <Link href="/cuenta">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand)] font-mono text-[11px] font-semibold text-white">
                     {cliente.nombre.charAt(0)}
                   </span>
-                  <span className="hidden text-sm font-semibold text-[var(--ink)] sm:inline">
-                    Hola, {cliente.nombre}
-                  </span>
+                  <span className="hidden text-sm font-semibold text-[var(--ink)] sm:inline">Hola, {cliente.nombre}</span>
                 </Link>
               </Button>
             ) : (
@@ -234,6 +220,7 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
 function HubSwitcher() {
   const hubs = useTahonaStore((state) => state.hubs);
   const clientes = useTahonaStore((state) => state.clientes);
@@ -287,7 +274,6 @@ function HubSwitcher() {
 
       {open ? (
         <>
-          {/* backdrop para cerrar al hacer clic fuera */}
           <button
             type="button"
             aria-hidden
@@ -341,6 +327,7 @@ function HubSwitcher() {
     </div>
   );
 }
+
 function ClienteFooter() {
   return (
     <footer className="border-t border-white/10 bg-[var(--ink)] text-white">
