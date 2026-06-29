@@ -927,18 +927,356 @@ function availabilityLabel(days: number) {
 }
 
 function CatalogoExactPage() {
-  const { productos, cart, addToCart, removeFromCart, setCartQuantity } = useTahonaStore();
+  const { productos, suscripciones, clientes, currentClientId, cart, addToCart, removeFromCart, setCartQuantity } =
+    useTahonaStore();
   const [category, setCategory] = useState("Todo");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const countdown = useWeeklyCutoffCountdown();
+  const hub = useSelectedHub();
+
+  const cliente = clientes.find((c) => c.id === currentClientId);
+  const suscripcion = suscripciones.find((s) => s.cliente_id === currentClientId);
+  const isSubscriber = Boolean(suscripcion && suscripcion.estado !== "cancelada");
+
   const categories = ["Todo", ...Array.from(new Set(productos.map((product) => product.categoria)))];
   const filtered = productos.filter((product) => category === "Todo" || product.categoria === category);
+
   const cartItems = productos
     .map((product) => ({ product, qty: cart[product.id] ?? 0 }))
     .filter((item) => item.qty > 0);
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
   const cartTotal = cartItems.reduce((sum, item) => sum + item.product.precio_mxn * item.qty, 0);
-  const countdown = useWeeklyCutoffCountdown();
+
+  // ── Rieles de descubrimiento ──────────────────────────────────────────
+  // "Lo de siempre": las piezas de tu suscripción
+  const loDeSiempre = (suscripcion?.productos ?? [])
+    .map((item) => ({ product: productos.find((p) => p.id === item.producto_id), cantidad: item.cantidad }))
+    .filter((x): x is { product: Producto; cantidad: number } => Boolean(x.product));
+
+  // "Especial del panadero": rota cada semana (prioriza categoría Especiales)
+  const especiales = productos.filter((p) => p.categoria === "Especiales");
+  const weekIndex = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
+  const especial = especiales.length
+    ? especiales[weekIndex % especiales.length]
+    : productos[weekIndex % productos.length];
+
+  // "Recién horneado hoy": disponibles el día de hoy
+  const dayNames = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const today = dayNames[new Date().getDay()];
+  const recienHoy = productos.filter((p) => (p.disponibilidad as string[]).includes(today)).slice(0, 8);
+
+  function flash(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2000);
+  }
+  function handleAdd(product: Producto) {
+    addToCart(product.id);
+    flash(`${product.nombre} agregado a tu bolsa`);
+  }
+  function handleAddUsual() {
+    loDeSiempre.forEach(({ product, cantidad }) =>
+      setCartQuantity(product.id, Math.max(cart[product.id] ?? 0, cantidad))
+    );
+    flash("Tu bolsa de siempre, lista");
+  }
+
+  return (
+    <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
+      <div className="mx-auto w-full max-w-[1240px] px-4 pb-28 pt-10 md:px-6 lg:pb-16">
+        {/* ── Intro personalizada ─────────────────────────────────────── */}
+        <section className="grid gap-6 pb-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+          <div>
+            {hub ? (
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-tint)] px-3 py-1 font-sans text-[0.75rem] font-semibold text-[var(--brand)]">
+                <MapPin className="h-3.5 w-3.5" aria-hidden />
+                Retiras en {hub.nombre}
+              </p>
+            ) : null}
+            <h1 className="mt-3 max-w-[18ch] font-serif text-display font-medium text-[var(--ink)]">
+              {isSubscriber && cliente
+                ? `Hola de nuevo, ${cliente.nombre}.`
+                : "Pan recién horneado, listo para tu semana."}
+            </h1>
+            <p className="mt-3 max-w-[48ch] font-sans text-[0.875rem] leading-[1.5] text-[var(--ink-soft)] md:text-base">
+              {isSubscriber
+                ? "Repite tu bolsa de siempre o suma un antojo antes del corte del viernes."
+                : "Elige tus piezas y arma la bolsa. Recoges en tu hub, sin filas."}
+            </p>
+          </div>
+          <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-5 py-4 shadow-[var(--shadow-sm)]">
+            <p className="flex items-center gap-2 font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
+              <Clock className="h-4 w-4" aria-hidden />
+              Corte semanal
+            </p>
+            <p className="mt-2 font-serif text-[1.125rem] font-medium text-[var(--ink)]">Viernes · 10:00 PM</p>
+            <p className="mt-1 font-mono text-sm font-medium text-[var(--brand)] [font-variant-numeric:tabular-nums]">
+              Cierra en {countdown}
+            </p>
+          </div>
+        </section>
+
+        {/* ── "Lo de siempre" (solo suscriptores) ─────────────────────── */}
+        {isSubscriber && loDeSiempre.length > 0 ? (
+          <CatalogRail
+            icon={RefreshCw}
+            title="Lo de siempre"
+            subtitle="Tu bolsa habitual, a un toque"
+            action={
+              <Button type="button" size="sm" variant="outline" className="rounded-full" onClick={handleAddUsual}>
+                Agregar todo
+              </Button>
+            }
+            products={loDeSiempre.map((x) => x.product)}
+            cart={cart}
+            onAdd={handleAdd}
+            onRemove={(p) => removeFromCart(p.id)}
+          />
+        ) : null}
+
+        {/* ── Especial del panadero ───────────────────────────────────── */}
+        {especial ? (
+          <PanaderoSpecial
+            product={especial}
+            quantity={cart[especial.id] ?? 0}
+            onAdd={() => handleAdd(especial)}
+            onRemove={() => removeFromCart(especial.id)}
+          />
+        ) : null}
+
+        {/* ── Recién horneado hoy ─────────────────────────────────────── */}
+        {recienHoy.length > 0 ? (
+          <CatalogRail
+            icon={Flame}
+            title="Recién horneado hoy"
+            subtitle="Sale del horno esta mañana"
+            products={recienHoy}
+            cart={cart}
+            onAdd={handleAdd}
+            onRemove={(p) => removeFromCart(p.id)}
+          />
+        ) : null}
+
+        {/* ── Filtro de categorías (pegajoso) ─────────────────────────── */}
+        <section className="mt-8 sticky top-[calc(64px+env(safe-area-inset-top))] z-20 -mx-4 border-y border-[var(--line)] bg-[rgba(251,248,243,.86)] px-4 py-4 backdrop-blur-[12px] md:-mx-6 md:px-6">
+          <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+              {categories.map((item) => {
+                const active = item === category;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    className={cn(
+                      "h-10 shrink-0 rounded-full px-4 font-sans text-[0.875rem] font-medium transition-all duration-base ease-out-soft",
+                      active
+                        ? "bg-[var(--brand)] text-white shadow-[var(--shadow-sm)]"
+                        : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:bg-[var(--paper-raised)] hover:text-[var(--ink)]"
+                    )}
+                    onClick={() => setCategory(item)}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="hidden shrink-0 font-mono text-sm font-medium text-[var(--ink-faint)] [font-variant-numeric:tabular-nums] sm:block">
+              {filtered.length} piezas
+            </p>
+          </div>
+        </section>
+
+        {/* ── Grid + bolsa (intacto) ──────────────────────────────────── */}
+        <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((product) => (
+              <TahonaCatalogCard
+                key={product.id}
+                product={product}
+                quantity={cart[product.id] ?? 0}
+                onAdd={() => handleAdd(product)}
+                onRemove={() => removeFromCart(product.id)}
+              />
+            ))}
+            {!filtered.length ? <CatalogEmptyState onReset={() => setCategory("Todo")} /> : null}
+          </div>
+          <CatalogBag
+            items={cartItems}
+            count={cartCount}
+            total={cartTotal}
+            onIncrement={(product) => handleAdd(product)}
+            onDecrement={(product) => removeFromCart(product.id)}
+            onRemove={(product) => setCartQuantity(product.id, 0)}
+          />
+        </section>
+      </div>
+
+      <MobileCatalogBar count={cartCount} total={cartTotal} onOpen={() => setSheetOpen(true)} />
+      <BottomSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        title="Tu bolsa"
+        description={`${cartCount} piezas seleccionadas`}
+      >
+        <CatalogBagContent
+          items={cartItems}
+          count={cartCount}
+          total={cartTotal}
+          onIncrement={(product) => handleAdd(product)}
+          onDecrement={(product) => removeFromCart(product.id)}
+          onRemove={(product) => setCartQuantity(product.id, 0)}
+        />
+      </BottomSheet>
+      <AnimatePresence>
+        {toast ? (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            transition={{ duration: 0.24, ease: easeOutSoft }}
+            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
+          >
+            {toast}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </main>
+  );
+}
+function useSelectedHub() {
+  const hubs = useTahonaStore((s) => s.hubs);
+  const clientes = useTahonaStore((s) => s.clientes);
+  const currentClientId = useTahonaStore((s) => s.currentClientId);
+  const fallback = clientes.find((c) => c.id === currentClientId)?.hub_asignado_id ?? hubs[0]?.id ?? "";
+  const [hubId, setHubId] = useState(fallback);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const read = () => {
+      const v = window.localStorage.getItem("tahona:hub");
+      if (v && hubs.some((h) => h.id === v)) setHubId(v);
+    };
+    read();
+    window.addEventListener("storage", read);
+    return () => window.removeEventListener("storage", read);
+  }, [hubs]);
+
+  return hubs.find((h) => h.id === hubId) ?? hubs[0];
+}
+
+function CatalogRail({
+  icon: Icon,
+  title,
+  subtitle,
+  action,
+  products,
+  cart,
+  onAdd,
+  onRemove
+}: {
+  icon: typeof Flame;
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  products: Producto[];
+  cart: Record<string, number>;
+  onAdd: (product: Producto) => void;
+  onRemove: (product: Producto) => void;
+}) {
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex items-end justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+            <Icon className="h-[18px] w-[18px]" aria-hidden />
+          </span>
+          <div>
+            <h2 className="font-serif text-[1.25rem] font-medium leading-tight text-[var(--ink)]">{title}</h2>
+            {subtitle ? <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">{subtitle}</p> : null}
+          </div>
+        </div>
+        {action}
+      </div>
+      <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {products.map((product) => (
+          <div key={product.id} className="w-[230px] shrink-0 sm:w-[250px]">
+            <TahonaCatalogCard
+              product={product}
+              quantity={cart[product.id] ?? 0}
+              onAdd={() => onAdd(product)}
+              onRemove={() => onRemove(product)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+function PanaderoSpecial({
+  product,
+  quantity,
+  onAdd,
+  onRemove
+}: {
+  product: Producto;
+  quantity: number;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <section className="mt-8 overflow-hidden rounded-[20px] border border-[var(--line)] shadow-[var(--shadow-sm)]">
+      <div className="grid md:grid-cols-[1.1fr_1fr]">
+        <div className="relative min-h-[220px] overflow-hidden bg-[var(--paper-sunken)]">
+          <Image
+            src={product.imagen_url}
+            alt={product.nombre}
+            fill
+            sizes="(max-width: 768px) 100vw, 600px"
+            className="object-cover"
+          />
+          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-3 py-1 font-sans text-[0.75rem] font-bold uppercase tracking-[0.08em] text-[var(--ink)]">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Especial de la semana
+          </span>
+        </div>
+        <div className="flex flex-col justify-center gap-3 bg-[var(--brand)] p-6 text-white md:p-8">
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-white/70">
+            El especial del panadero
+          </p>
+          <h2 className="font-serif text-[clamp(1.75rem,3vw,2.5rem)] font-medium leading-[1.05]">{product.nombre}</h2>
+          <p className="max-w-[42ch] font-sans text-[0.9375rem] leading-[1.55] text-white/80">
+            {product.descripcion_premium || product.descripcion_corta}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-4">
+            <span className="font-mono text-[1.5rem] font-medium [font-variant-numeric:tabular-nums]">
+              {formatCurrency(product.precio_mxn)}
+            </span>
+            {quantity > 0 ? (
+              <div className="flex items-center gap-3 rounded-full bg-white/15 px-2 py-1">
+                <button type="button" onClick={onRemove} aria-label="Quitar pieza" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15">
+                  <Minus className="h-4 w-4" aria-hidden />
+                </button>
+                <span className="min-w-6 text-center font-mono text-sm font-medium [font-variant-numeric:tabular-nums]">{quantity}</span>
+                <button type="button" onClick={onAdd} aria-label="Agregar pieza" className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/15">
+                  <Plus className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <Button type="button" variant="accent" onClick={onAdd}>
+                Agregar a mi bolsa
+              </Button>
+            )}
+            <Button asChild variant="ghost" className="text-white hover:bg-white/10">
+              <Link href={`/catalogo/${product.slug}`}>
+                Ver detalle <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
   function showToast(productName: string) {
     setToast(`${productName} agregado a tu bolsa`);
