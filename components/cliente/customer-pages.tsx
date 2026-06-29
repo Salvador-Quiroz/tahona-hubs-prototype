@@ -253,34 +253,42 @@ function AppPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; prod
 }
 
 function DeliveryTimeline({ estado }: { estado: Entrega["estado"] }) {
-  const stages = ["Apartado", "En produccion", "Cargado", "Listo", "Retirado"];
-  const activeIndex = estado === "entregado" ? 4 : estado === "listo" ? 3 : estado === "incidencia" ? 3 : 1;
+  const stages = [
+    { label: "Apartado", icon: ShoppingBag },
+    { label: "En producción", icon: Flame },
+    { label: "Cargado", icon: PackageCheck },
+    { label: "Listo", icon: QrCode },
+    { label: "Retirado", icon: Check }
+  ];
+  const activeIndex = estado === "entregado" ? 4 : estado === "listo" ? 3 : estado === "incidencia" ? 2 : 1;
 
   return (
-    <div className="relative">
-      <div className="absolute left-5 right-5 top-4 h-px bg-border" aria-hidden />
+    <div className="relative px-2">
+      <div className="absolute left-6 right-6 top-5 h-0.5 bg-[var(--line)]" aria-hidden />
       <div
-        className="absolute left-5 top-4 h-px bg-primary transition-all duration-base"
-        style={{ width: `${(activeIndex / (stages.length - 1)) * 100}%` }}
+        className="absolute left-6 top-5 h-0.5 bg-[var(--brand)] transition-all duration-base"
+        style={{ width: `calc((100% - 3rem) * ${activeIndex / (stages.length - 1)})` }}
         aria-hidden
       />
-      <div className="relative grid grid-cols-5 gap-2">
+      <div className="relative grid grid-cols-5 gap-1">
         {stages.map((stage, index) => {
+          const Icon = stage.icon;
           const done = index < activeIndex;
           const active = index === activeIndex;
           return (
-            <div key={stage} className="flex flex-col items-center gap-2 text-center">
+            <div key={stage.label} className="flex flex-col items-center gap-2 text-center">
               <span
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full border bg-card text-xs font-semibold",
-                  done && "border-primary bg-primary text-white",
-                  active && "border-primary bg-primary text-white shadow-[0_0_0_6px_var(--brand-soft)]"
+                  "flex h-10 w-10 items-center justify-center rounded-full border bg-[var(--paper-raised)] transition-all",
+                  done && "border-[var(--brand)] bg-[var(--brand)] text-white",
+                  active && "border-[var(--brand)] bg-[var(--brand)] text-white shadow-[0_0_0_6px_var(--brand-tint)]",
+                  !done && !active && "border-[var(--line)] text-[var(--ink-faint)]"
                 )}
               >
-                {done ? <Check className="h-4 w-4" aria-hidden /> : index + 1}
+                {done ? <Check className="h-4 w-4" aria-hidden /> : <Icon className={cn("h-4 w-4", active && "animate-pulse")} aria-hidden />}
               </span>
-              <span className={cn("text-[11px] leading-4 text-muted-foreground", active && "font-semibold text-primary")}>
-                {stage}
+              <span className={cn("text-[11px] leading-4 text-[var(--ink-faint)]", active && "font-semibold text-[var(--brand)]")}>
+                {stage.label}
               </span>
             </div>
           );
@@ -289,70 +297,74 @@ function DeliveryTimeline({ estado }: { estado: Entrega["estado"] }) {
     </div>
   );
 }
-
 function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub; productos: Producto[] }) {
   const locker = entrega.casillero_id.split("-").at(-1)?.replace(/^0/, "") ?? "1";
   const passCode = `TH-${entrega.id.slice(-4).toUpperCase()}-${entrega.qr_code.slice(-3).toUpperCase()}`;
   const isReady = entrega.estado === "listo";
   const isRetired = entrega.estado === "entregado";
   const isBlocked = entrega.estado === "incidencia" || entrega.estado === "no_entregado";
+  const countdown = useWeeklyCutoffCountdown();
 
   return (
-    <div className="mx-auto w-full max-w-[480px] space-y-md">
+    <div className="mx-auto w-full max-w-[480px] space-y-4">
       <DeliveryTimeline estado={entrega.estado} />
-      <article className={cn("overflow-hidden rounded-xl bg-card shadow-lg", isRetired && "grayscale")}>
-        <div className="bg-primary p-md text-white">
-          <p className="text-caption font-semibold uppercase text-white/72">TAHONA - Pase de retiro</p>
-          <h2 className="mt-2 text-h2 font-semibold">{hub.nombre}</h2>
-          <p className="mt-1 text-body-l text-white/82">{shortDate(entrega.fecha)} - {entrega.slot}</p>
+      <article className={cn("overflow-hidden rounded-[20px] bg-[var(--paper-raised)] shadow-[var(--shadow-lg)]", isRetired && "grayscale")}>
+        <div className="bg-[var(--brand)] p-5 text-white">
+          <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white/72">TAHONA · Pase de retiro</p>
+          <h2 className="mt-2 font-serif text-[1.5rem] font-medium">{hub.nombre}</h2>
+          <p className="mt-1 font-sans text-[0.9375rem] text-white/82">{shortDate(entrega.fecha)} · {entrega.slot}</p>
         </div>
-        <div className="relative border-y border-dashed border-border bg-card">
-          <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--bg)]" aria-hidden />
-          <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--bg)]" aria-hidden />
+        <div className="relative border-y border-dashed border-[var(--line)] bg-[var(--paper-raised)]">
+          <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--paper)]" aria-hidden />
+          <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[var(--paper)]" aria-hidden />
         </div>
-        <div className="p-md">
-          <div className={cn("mx-auto flex w-fit flex-col items-center rounded-lg border border-border bg-white p-sm", !isReady && !isRetired && "opacity-35")}>
+        <div className="p-5">
+          <div className={cn("mx-auto flex w-fit flex-col items-center rounded-[12px] border border-[var(--line)] bg-white p-4", !isReady && !isRetired && "opacity-35")}>
             <QRCodeSVG value={entrega.qr_code} size={200} level="H" includeMargin />
           </div>
           {!isReady && !isRetired ? (
-            <div className="mt-sm rounded-md border border-info/20 bg-info-bg p-sm text-sm text-info">
-              Tu pan se esta horneando. El QR se activa cuando el casillero queda cargado.
+            <div className="mt-4 rounded-[12px] border border-[var(--brand)]/20 bg-[var(--brand-tint)] p-3 text-center font-sans text-sm text-[var(--brand)]">
+              Tu pan se está horneando. El QR se activa cuando el casillero quede cargado.
             </div>
           ) : null}
-          <p className="mt-sm text-center font-mono text-2xl font-semibold tracking-normal text-foreground">{passCode}</p>
-          <p className="mt-1 text-center text-xs text-muted-foreground">Fallback si el escaner no lee el QR</p>
-          <div className="mt-md grid grid-cols-2 gap-xs">
-            <div className="rounded-md border border-border bg-surface-2 p-sm">
-              <p className="text-xs text-muted-foreground">Casillero</p>
-              <p className="mt-1 font-mono text-h2 font-semibold">#{locker}</p>
+          <p className="mt-4 text-center font-mono text-2xl font-semibold text-[var(--ink)]">{passCode}</p>
+          <p className="mt-1 text-center font-sans text-xs text-[var(--ink-faint)]">Código de respaldo si el escáner no lee el QR</p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-[12px] border border-[var(--line)] bg-[var(--paper-sunken)] p-3">
+              <p className="font-sans text-xs text-[var(--ink-faint)]">Casillero</p>
+              <p className="mt-1 font-mono text-[1.5rem] font-semibold text-[var(--ink)]">#{locker}</p>
             </div>
-            <div className="rounded-md border border-border bg-surface-2 p-sm">
-              <p className="text-xs text-muted-foreground">Estado</p>
+            <div className="rounded-[12px] border border-[var(--line)] bg-[var(--paper-sunken)] p-3">
+              <p className="font-sans text-xs text-[var(--ink-faint)]">Estado</p>
               <div className="mt-2">
                 <StatusPill
                   tone={isBlocked ? "danger" : isRetired ? "neutral" : isReady ? "success" : "info"}
-                  label={isRetired ? "Retirado" : entrega.estado.replaceAll("_", " ")}
+                  label={isRetired ? "Retirado" : isReady ? "Listo" : entrega.estado.replaceAll("_", " ")}
                 />
               </div>
             </div>
           </div>
-          <div className={cn("mt-sm rounded-md border p-sm text-center", isReady ? "border-warning/30 bg-warning-bg text-warning" : "border-border bg-surface-2 text-muted-foreground")}>
-            <p className="text-xs">Tu ventana cierra en</p>
-            <p className="mt-1 font-mono text-h3 font-semibold">02:14:30</p>
-          </div>
+          {isReady ? (
+            <div className="mt-3 rounded-[12px] border border-[var(--warn)]/30 bg-[var(--warn-bg)] p-3 text-center text-[var(--warn)]">
+              <p className="font-sans text-xs">Tu ventana cierra en</p>
+              <p className="mt-1 font-mono text-[1.25rem] font-semibold [font-variant-numeric:tabular-nums]">{countdown}</p>
+            </div>
+          ) : null}
         </div>
       </article>
-      <Card className="">
-        <CardHeader><CardTitle>Contenido del pedido</CardTitle></CardHeader>
-        <CardContent className="space-y-xs">
+      <div className="rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] p-4">
+        <p className="font-serif text-[1.0625rem] font-medium text-[var(--ink)]">Contenido del pedido</p>
+        <div className="mt-3 space-y-1">
           {entrega.productos.map((item) => (
             <ProductLine key={item.producto_id} product={getProduct(productos, item.producto_id)} quantity={item.cantidad} />
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
+
+
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const hero = productos[0];
@@ -2881,35 +2893,120 @@ function DeliveryList({ entregas, productos, hubs }: { entregas: Entrega[]; prod
 }
 
 function DeliveryDetail({ entrega, productos, hub }: { entrega: Entrega; productos: Producto[]; hub: Hub }) {
+  const locker = entrega.casillero_id.split("-").at(-1)?.replace(/^0/, "") ?? "1";
+  const ready = entrega.estado === "listo";
+  const retired = entrega.estado === "entregado";
+  const issue = entrega.estado === "incidencia" || entrega.estado === "no_entregado";
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${hub.coordenadas.lat},${hub.coordenadas.lng}`;
+
+  const hero = issue
+    ? {
+        bg: "border-[var(--danger)]/25 bg-[var(--danger-bg)]",
+        icon: AlertTriangle,
+        iconColor: "text-[var(--danger)]",
+        title: "Hubo un problema con tu casillero",
+        sub: "Nuestro equipo ya está en ello. Si necesitas ayuda, contáctanos."
+      }
+    : retired
+    ? {
+        bg: "border-[var(--line)] bg-[var(--paper-sunken)]",
+        icon: Check,
+        iconColor: "text-[var(--ink-soft)]",
+        title: "Pedido retirado",
+        sub: "¡Buen provecho! Nos vemos la próxima semana."
+      }
+    : ready
+    ? {
+        bg: "border-[var(--ok)]/30 bg-[var(--ok-bg)]",
+        icon: QrCode,
+        iconColor: "text-[var(--ok)]",
+        title: `Tu pan está listo · Casillero #${locker}`,
+        sub: `Recógelo en ${hub.nombre} antes de que cierre tu ventana de ${entrega.slot}.`
+      }
+    : {
+        bg: "border-[var(--brand)]/20 bg-[var(--brand-tint)]",
+        icon: Flame,
+        iconColor: "text-[var(--brand)]",
+        title: "Estamos preparando tu pan",
+        sub: "Te avisamos en cuanto tu casillero esté cargado y el QR se active."
+      };
+  const HeroIcon = hero.icon;
+
   return (
-    <div className="mx-auto grid max-w-[920px] gap-md lg:grid-cols-[480px_1fr]">
-      <BoardingPass entrega={entrega} hub={hub} productos={productos} />
-      <Card className="">
-        <CardHeader><CardTitle>Instrucciones de retiro</CardTitle></CardHeader>
-        <CardContent className="space-y-sm">
-          {["Llega dentro de tu ventana.", "Escanea el codigo QR en el modulo.", "Abre el casillero asignado y confirma retiro."].map((text, index) => <div key={text} className="flex gap-sm"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info-bg text-sm font-semibold text-info">{index + 1}</span><p className="pt-1 text-sm text-muted-foreground">{text}</p></div>)}
-          <div className="rounded-md border border-danger/20 bg-danger-bg p-sm">
-            <p className="text-sm font-semibold text-danger">El casillero no abre?</p>
-            <p className="mt-1 text-sm text-muted-foreground">Ten listo tu codigo de respaldo y contacta soporte desde aqui.</p>
-            <Button asChild variant="outline" className="mt-sm bg-card">
+    <div className="mx-auto max-w-[960px] space-y-6">
+      <div className={cn("flex items-start gap-4 rounded-[18px] border p-5", hero.bg)}>
+        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--paper-raised)]", hero.iconColor)}>
+          <HeroIcon className="h-6 w-6" aria-hidden />
+        </span>
+        <div>
+          <h1 className="font-serif text-[1.375rem] font-medium leading-tight text-[var(--ink)]">{hero.title}</h1>
+          <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">{hero.sub}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,480px)_1fr]">
+        <BoardingPass entrega={entrega} hub={hub} productos={productos} />
+
+        <div className="space-y-4">
+          <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5">
+            <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Tu hub de retiro</p>
+            <p className="mt-2 flex items-start gap-2 font-sans text-sm text-[var(--ink-soft)]">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" aria-hidden />
+              {hub.direccion}
+            </p>
+            <p className="mt-1 flex items-start gap-2 font-sans text-sm text-[var(--ink-soft)]">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" aria-hidden />
+              {hub.horario_operacion}
+            </p>
+            <Button asChild variant="outline" className="mt-4 w-full">
+              <a href={mapsUrl} target="_blank" rel="noreferrer">
+                Cómo llegar <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+              </a>
+            </Button>
+          </div>
+
+          <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5">
+            <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Cómo retirar</p>
+            <div className="mt-3 space-y-3">
+              {["Llega dentro de tu ventana de horario.", "Escanea el QR en el módulo del hub.", "Abre el casillero asignado y confirma el retiro."].map((text, index) => (
+                <div key={text} className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand-tint)] font-mono text-sm font-semibold text-[var(--brand)]">
+                    {index + 1}
+                  </span>
+                  <p className="pt-0.5 font-sans text-sm text-[var(--ink-soft)]">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5">
+            <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Seguimiento</p>
+            <div className="mt-3 space-y-2.5">
+              {["Pedido apartado", "Producción confirmada", "Casillero asignado", "QR activado"].map((event) => (
+                <div key={event} className="flex items-center gap-2.5 font-sans text-sm text-[var(--ink-soft)]">
+                  <span className="h-2 w-2 rounded-full bg-[var(--brand)]" aria-hidden />
+                  {event}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[18px] border border-[var(--danger)]/20 bg-[var(--danger-bg)] p-5">
+            <p className="flex items-center gap-2 font-sans font-semibold text-[var(--danger)]">
+              <HelpCircle className="h-4 w-4" aria-hidden /> ¿El casillero no abre?
+            </p>
+            <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">
+              Ten listo tu código de respaldo y contáctanos. Resolvemos en minutos.
+            </p>
+            <Button asChild variant="outline" className="mt-3 bg-[var(--paper-raised)]">
               <Link href="/soporte">Necesito ayuda</Link>
             </Button>
           </div>
-          <div className="border-t border-border pt-sm">
-            <p className="text-sm font-semibold">Bitacora</p>
-            {["Pedido apartado", "Produccion confirmada", "Casillero asignado", "QR activado"].map((event) => (
-              <div key={event} className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
-                {event}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-
 function shiftIsoDate(value: string, days: number) {
   const date = new Date(`${value}T12:00:00`);
   date.setDate(date.getDate() + days);
