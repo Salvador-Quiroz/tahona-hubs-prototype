@@ -35,6 +35,8 @@ import {
   RefreshCw,
   Sparkles,
   ArrowLeft,
+  Phone,
+  ShieldCheck,
   X
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -62,47 +64,46 @@ const stepCopy: Record<Step, { eyebrow: string; title: string; body: string; cta
   acceso: {
     eyebrow: "Pedido semanal",
     title: "Aparta tu pan antes del corte.",
-    body: "Elige piezas, confirma hub y paga en una experiencia corta. Tu bolsa queda ligada a un horario y casillero.",
+    body: "Elige piezas, confirma hub y paga en una experiencia corta.",
     cta: "Empezar pedido",
     next: "/suscribirme/productos"
   },
   productos: {
-    eyebrow: "Paso 1 de 4",
-    title: "Arma una bolsa clara, sin friccion.",
-    body: "Cada producto muestra precio, disponibilidad y cantidad. Puedes ajustar antes de confirmar.",
-    cta: "Elegir horario",
+    eyebrow: "Tu bolsa",
+    title: "Edita tu bolsa.",
+    body: "Ajusta cantidades. Lo que elijas se guarda en tu bolsa.",
+    cta: "Continuar al retiro",
     next: "/suscribirme/horarios"
   },
   horarios: {
-    eyebrow: "Paso 2 de 4",
-    title: "Selecciona hub y ventana.",
-    body: "El horario debe sentirse garantizado: capacidad visible, slots concretos y ubicacion entendible.",
-    cta: "Continuar a datos",
+    eyebrow: "Paso 1 de 3",
+    title: "Elige hub y ventana de retiro.",
+    body: "Capacidad visible, slots concretos y ubicación clara. Tu pan te espera en casillero.",
+    cta: "Continuar a tu cuenta",
     next: "/suscribirme/direccion"
   },
   direccion: {
-    eyebrow: "Paso 3 de 4",
-    title: "Datos minimos para operar.",
-    body: "Solo lo necesario para confirmar cuenta, contacto y zona de retiro. Sin formularios eternos.",
+    eyebrow: "Paso 2 de 3",
+    title: "Crea tu cuenta.",
+    body: "La necesitas para gestionar tu bolsa, saltar o pausar cada semana. Solo tu teléfono.",
     cta: "Continuar a pago",
     next: "/suscribirme/pago"
   },
   pago: {
-    eyebrow: "Paso 4 de 4",
+    eyebrow: "Paso 3 de 3",
     title: "Pago protegido y pedido listo.",
-    body: "Tarjeta, resumen y seguridad visibles. Facturacion y cupon se mantienen como opciones secundarias.",
+    body: "Tarjeta, resumen y seguridad visibles. Cancela, salta o pausa cuando quieras.",
     cta: "Confirmar pedido",
     next: "/suscribirme/confirmacion"
   },
   confirmacion: {
     eyebrow: "Confirmado",
-    title: "Tu retiro quedo programado.",
-    body: "Guarda tu pase de retiro. El codigo final aparecera en tu cuenta cuando el casillero este cargado.",
+    title: "Tu retiro quedó programado.",
+    body: "Guarda tu pase de retiro. El código final aparece en tu cuenta cuando el casillero esté cargado.",
     cta: "Ver mi cuenta",
     next: "/cuenta"
   }
 };
-
 function Container({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("mx-auto w-full max-w-[1240px] px-4 md:px-6", className)}>{children}</div>;
 }
@@ -1954,38 +1955,138 @@ export function HubDetailPage({ slug }: { slug: string }) {
     </main>
   );
 }
-
 function StepProgress({ step }: { step: Step }) {
-  const index = Math.max(0, stepOrder.indexOf(step));
+  const flow: { key: Step; label: string }[] = [
+    { key: "productos", label: "Bolsa" },
+    { key: "horarios", label: "Retiro" },
+    { key: "direccion", label: "Cuenta" },
+    { key: "pago", label: "Pago" }
+  ];
   if (step === "acceso" || step === "confirmacion") return null;
+  const index = Math.max(0, flow.findIndex((f) => f.key === step));
+
   return (
     <div className="mb-md">
-      <div className="mb-xs flex justify-between text-xs font-semibold text-muted-foreground">
-        {stepOrder.map((item) => <span key={item} className={cn(item === step && "text-primary")}>{stepCopy[item].eyebrow.replace("Paso ", "")}</span>)}
+      <div className="mb-2 flex justify-between">
+        {flow.map((item, i) => (
+          <span
+            key={item.key}
+            className={cn(
+              "font-sans text-xs font-semibold",
+              i < index ? "text-[var(--brand)]" : i === index ? "text-[var(--ink)]" : "text-[var(--ink-faint)]"
+            )}
+          >
+            {item.label}
+          </span>
+        ))}
       </div>
-      <ProgressBar value={((index + 1) / stepOrder.length) * 100} />
+      <ProgressBar value={((index + 1) / flow.length) * 100} />
     </div>
   );
 }
+function AccountStep({
+  checkout,
+  update
+}: {
+  checkout: CheckoutData;
+  update: (patch: Partial<CheckoutData>) => void;
+}) {
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const verified = checkout.verified ?? false;
+  const phoneDigits = (checkout.telefono ?? "").replace(/\D/g, "");
+  const phoneOk = phoneDigits.length >= 10;
 
-function CheckoutContactFields() {
+  function sendCode() {
+    if (phoneOk) setCodeSent(true);
+  }
+  function verify() {
+    if (code.replace(/\D/g, "").length >= 4) update({ verified: true });
+  }
+
   return (
-    <div className="mt-md grid gap-sm md:grid-cols-2">
-      <Field label="Nombre" placeholder="Mariana Soto" autoComplete="name" required />
-      <Field label="Telefono" type="tel" inputMode="tel" placeholder="55 0000 0000" autoComplete="tel" required />
-      <Field label="Email" type="email" inputMode="email" placeholder="nombre@correo.com" autoComplete="email" required />
-      <div className="space-y-2 md:col-span-2">
-        <label htmlFor="hub-note" className="block text-sm font-semibold text-foreground">Nota para el hub</label>
-        <Textarea id="hub-note" placeholder="Opcional: referencia breve para el equipo de retiro" />
+    <div className="mt-md space-y-4">
+      {verified ? (
+        <div className="flex items-center gap-3 rounded-[14px] border border-[var(--ok)]/30 bg-[var(--ok-bg)] px-4 py-3">
+          <ShieldCheck className="h-5 w-5 text-[var(--ok)]" aria-hidden />
+          <div>
+            <p className="font-sans text-sm font-semibold text-[var(--ink)]">Cuenta verificada</p>
+            <p className="font-mono text-xs text-[var(--ink-soft)]">{checkout.telefono}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] p-4">
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <Field
+                label="Teléfono"
+                type="tel"
+                inputMode="tel"
+                placeholder="55 0000 0000"
+                autoComplete="tel"
+                value={checkout.telefono ?? ""}
+                onChange={(e) => update({ telefono: e.target.value })}
+                required
+              />
+            </div>
+            <Button type="button" variant="outline" className="h-11" onClick={sendCode} disabled={!phoneOk}>
+              {codeSent ? "Reenviar" : "Enviar código"}
+            </Button>
+          </div>
+          {codeSent ? (
+            <div className="mt-3 flex items-end gap-2">
+              <div className="flex-1">
+                <Field
+                  label="Código de verificación"
+                  inputMode="numeric"
+                  placeholder="• • • •"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  helper="Te enviamos un SMS. (Demo: escribe 4 dígitos)"
+                />
+              </div>
+              <Button type="button" className="h-11" onClick={verify} disabled={code.replace(/\D/g, "").length < 4}>
+                Verificar
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Nombre"
+          placeholder="Mariana Soto"
+          autoComplete="name"
+          value={checkout.nombre ?? ""}
+          onChange={(e) => update({ nombre: e.target.value })}
+          required
+        />
+        <Field
+          label="Email (opcional)"
+          type="email"
+          inputMode="email"
+          placeholder="nombre@correo.com"
+          autoComplete="email"
+          value={checkout.email ?? ""}
+          onChange={(e) => update({ email: e.target.value })}
+        />
+        <div className="space-y-2 sm:col-span-2">
+          <label htmlFor="hub-note" className="block text-sm font-semibold text-foreground">
+            Nota para el hub (opcional)
+          </label>
+          <Textarea
+            id="hub-note"
+            placeholder="Referencia breve para el equipo de retiro"
+            value={checkout.nota ?? ""}
+            onChange={(e) => update({ nota: e.target.value })}
+          />
+        </div>
       </div>
-      <label className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-sm text-sm md:col-span-2">
-        <input type="checkbox" className="h-4 w-4 accent-primary" />
-        Crear cuenta para gestionar mi bolsa despues de pagar
-      </label>
     </div>
   );
 }
-
 function CheckoutPaymentFields({ total }: { total: number }) {
   return (
     <div className="mt-md grid gap-sm">
@@ -2016,6 +2117,35 @@ function CheckoutPaymentFields({ total }: { total: number }) {
       </Accordion>
     </div>
   );
+}
+
+type CheckoutData = {
+  dia?: string;
+  hora?: string;
+  nombre?: string;
+  telefono?: string;
+  email?: string;
+  nota?: string;
+  verified?: boolean;
+};
+
+function useCheckout(): [CheckoutData, (patch: Partial<CheckoutData>) => void] {
+  const [data, setData] = useState<CheckoutData>({});
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("tahona:checkout");
+      if (raw) setData(JSON.parse(raw));
+    } catch {}
+  }, []);
+  const update = (patch: Partial<CheckoutData>) =>
+    setData((prev) => {
+      const next = { ...prev, ...patch };
+      try {
+        window.localStorage.setItem("tahona:checkout", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  return [data, update];
 }
 
 export function BagPage() {
@@ -2264,16 +2394,44 @@ export function BagPage() {
 }
 
 export function SubscriptionStepPage({ step }: { step: Step }) {
-  const { productos, hubs } = useTahonaStore();
+  const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const copy = stepCopy[step];
-  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries(productos.slice(0, 4).map((product, index) => [product.id, index === 0 ? 1 : 0])));
-  const selected = productos.map((product) => ({ product, quantity: quantities[product.id] ?? 0 })).filter((item) => item.quantity > 0);
-  const subtotal = selected.reduce((sum, item) => sum + item.product.precio_mxn * item.quantity, 0);
-  const total = subtotal || productos[0].precio_mxn;
+  const baseHub = useSelectedHub();
+  const [checkout, updateCheckout] = useCheckout();
+  const [selectedHubId, setSelectedHubId] = useState<string>(baseHub?.id ?? hubs[0]?.id ?? "");
 
-  function updateQuantity(id: string, delta: number) {
-    setQuantities((current) => ({ ...current, [id]: Math.max(0, (current[id] ?? 0) + delta) }));
+  const selectedHub = hubs.find((h) => h.id === selectedHubId) ?? baseHub ?? hubs[0];
+  const pickupDays = ["Viernes", "Sábado", "Domingo"];
+
+  const items = productos
+    .map((product) => ({ product, quantity: cart[product.id] ?? 0 }))
+    .filter((item) => item.quantity > 0);
+  const total = items.reduce((sum, item) => sum + item.product.precio_mxn * item.quantity, 0);
+
+  function chooseHub(id: string) {
+    setSelectedHubId(id);
+    if (typeof window !== "undefined") window.localStorage.setItem("tahona:hub", id);
   }
+
+  const canContinue =
+    step === "horarios"
+      ? Boolean(checkout.dia && checkout.hora)
+      : step === "direccion"
+      ? Boolean(checkout.verified && (checkout.nombre ?? "").trim())
+      : true;
+
+  const ContinueButton = ({ full }: { full?: boolean }) =>
+    canContinue ? (
+      <Button asChild size="lg" className={cn(full && "w-full")}>
+        <Link href={copy.next}>
+          {copy.cta} <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+        </Link>
+      </Button>
+    ) : (
+      <Button type="button" size="lg" className={cn(full && "w-full")} disabled>
+        {copy.cta}
+      </Button>
+    );
 
   return (
     <main className="storefront-shell py-lg">
@@ -2281,78 +2439,182 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
         <section>
           <StepProgress step={step} />
           <SectionHeader eyebrow={copy.eyebrow} title={copy.title} body={copy.body} compact />
-          {step === "acceso" ? (
-            <div className="mt-lg grid gap-sm md:grid-cols-3">
-              {["Sin filas", "Sin pago en tienda", "Con casillero"].map((item) => <Card key={item} className=""><CardContent className="p-md"><Check className="h-5 w-5 text-success" /><p className="mt-sm font-semibold">{item}</p></CardContent></Card>)}
-            </div>
-          ) : null}
+
           {step === "productos" ? (
-            <div className="mt-md grid gap-sm md:grid-cols-2">
-              {productos.slice(0, 8).map((product) => (
-                <Card key={product.id} className="overflow-hidden">
-                  <div className="grid grid-cols-[112px_1fr]">
-                    <div className="relative min-h-[150px] bg-muted"><Image src={product.imagen_url} alt={product.nombre} fill sizes="120px" className="object-cover" /></div>
-                    <CardContent className="p-sm">
-                      <Badge variant="outline">{product.categoria}</Badge>
-                      <h3 className="mt-2 line-clamp-2 text-sm font-semibold">{product.nombre}</h3>
-                      <p className="mt-1 font-mono text-sm">{formatCurrency(product.precio_mxn)}</p>
-                      <div className="mt-sm flex items-center justify-between gap-xs">
-                        <Button type="button" variant="outline" size="icon" onClick={() => updateQuantity(product.id, -1)} aria-label="Quitar"><Minus className="h-4 w-4" /></Button>
-                        <span className="font-mono text-lg font-semibold">{quantities[product.id] ?? 0}</span>
-                        <Button type="button" variant="outline" size="icon" onClick={() => updateQuantity(product.id, 1)} aria-label="Agregar"><Plus className="h-4 w-4" /></Button>
-                      </div>
-                    </CardContent>
-                  </div>
-                </Card>
+            <div className="mt-md grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {productos.map((product) => (
+                <TahonaCatalogCard
+                  key={product.id}
+                  product={product}
+                  quantity={cart[product.id] ?? 0}
+                  onAdd={() => addToCart(product.id)}
+                  onRemove={() => removeFromCart(product.id)}
+                />
               ))}
             </div>
           ) : null}
+
           {step === "horarios" ? (
-            <div className="mt-md grid gap-sm">
-              {hubs.map((hub) => (
-                <Card key={hub.id} className="">
-                  <CardContent className="p-md">
-                    <div className="flex flex-col justify-between gap-sm md:flex-row md:items-center">
-                      <div><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3><p className="mt-1 text-sm text-muted-foreground">{hub.direccion}</p></div>
-                      <div className="flex flex-wrap gap-2">{hub.slots_horarios.map((slot) => <Button key={slot} variant="outline" size="sm">{slot}</Button>)}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="mt-md space-y-6">
+              <div>
+                <p className="mb-3 font-sans text-sm font-semibold text-[var(--ink)]">1 · Tu hub de retiro</p>
+                <div className="grid gap-3">
+                  {hubs.map((hub) => {
+                    const active = hub.id === selectedHubId;
+                    const ocupacion = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+                    return (
+                      <button
+                        key={hub.id}
+                        type="button"
+                        onClick={() => chooseHub(hub.id)}
+                        className={cn(
+                          "flex items-center gap-4 rounded-[16px] border bg-[var(--paper-raised)] px-4 py-4 text-left transition-colors",
+                          active ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : "border-[var(--line)] hover:border-[var(--brand)]"
+                        )}
+                      >
+                        <MapPin className={cn("h-5 w-5 shrink-0", active ? "text-[var(--brand)]" : "text-[var(--ink-faint)]")} aria-hidden />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-serif text-[1.0625rem] font-medium text-[var(--ink)]">{hub.nombre}</p>
+                          <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">{hub.direccion}</p>
+                        </div>
+                        <span className="font-mono text-xs text-[var(--ink-faint)]">{ocupacion}% ocup.</span>
+                        {active ? <Check className="h-5 w-5 shrink-0 text-[var(--brand)]" aria-hidden /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-3 font-sans text-sm font-semibold text-[var(--ink)]">2 · Día de retiro</p>
+                <div className="flex flex-wrap gap-2">
+                  {pickupDays.map((dia) => {
+                    const active = checkout.dia === dia;
+                    return (
+                      <button
+                        key={dia}
+                        type="button"
+                        onClick={() => updateCheckout({ dia })}
+                        className={cn(
+                          "h-11 rounded-full px-5 font-sans text-sm font-medium transition-colors",
+                          active ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                        )}
+                      >
+                        {dia}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-3 font-sans text-sm font-semibold text-[var(--ink)]">3 · Ventana de horario</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedHub.slots_horarios.map((hora) => {
+                    const active = checkout.hora === hora;
+                    return (
+                      <button
+                        key={hora}
+                        type="button"
+                        onClick={() => updateCheckout({ hora })}
+                        className={cn(
+                          "inline-flex h-11 items-center gap-2 rounded-full px-5 font-sans text-sm font-medium transition-colors",
+                          active ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                        )}
+                      >
+                        <Clock className="h-4 w-4" aria-hidden /> {hora}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : null}
-          {step === "direccion" ? <CheckoutContactFields /> : null}
+
+          {step === "direccion" ? <AccountStep checkout={checkout} update={updateCheckout} /> : null}
           {step === "pago" ? <CheckoutPaymentFields total={total} /> : null}
+
           {step === "confirmacion" ? (
-            <div className="mt-md grid gap-sm md:grid-cols-2">
-              <StatusPill tone="success" label="Pedido confirmado" />
-              <StatusPill tone="info" label="QR disponible al cargar casillero" icon={QrCode} />
+            <div className="mt-md space-y-4">
+              <div className="flex items-center gap-3 rounded-[16px] border border-[var(--ok)]/30 bg-[var(--ok-bg)] px-5 py-4">
+                <Check className="h-6 w-6 text-[var(--ok)]" aria-hidden />
+                <div>
+                  <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Pedido confirmado</p>
+                  <p className="font-sans text-sm text-[var(--ink-soft)]">
+                    {selectedHub.nombre} · {checkout.dia ?? "Viernes"} · {checkout.hora ?? selectedHub.slots_horarios[0]}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] px-5 py-4">
+                <QrCode className="h-6 w-6 text-[var(--brand)]" aria-hidden />
+                <p className="font-sans text-sm text-[var(--ink-soft)]">
+                  Tu pase de retiro estará disponible en tu cuenta cuando el casillero se cargue.
+                </p>
+              </div>
             </div>
           ) : null}
         </section>
-        <aside className="h-fit lg:sticky lg:top-28">
-          <Card className="shadow-md">
-            <CardHeader><CardTitle>Resumen</CardTitle></CardHeader>
-            <CardContent className="space-y-xs">
-              {(selected.length ? selected : [{ product: productos[0], quantity: 1 }]).map(({ product, quantity }) => <ProductLine key={product.id} product={product} quantity={quantity} />)}
-              <div className="border-t border-border pt-sm">
-                <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatCurrency(total)}</span></div>
-                <div className="mt-2 flex justify-between text-sm text-muted-foreground"><span>Retiro</span><span>Incluido</span></div>
-                <div className="mt-sm flex justify-between text-h3 font-semibold"><span>Total</span><span>{formatCurrency(total)}</span></div>
+
+        <aside className="h-fit lg:sticky lg:top-24">
+          <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+            <h2 className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Resumen</h2>
+            <div className="mt-4 space-y-2">
+              {(items.length ? items : [{ product: productos[0], quantity: 1 }]).map(({ product, quantity }) => (
+                <ProductLine key={product.id} product={product} quantity={quantity} />
+              ))}
+            </div>
+            {checkout.dia || checkout.hora ? (
+              <div className="mt-4 flex items-center gap-2 rounded-[12px] bg-[var(--paper-sunken)] px-3 py-2 font-sans text-[0.8125rem] text-[var(--ink-soft)]">
+                <MapPin className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                {selectedHub.nombre}
+                {checkout.dia ? ` · ${checkout.dia}` : ""}
+                {checkout.hora ? ` · ${checkout.hora}` : ""}
               </div>
-              <Button asChild size="lg" className="w-full">
-                <Link href={copy.next}>{copy.cta}</Link>
-              </Button>
-              <p className="text-xs leading-5 text-muted-foreground">Sin cargos ocultos. Puedes pausar o editar desde tu cuenta.</p>
-            </CardContent>
-          </Card>
+            ) : null}
+            <div className="my-4 h-px bg-[var(--line)]" />
+            <div className="flex items-baseline justify-between">
+              <span className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Total</span>
+              <span className="font-mono text-[1.25rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                {formatCurrency(total)}
+              </span>
+            </div>
+            <div className="mt-5">
+              {step === "confirmacion" ? (
+                <Button asChild size="lg" className="w-full">
+                  <Link href="/cuenta">Ver mi cuenta</Link>
+                </Button>
+              ) : (
+                <ContinueButton full />
+              )}
+            </div>
+            {step === "horarios" && !canContinue ? (
+              <p className="mt-2 text-center font-sans text-xs text-[var(--ink-faint)]">Elige día y horario para continuar.</p>
+            ) : null}
+            {step === "direccion" && !canContinue ? (
+              <p className="mt-2 text-center font-sans text-xs text-[var(--ink-faint)]">Verifica tu teléfono y nombre para continuar.</p>
+            ) : null}
+            <p className="mt-3 font-sans text-xs leading-5 text-[var(--ink-faint)]">
+              Sin cargos ocultos. Puedes pausar o editar desde tu cuenta.
+            </p>
+          </div>
         </aside>
       </Container>
-      {step !== "confirmacion" ? <StickyCTA label="Pedido Tahona" helper="Resumen visible antes de pagar" price={formatCurrency(total)} buttonProps={{ asChild: true, children: <Link href={copy.next}>{copy.cta}</Link> }} /> : null}
+
+      {step !== "confirmacion" ? (
+        <StickyCTA
+          label="Pedido Tahona"
+          helper={canContinue ? "Listo para continuar" : "Completa este paso"}
+          price={formatCurrency(total)}
+          buttonProps={
+            canContinue
+              ? { asChild: true, children: <Link href={copy.next}>{copy.cta}</Link> }
+              : { disabled: true, children: copy.cta }
+          }
+        />
+      ) : null}
     </main>
   );
 }
-
 function useAccountData() {
   const store = useTahonaStore();
   const client = store.clientes.find((item) => item.id === store.currentClientId) ?? store.clientes[0];
