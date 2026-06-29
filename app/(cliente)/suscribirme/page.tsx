@@ -1,5 +1,5 @@
-import { SubscriptionStepPage } from "@/components/cliente/customer-pages";
 
+import { BagPage } from "@/components/cliente/customer-pages";
 export default function Page() {
-  return <SubscriptionStepPage step="acceso" />;
+  return <BagPage />;
 }
