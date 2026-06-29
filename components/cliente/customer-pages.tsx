@@ -2648,64 +2648,195 @@ type AccountData = ReturnType<typeof useAccountData>;
 function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entrega }) {
   const failedCharge = data.charges.find((charge) => charge.estado === "fallido");
   const weeklyTotal = subscriptionTotal(data.productos, data.subscription);
+  const countdown = useWeeklyCutoffCountdown();
+  const [skipped, setSkipped] = useState(false);
+  const [toast, setToast] = useState("");
+  const paused = data.subscription.estado === "pausada";
+
+  function flash(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2200);
+  }
+
+  const estadoTone = delivery.estado === "incidencia" ? "danger" : delivery.estado === "listo" ? "success" : "info";
+  const estadoLabel =
+    delivery.estado === "listo" ? "Listo para retirar" : delivery.estado === "incidencia" ? "Incidencia" : "En preparación";
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-6">
+      {/* Aviso de pago fallido (recuperación) */}
       {failedCharge ? (
-        <div className="flex flex-col justify-between gap-sm rounded-lg border border-danger/20 bg-danger-bg p-sm md:flex-row md:items-center">
-          <div className="flex gap-sm">
-            <AlertTriangle className="mt-1 h-5 w-5 shrink-0 text-danger" aria-hidden />
+        <div className="flex flex-col justify-between gap-3 rounded-[16px] border border-[var(--danger)]/25 bg-[var(--danger-bg)] p-4 md:flex-row md:items-center">
+          <div className="flex gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--danger)]" aria-hidden />
             <div>
-              <p className="font-semibold text-danger">Tu pago no se proceso.</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Actualiza tu tarjeta antes del corte del viernes. Monto pendiente: {formatCurrency(failedCharge.monto)}.
+              <p className="font-sans font-semibold text-[var(--danger)]">Tu pago no se procesó.</p>
+              <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">
+                Actualiza tu tarjeta antes del corte del viernes. Pendiente: {formatCurrency(failedCharge.monto)}.
               </p>
             </div>
           </div>
-          <Button asChild variant="outline" className="bg-card">
+          <Button asChild variant="outline" className="bg-[var(--paper-raised)]">
             <Link href="/cuenta/pagos">Actualizar tarjeta</Link>
           </Button>
         </div>
       ) : null}
-      <div className="grid gap-md lg:grid-cols-[480px_1fr]">
-        <BoardingPass entrega={delivery} hub={data.hub} productos={data.productos} />
-        <div className="space-y-sm">
-          <Card className="rounded-xl shadow-sm">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-sm">
-                <div>
-                  <StatusPill tone={delivery.estado === "incidencia" ? "danger" : delivery.estado === "listo" ? "success" : "info"} label={delivery.estado.replaceAll("_", " ")} />
-                  <CardTitle className="mt-sm">Tu bolsa del {shortDate(delivery.fecha)}</CardTitle>
-                  <p className="mt-2 text-sm text-muted-foreground">{data.hub.nombre} - {delivery.slot}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Se cobra el viernes previo - {formatCurrency(weeklyTotal)}</p>
+
+      {/* Estado pausado */}
+      {paused ? (
+        <div className="flex flex-col justify-between gap-3 rounded-[16px] border border-[var(--warn)]/30 bg-[var(--warn-bg)] p-4 md:flex-row md:items-center">
+          <div>
+            <p className="font-sans font-semibold text-[var(--ink)]">Tu suscripción está pausada.</p>
+            <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">Reactívala cuando quieras volver a recibir tu pan.</p>
+          </div>
+          <Button asChild className="bg-[var(--brand)]">
+            <Link href="/cuenta/suscripcion">Reactivar</Link>
+          </Button>
+        </div>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-[1fr_minmax(0,440px)]">
+        {/* ── Tu próxima bolsa ─────────────────────────────────────────── */}
+        <div className="overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)]">
+          <div className="flex items-start justify-between gap-4 border-b border-[var(--line)] bg-[var(--brand)] p-5 text-white">
+            <div>
+              <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white/70">
+                Tu próxima bolsa
+              </p>
+              <p className="mt-1 font-serif text-[1.5rem] font-medium leading-tight">{shortDate(delivery.fecha)}</p>
+              <p className="mt-1 flex items-center gap-1.5 font-sans text-sm text-white/80">
+                <MapPin className="h-4 w-4" aria-hidden /> {data.hub.nombre} · {delivery.slot}
+              </p>
+            </div>
+            <span className="rounded-full bg-white/15 px-3 py-1 font-sans text-xs font-semibold">{estadoLabel}</span>
+          </div>
+
+          <div className="p-5">
+            {skipped ? (
+              <div className="flex items-center justify-between gap-3 rounded-[12px] bg-[var(--paper-sunken)] px-4 py-3">
+                <p className="font-sans text-sm text-[var(--ink-soft)]">Saltarás la entrega de esta semana.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSkipped(false);
+                    flash("Entrega reactivada");
+                  }}
+                  className="font-sans text-sm font-semibold text-[var(--brand)] hover:underline"
+                >
+                  Deshacer
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="flex items-center gap-2 font-mono text-sm font-medium text-[var(--brand)]">
+                  <Clock className="h-4 w-4" aria-hidden /> Puedes editarla hasta el viernes · cierra en {countdown}
+                </p>
+                <div className="mt-4 space-y-1">
+                  {data.subscription.productos.map((item) => (
+                    <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />
+                  ))}
                 </div>
-                <Button asChild>
-                  <Link href={`/cuenta/entrega/${delivery.id}`}>Ver pase</Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-xs">
-              <div className="grid gap-xs sm:grid-cols-3">
-                <Button variant="outline" className="w-full">Saltar esta semana</Button>
-                <Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/pausar">Pausar</Link></Button>
-                <Button asChild variant="outline" className="w-full"><Link href="/cuenta/suscripcion/editar">Editar bolsa</Link></Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="">
-            <CardHeader><CardTitle>Contenido de la bolsa</CardTitle></CardHeader>
-            <CardContent className="space-y-xs">
-              {data.subscription.productos.map((item) => (
-                <ProductLine key={item.producto_id} product={getProduct(data.productos, item.producto_id)} quantity={item.cantidad} />
-              ))}
-              <div className="flex justify-between border-t border-border pt-sm text-h3 font-semibold">
-                <span>Total semanal</span>
-                <span className="font-mono">{formatCurrency(weeklyTotal)}</span>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-3 flex items-baseline justify-between border-t border-[var(--line)] pt-3">
+                  <span className="font-sans text-sm font-semibold text-[var(--ink)]">Total semanal</span>
+                  <span className="font-mono text-[1.0625rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                    {formatCurrency(weeklyTotal)}
+                  </span>
+                </div>
+              </>
+            )}
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <Button asChild className="w-full">
+                <Link href={`/cuenta/entrega/${delivery.id}`}>
+                  <QrCode className="mr-1 h-4 w-4" aria-hidden /> Ver pase de retiro
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/cuenta/suscripcion/editar">
+                  <SlidersHorizontal className="mr-1 h-4 w-4" aria-hidden /> Editar bolsa
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSkipped((v) => !v);
+                  flash(skipped ? "Entrega reactivada" : "Saltarás esta semana");
+                }}
+              >
+                <CalendarDays className="mr-1 h-4 w-4" aria-hidden /> {skipped ? "Reactivar semana" : "Saltar esta semana"}
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/cuenta/suscripcion/pausar">Pausar suscripción</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Pase de retiro ───────────────────────────────────────────── */}
+        <div>
+          <BoardingPass entrega={delivery} hub={data.hub} productos={data.productos} />
         </div>
       </div>
+
+      {/* ── Ritual semanal ─────────────────────────────────────────────── */}
+      <div className="flex flex-col items-start justify-between gap-4 rounded-[18px] border border-[var(--line)] bg-[var(--paper-sunken)] p-5 md:flex-row md:items-center">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+            <RefreshCw className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">¿Repetimos lo de siempre?</p>
+            <p className="mt-0.5 font-sans text-sm text-[var(--ink-soft)]">
+              Tu bolsa habitual está lista. Edítala o súmale un antojo antes del corte.
+            </p>
+          </div>
+        </div>
+        <div className="flex w-full gap-2 md:w-auto">
+          <Button asChild variant="outline" className="flex-1 md:flex-none">
+            <Link href="/catalogo">Sumar antojo</Link>
+          </Button>
+          <Button asChild className="flex-1 md:flex-none">
+            <Link href="/cuenta/suscripcion/editar">Editar bolsa</Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Atajos ─────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { href: "/cuenta/entregas", label: "Mis entregas", icon: PackageCheck },
+          { href: "/cuenta/pagos", label: "Pagos", icon: CreditCard },
+          { href: "/cuenta/perfil", label: "Mi perfil", icon: User },
+          { href: "/soporte", label: "Soporte", icon: HelpCircle }
+        ].map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="flex flex-col gap-3 rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] p-4 transition-colors hover:border-[var(--brand)]"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+              <Icon className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="font-sans text-sm font-semibold text-[var(--ink)]">{label}</span>
+          </Link>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {toast ? (
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 18 }}
+            transition={{ duration: 0.24, ease: easeOutSoft }}
+            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
+          >
+            {toast}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
