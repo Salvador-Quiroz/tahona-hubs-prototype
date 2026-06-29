@@ -21,6 +21,11 @@ import {
   User,
   Users,
   Wheat,
+  Clock,
+  Flame,        
+  RefreshCw,    
+  Sparkles,     
+  ShoppingBag,
   type LucideIcon
 } from "lucide-react";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
