@@ -6,7 +6,10 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
+  Bell,
   Box,
+  Check,
+  ChevronDown,
   ClipboardList,
   CreditCard,
   Home,
@@ -33,7 +36,7 @@ type NavItem = {
 
 const customerNav: NavItem[] = [
   { href: "/", label: "Inicio", icon: Home },
-  { href: "/catalogo", label: "Catálogo ·", icon: Wheat },
+  { href: "/catalogo", label: "Catálogo", icon: Wheat },
   { href: "/hubs", label: "Hubs", icon: MapPin },
   { href: "/como-funciona", label: "Proceso", icon: ShoppingBag }
 ];
@@ -93,8 +96,16 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const collapsed = useCollapsedHeader();
   const reduceMotion = useReducedMotion();
+
   const cart = useTahonaStore((state) => state.cart);
+  const clientes = useTahonaStore((state) => state.clientes);
+  const suscripciones = useTahonaStore((state) => state.suscripciones);
+  const currentClientId = useTahonaStore((state) => state.currentClientId);
+
   const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+  const cliente = clientes.find((c) => c.id === currentClientId);
+  const suscripcion = suscripciones.find((s) => s.cliente_id === currentClientId);
+  const isSubscriber = Boolean(suscripcion && suscripcion.estado !== "cancelada");
 
   return (
     <div className="storefront-shell min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
@@ -106,12 +117,27 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
       >
         <div
           className={cn(
-            "mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-sm px-4 transition-all duration-base md:px-6",
-            collapsed && "h-[52px]"
+            "mx-auto flex h-16 max-w-[1240px] items-center gap-2 px-4 transition-all duration-base md:gap-sm md:px-6",
+            collapsed && "h-[56px]"
           )}
         >
-          <TahonaWordmark compact={collapsed} />
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Navegación cliente">
+          {/* Marca — compacta en móvil y al colapsar */}
+          <div className="shrink-0">
+            <span className="lg:hidden">
+              <TahonaWordmark compact />
+            </span>
+            <span className="hidden lg:block">
+              <TahonaWordmark compact={collapsed} />
+            </span>
+          </div>
+
+          {/* Selector de hub — el "¿dónde retiras?" siempre visible */}
+          <div className="min-w-0 flex-1 lg:flex-none">
+            <HubSwitcher />
+          </div>
+
+          {/* Navegación desktop */}
+          <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Navegación cliente">
             {customerNav.map((item) => (
               <Link
                 key={item.href}
@@ -124,30 +150,60 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
                 {item.label}
               </Link>
             ))}
-            <Button asChild size="sm" className="ml-2 h-10 rounded-[12px]">
+          </nav>
+
+          {/* Acciones derecha */}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Botón de bolsa que se adapta: vacío → Apartar; con items → Mi bolsa · N */}
+            <Button asChild size="sm" className="hidden h-10 rounded-[12px] lg:inline-flex">
               <Link href="/suscribirme">
                 <ShoppingBag className="mr-2 h-4 w-4" aria-hidden />
-                Apartar mi pan
                 {cartCount ? (
-                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 font-mono text-[11px] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
-                    {cartCount}
+                  <>
+                    Mi bolsa
+                    <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 font-mono text-[11px] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                      {cartCount}
+                    </span>
+                  </>
+                ) : (
+                  "Apartar mi pan"
+                )}
+              </Link>
+            </Button>
+
+            {/* Notificaciones — solo suscriptores (algo cambia cada semana) */}
+            {isSubscriber ? (
+              <Button asChild size="icon" variant="outline" className="relative hidden lg:inline-flex" aria-label="Avisos">
+                <Link href="/cuenta">
+                  <Bell className="h-4 w-4" aria-hidden />
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden />
+                </Link>
+              </Button>
+            ) : null}
+
+            {/* Cuenta — con saludo personalizado si hay suscripción */}
+            {isSubscriber && cliente ? (
+              <Button asChild variant="outline" className="h-10 gap-2 rounded-[12px] pl-2.5 pr-3">
+                <Link href="/cuenta">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand)] font-mono text-[11px] font-semibold text-white">
+                    {cliente.nombre.charAt(0)}
                   </span>
-                ) : null}
-              </Link>
-            </Button>
-            <Button asChild size="icon" variant="outline" aria-label="Cuenta">
-              <Link href="/cuenta">
-                <User className="h-4 w-4" aria-hidden />
-              </Link>
-            </Button>
-          </nav>
-          <Button asChild size="icon" variant="outline" className="lg:hidden" aria-label="Cuenta">
-            <Link href="/cuenta">
-              <User className="h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
+                  <span className="hidden text-sm font-semibold text-[var(--ink)] sm:inline">
+                    Hola, {cliente.nombre}
+                  </span>
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild size="icon" variant="outline" aria-label="Cuenta">
+                <Link href="/cuenta">
+                  <User className="h-4 w-4" aria-hidden />
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
+
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}
@@ -159,11 +215,13 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
           {children}
         </motion.div>
       </AnimatePresence>
+
       <ClienteFooter />
+
       <BottomTabBar
         items={[
-          customerNav[0],
-          customerNav[1],
+          { href: "/", label: "Inicio", icon: Home },
+          { href: "/catalogo", label: "Catálogo", icon: Wheat },
           { href: "/suscribirme", label: "Mi bolsa", icon: ShoppingBag, badge: cartCount || undefined },
           { href: "/cuenta", label: "Cuenta", icon: User }
         ]}
@@ -171,7 +229,113 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+function HubSwitcher() {
+  const hubs = useTahonaStore((state) => state.hubs);
+  const clientes = useTahonaStore((state) => state.clientes);
+  const currentClientId = useTahonaStore((state) => state.currentClientId);
 
+  const defaultHubId =
+    clientes.find((c) => c.id === currentClientId)?.hub_asignado_id ?? hubs[0]?.id ?? "";
+
+  const [open, setOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string>(defaultHubId);
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem("tahona:hub") : null;
+    if (stored && hubs.some((h) => h.id === stored)) {
+      setSelectedId(stored);
+    }
+  }, [hubs]);
+
+  const selected = hubs.find((h) => h.id === selectedId) ?? hubs[0];
+  if (!selected) return null;
+
+  const choose = (id: string) => {
+    setSelectedId(id);
+    if (typeof window !== "undefined") window.localStorage.setItem("tahona:hub", id);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative w-full lg:w-auto">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 rounded-[12px] border border-[var(--line)] bg-[var(--paper-raised)] px-3 py-2 text-left transition-colors hover:border-[var(--brand)] lg:w-auto"
+      >
+        <MapPin className="h-4 w-4 shrink-0 text-[var(--brand)]" aria-hidden />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[0.625rem] font-semibold uppercase leading-none tracking-[0.08em] text-[var(--ink-faint)]">
+            Retiras en
+          </span>
+          <span className="block truncate text-sm font-semibold leading-tight text-[var(--ink)]">
+            {selected.colonia}
+          </span>
+        </span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 text-[var(--ink-soft)] transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+
+      {open ? (
+        <>
+          {/* backdrop para cerrar al hacer clic fuera */}
+          <button
+            type="button"
+            aria-hidden
+            tabIndex={-1}
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            role="listbox"
+            aria-label="Hubs de retiro"
+            className="absolute left-0 top-[calc(100%+8px)] z-50 w-[300px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-editorial"
+          >
+            <p className="border-b border-[var(--line)] px-4 py-3 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">
+              Elige tu hub de retiro
+            </p>
+            <div className="p-2">
+              {hubs.map((hub) => {
+                const active = hub.id === selected.id;
+                const ocupacion = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+                return (
+                  <button
+                    key={hub.id}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => choose(hub.id)}
+                    className={cn(
+                      "flex w-full items-start gap-3 rounded-[12px] px-3 py-2.5 text-left transition-colors hover:bg-[var(--paper-sunken)]",
+                      active && "bg-[var(--brand-tint)]"
+                    )}
+                  >
+                    <MapPin
+                      className={cn("mt-0.5 h-4 w-4 shrink-0", active ? "text-[var(--brand)]" : "text-[var(--ink-faint)]")}
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-[var(--ink)]">{hub.nombre}</span>
+                      <span className="block truncate text-xs text-[var(--ink-soft)]">{hub.direccion}</span>
+                      <span className="mt-0.5 block font-mono text-[0.6875rem] text-[var(--ink-faint)]">
+                        {ocupacion}% ocupado
+                      </span>
+                    </span>
+                    {active ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand)]" aria-hidden /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
 function ClienteFooter() {
   return (
     <footer className="border-t border-white/10 bg-[var(--ink)] text-white">
