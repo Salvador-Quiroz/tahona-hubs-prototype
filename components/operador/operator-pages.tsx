@@ -22,10 +22,7 @@ import {
   Clock, 
   QrCode,
   Wheat,
-  Camera, 
-  Bell, 
-  CheckCircle2, 
-  User, 
+  Camera,   
   Check, 
   X
 } from "lucide-react";
