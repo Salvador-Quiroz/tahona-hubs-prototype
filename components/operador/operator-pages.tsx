@@ -617,21 +617,123 @@ function OrdersView({ extra }: { extra: boolean }) {
     </PageShell>
   );
 }
-
 function DeliveryDetail({ id }: { id?: string }) {
   const { entregas, clientes, hubs, productos, markDelivery } = useTahonaStore();
   const entrega = entregas.find((item) => item.id === id) ?? entregas[0];
   const hub = hubs.find((item) => item.id === entrega.hub_id) ?? hubs[0];
+  const cliente = clientes.find((c) => c.id === entrega.cliente_id);
+  const locker = entrega.casillero_id.split("-").at(-1)?.replace(/^0/, "") ?? "1";
+  const total = entrega.productos.reduce(
+    (sum, item) => sum + (productos.find((p) => p.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad,
+    0
+  );
+  const done = entrega.estado === "entregado";
+  const blocked = entrega.estado === "incidencia" || entrega.estado === "no_entregado";
+
+  const hero = blocked
+    ? { bg: "border-[var(--danger)]/25 bg-[var(--danger-bg)]", color: "text-[var(--danger)]", icon: AlertTriangle, title: "Entrega con incidencia", sub: "Resuélvela para liberar el casillero." }
+    : done
+    ? { bg: "border-[var(--line)] bg-[var(--paper-sunken)]", color: "text-[var(--ink-soft)]", icon: CheckCircle2, title: "Entrega cerrada", sub: "El pedido fue retirado correctamente." }
+    : entrega.estado === "listo"
+    ? { bg: "border-[var(--ok)]/30 bg-[var(--ok-bg)]", color: "text-[var(--ok)]", icon: QrCode, title: `Listo para retirar · Casillero #${locker}`, sub: "Esperando al cliente. Marca entregado al confirmar el retiro." }
+    : { bg: "border-[var(--brand)]/20 bg-[var(--brand-tint)]", color: "text-[var(--brand)]", icon: Package, title: "En preparación", sub: "Aún no cargado en casillero." };
+  const HeroIcon = hero.icon;
+
   return (
-    <PageShell eyebrow="Detalle de entrega" title={`Entrega ${entrega.id}`} description="Estado de pedido, casillero, cliente y acciones de piso para cerrar la entrega.">
-      <div className="grid gap-md lg:grid-cols-[420px_1fr]">
-        <Card className="shadow-sm"><CardHeader><CardTitle>Pase operativo</CardTitle></CardHeader><CardContent className="space-y-sm"><StatusPill tone={deliveryTone(entrega.estado)} label={entrega.estado.replaceAll("_", " ")} /><p className="text-sm text-muted-foreground">{clientName(clientes, entrega.cliente_id)} · {hub.nombre} · {entrega.slot}</p><p className="font-mono text-h2 font-semibold">{entrega.qr_code.slice(-12)}</p><div className="flex gap-xs"><Button onClick={() => markDelivery(entrega.id, "entregado")}>Marcar entregado</Button><Button variant="outline" onClick={() => markDelivery(entrega.id, "incidencia")}>Incidencia</Button></div></CardContent></Card>
-        <Card className="shadow-sm"><CardHeader><CardTitle>Productos</CardTitle></CardHeader><CardContent className="grid gap-xs">{entrega.productos.map((item) => <div key={item.producto_id} className="flex justify-between rounded-md border border-border p-sm"><span>{item.cantidad}x {productName(productos, item.producto_id)}</span><span className="font-mono">{formatCurrency((productos.find((product) => product.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}</span></div>)}</CardContent></Card>
+    <PageShell
+      eyebrow="Detalle de entrega"
+      title={`Entrega ${entrega.id}`}
+      description="Estado del pedido, casillero, cliente y acciones de piso para cerrar la entrega."
+      actions={<Button asChild variant="outline"><Link href="/operador">Volver a hoy</Link></Button>}
+    >
+      <div className={cn("mb-md flex items-start gap-4 rounded-[18px] border p-5", hero.bg)}>
+        <span className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--paper-raised)]", hero.color)}>
+          <HeroIcon className="h-6 w-6" aria-hidden />
+        </span>
+        <div className="flex-1">
+          <h2 className="font-sans text-[1.25rem] font-semibold text-[var(--ink)]">{hero.title}</h2>
+          <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">{hero.sub}</p>
+        </div>
+        <div className="flex gap-2">
+          {entrega.estado !== "entregado" ? (
+            <Button type="button" onClick={() => markDelivery(entrega.id, "entregado")}>
+              <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Marcar entregado
+            </Button>
+          ) : null}
+          {!blocked ? (
+            <Button type="button" variant="outline" onClick={() => markDelivery(entrega.id, "incidencia")}>
+              Reportar incidencia
+            </Button>
+          ) : (
+            <Button asChild variant="outline"><Link href="/operador/incidencias">Ver incidencias</Link></Button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-md lg:grid-cols-[400px_1fr]">
+        {/* Pase operativo */}
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <div className="flex items-center justify-between">
+            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Pase operativo</p>
+            <StatusPill tone={deliveryTone(entrega.estado)} label={entrega.estado.replaceAll("_", " ")} />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-[12px] border border-[var(--line)] bg-[var(--paper-sunken)] p-3 text-center">
+              <p className="font-sans text-xs text-[var(--ink-faint)]">Casillero</p>
+              <p className="mt-1 font-mono text-[1.75rem] font-semibold text-[var(--ink)]">#{locker}</p>
+            </div>
+            <div className="rounded-[12px] border border-[var(--line)] bg-[var(--paper-sunken)] p-3 text-center">
+              <p className="font-sans text-xs text-[var(--ink-faint)]">Ventana</p>
+              <p className="mt-1 font-mono text-[1.0625rem] font-semibold text-[var(--ink)]">{entrega.slot}</p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-[12px] border border-dashed border-[var(--line)] bg-[var(--paper-sunken)] p-4 text-center">
+            <p className="font-sans text-xs text-[var(--ink-faint)]">Código QR</p>
+            <p className="mt-1 font-mono text-[1.25rem] font-semibold tracking-wider text-[var(--ink)]">{entrega.qr_code.slice(-12).toUpperCase()}</p>
+          </div>
+        </article>
+
+        {/* Cliente + productos */}
+        <div className="space-y-md">
+          <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Cliente</p>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--brand)] font-mono text-sm font-semibold text-white">
+                {(cliente?.nombre?.[0] ?? "?") + (cliente?.apellido?.[0] ?? "")}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{clientName(clientes, entrega.cliente_id)}</p>
+                <p className="font-sans text-sm text-[var(--ink-soft)]">{cliente?.telefono ?? ""}</p>
+              </div>
+              <span className="flex items-center gap-1.5 font-sans text-sm text-[var(--ink-soft)]">
+                <MapPin className="h-4 w-4 text-[var(--brand)]" aria-hidden /> {hub.nombre}
+              </span>
+            </div>
+          </article>
+
+          <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+            <div className="flex items-center justify-between">
+              <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Productos</p>
+              <span className="font-mono text-sm font-semibold text-[var(--ink)]">{formatCurrency(total)}</span>
+            </div>
+            <div className="mt-3 space-y-1.5">
+              {entrega.productos.map((item) => (
+                <div key={item.producto_id} className="flex items-center justify-between rounded-[10px] border border-[var(--line)] px-3 py-2">
+                  <span className="font-sans text-sm text-[var(--ink)]">
+                    <span className="font-mono font-semibold text-[var(--brand)]">{item.cantidad}×</span> {productName(productos, item.producto_id)}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--ink-soft)]">
+                    {formatCurrency((productos.find((p) => p.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
       </div>
     </PageShell>
   );
 }
-
 function SubscriptionsView({ id }: { id?: string }) {
   const { suscripciones, clientes, productos } = useTahonaStore();
   const selected = id ? suscripciones.find((item) => item.id === id || item.cliente_id === id) : null;
@@ -657,14 +759,105 @@ function SubscriptionsView({ id }: { id?: string }) {
 }
 
 function SubscriptionCard({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
+  const clientes = useTahonaStore((s) => s.clientes);
+  const pauseSubscription = useTahonaStore((s) => s.pauseSubscription);
+  const reactivateSubscription = useTahonaStore((s) => s.reactivateSubscription);
+  const cliente = clientes.find((c) => c.id === subscription.cliente_id);
+  const weeklyTotal = subscription.productos.reduce(
+    (sum, item) => sum + (productos.find((p) => p.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad,
+    0
+  );
+  const paused = subscription.estado === "pausada";
+
   return (
-    <Card className="max-w-4xl shadow-sm">
-      <CardHeader><CardTitle>Bolsa y ventanas</CardTitle></CardHeader>
-      <CardContent className="grid gap-md md:grid-cols-2">
-        <div className="space-y-xs">{subscription.productos.map((item) => <div key={item.producto_id} className="flex justify-between rounded-md border border-border p-sm"><span>{item.cantidad}x {productName(productos, item.producto_id)}</span><span className="font-mono">{formatCurrency((productos.find((product) => product.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}</span></div>)}</div>
-        <div className="space-y-xs">{subscription.slots_elegidos.map((slot) => <StatusPill key={`${slot.dia}-${slot.slot}`} tone="info" label={`${slot.dia} · ${slot.slot}`} />)}<StatusPill tone={subscription.estado === "activa" ? "success" : "warning"} label={subscription.estado} /></div>
-      </CardContent>
-    </Card>
+    <div className="grid gap-md lg:grid-cols-[1fr_360px]">
+      <div className="space-y-md">
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--brand)] font-mono text-sm font-semibold text-white">
+                {(cliente?.nombre?.[0] ?? "?") + (cliente?.apellido?.[0] ?? "")}
+              </span>
+              <div>
+                <p className="font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">{clientName(clientes, subscription.cliente_id)}</p>
+                <p className="font-sans text-sm text-[var(--ink-soft)]">{cliente?.email ?? ""}</p>
+              </div>
+            </div>
+            <StatusPill tone={subscription.estado === "activa" ? "success" : subscription.estado === "pausada" ? "warning" : "danger"} label={subscription.estado} />
+          </div>
+        </article>
+
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <div className="flex items-center justify-between">
+            <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Bolsa semanal</p>
+            <span className="font-mono text-sm font-semibold text-[var(--ink)]">{formatCurrency(weeklyTotal)}</span>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            {subscription.productos.map((item) => (
+              <div key={item.producto_id} className="flex items-center justify-between rounded-[10px] border border-[var(--line)] px-3 py-2">
+                <span className="font-sans text-sm text-[var(--ink)]">
+                  <span className="font-mono font-semibold text-[var(--brand)]">{item.cantidad}×</span> {productName(productos, item.producto_id)}
+                </span>
+                <span className="font-mono text-sm text-[var(--ink-soft)]">
+                  {formatCurrency((productos.find((p) => p.id === item.producto_id)?.precio_mxn ?? 0) * item.cantidad)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Historial de cambios</p>
+          <div className="mt-3 space-y-3">
+            {subscription.historial_cambios.slice(0, 6).map((evento, i) => (
+              <div key={i} className="flex gap-3">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--brand)]" aria-hidden />
+                <div>
+                  <p className="font-sans text-sm text-[var(--ink)]">{evento.descripcion}</p>
+                  <p className="font-mono text-xs text-[var(--ink-faint)]">{shortDate(evento.fecha)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+
+      <aside className="h-fit space-y-md lg:sticky lg:top-24">
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Ventanas de retiro</p>
+          <div className="mt-3 space-y-2">
+            {subscription.slots_elegidos.map((slot) => (
+              <div key={`${slot.dia}-${slot.slot}`} className="flex items-center gap-2 rounded-[10px] border border-[var(--line)] px-3 py-2">
+                <CalendarDays className="h-4 w-4 text-[var(--brand)]" aria-hidden />
+                <span className="font-sans text-sm capitalize text-[var(--ink)]">{slot.dia}</span>
+                <span className="ml-auto font-mono text-sm text-[var(--ink-soft)]">{slot.slot}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 flex items-center gap-1.5 font-sans text-xs text-[var(--ink-faint)]">
+            <Clock className="h-3.5 w-3.5" aria-hidden /> Próxima: {shortDate(subscription.proxima_entrega)}
+          </p>
+        </article>
+
+        <article className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <p className="font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Acciones</p>
+          <div className="mt-3 space-y-2">
+            {paused ? (
+              <Button type="button" className="w-full" onClick={() => reactivateSubscription(subscription.id)}>
+                <RefreshCw className="mr-1 h-4 w-4" aria-hidden /> Reactivar suscripción
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" className="w-full" onClick={() => pauseSubscription(subscription.id, 2)}>
+                Pausar 2 semanas
+              </Button>
+            )}
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/operador/suscripciones">Volver a la lista</Link>
+            </Button>
+          </div>
+        </article>
+      </aside>
+    </div>
   );
 }
 
