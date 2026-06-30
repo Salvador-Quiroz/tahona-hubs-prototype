@@ -866,43 +866,140 @@ function MoneyView({ mode }: { mode: "cobros" | "reintentos" | "conciliacion" })
   const rows = mode === "reintentos" ? cobros.filter((item) => item.estado !== "cobrado") : cobros.slice(0, 120);
   const collected = cobros.filter((item) => item.estado === "cobrado").reduce((sum, item) => sum + item.monto, 0);
   const pending = cobros.filter((item) => item.estado !== "cobrado").reduce((sum, item) => sum + item.monto, 0);
+  const failed = cobros.filter((item) => item.estado === "fallido");
+  const collectRate = cobros.length ? Math.round((cobros.filter((c) => c.estado === "cobrado").length / cobros.length) * 100) : 0;
+
   const columns: Array<DataTableColumn<Cobro>> = [
     { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
     { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
     { key: "metodo", header: "Método", render: (row) => row.metodo },
     { key: "monto", header: "Monto", align: "right", render: (row) => formatCurrency(row.monto) },
     { key: "estado", header: "Estado", render: (row) => <StatusPill tone={chargeTone(row.estado)} label={row.estado} /> },
-    { key: "accion", header: "", align: "right", render: (row) => row.estado === "fallido" ? <Button size="sm" variant="outline" onClick={() => retryCharge(row.id)}><RefreshCw className="h-4 w-4" /> Reintentar</Button> : null }
+    {
+      key: "accion",
+      header: "",
+      align: "right",
+      render: (row) =>
+        row.estado === "fallido" ? (
+          <Button size="sm" variant="outline" onClick={() => retryCharge(row.id)}>
+            <RefreshCw className="h-4 w-4" /> Reintentar
+          </Button>
+        ) : null
+    }
   ];
+
   return (
-    <PageShell eyebrow="Cobros" title={mode === "conciliacion" ? "Conciliación de ingresos." : "Cobros, reintentos y riesgo de pago."} description="El dinero debe leerse con estado, reintento y monto pendiente. Sin adornos.">
-      <div className="grid gap-sm md:grid-cols-3">
-        <KpiCard label="Cobrado" value={collected} formatter={formatCurrency} icon={Banknote} />
-        <KpiCard label="Pendiente/riesgo" value={pending} formatter={formatCurrency} icon={AlertTriangle} />
-        <KpiCard label="Transacciones" value={rows.length} icon={CreditCard} />
+    <PageShell
+      eyebrow="Cobros"
+      title={mode === "conciliacion" ? "Conciliación de ingresos." : "Cobros, reintentos y riesgo de pago."}
+      description="El dinero se lee con estado, reintento y monto pendiente. Resuelve los fallidos antes del corte."
+    >
+      <div className="grid gap-sm md:grid-cols-4">
+        <KpiCard label="Cobrado" value={collected} formatter={formatCurrency} icon={Banknote} helper="Periodo actual" />
+        <KpiCard label="Pendiente / riesgo" value={pending} formatter={formatCurrency} icon={AlertTriangle} delta={failed.length ? `${failed.length} fallidos` : "estable"} deltaTone={failed.length ? "down" : "up"} />
+        <KpiCard label="Tasa de cobro" value={collectRate} formatter={(v) => `${v}%`} icon={CreditCard} />
+        <KpiCard label="Transacciones" value={rows.length} icon={CreditCard} helper={mode === "reintentos" ? "En cola" : "Movimientos"} />
       </div>
-      <Card className="mt-md shadow-sm"><CardHeader><CardTitle>{mode === "reintentos" ? "Cola de reintentos" : "Movimientos"}</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
+
+      {/* Tira de acción: cobros fallidos */}
+      {failed.length ? (
+        <section className="mt-md rounded-[18px] border border-[var(--danger)]/25 bg-[var(--danger-bg)] p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-[var(--danger)]" aria-hidden />
+            <h2 className="font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">Cobros fallidos que bloquean retiro</h2>
+            <span className="rounded-full bg-[var(--paper-raised)] px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--danger)]">{failed.length}</span>
+          </div>
+          <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+            {failed.slice(0, 6).map((charge) => (
+              <div key={charge.id} className="flex items-center gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] p-3.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-sans text-sm font-semibold text-[var(--ink)]">{clientName(clientes, charge.cliente_id)}</p>
+                  <p className="font-sans text-xs text-[var(--ink-soft)]">{charge.metodo} · {charge.reintentos} reintentos</p>
+                </div>
+                <span className="font-mono text-sm font-semibold text-[var(--ink)]">{formatCurrency(charge.monto)}</span>
+                <Button size="sm" variant="outline" className="bg-[var(--paper-raised)]" onClick={() => retryCharge(charge.id)}>
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <Card className="mt-md shadow-sm">
+        <CardHeader><CardTitle>{mode === "reintentos" ? "Cola de reintentos" : "Movimientos"}</CardTitle></CardHeader>
+        <CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} selectable /></CardContent>
+      </Card>
     </PageShell>
   );
 }
 
 function IncidentsView() {
   const { incidencias, clientes, hubs, resolveIncident } = useTahonaStore();
-  const rows = incidencias.filter((item) => item.estado !== "resuelta");
-  const columns: Array<DataTableColumn<Incidencia>> = [
-    { key: "tipo", header: "Tipo", render: (row) => row.tipo.replaceAll("_", " ") },
-    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
-    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
-    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "abierta" ? "danger" : "warning"} label={row.estado.replaceAll("_", " ")} /> },
-    { key: "accion", header: "", align: "right", render: (row) => <Button size="sm" variant="outline" onClick={() => resolveIncident(row.id)}>Resolver</Button> }
-  ];
+  const open = incidencias.filter((item) => item.estado !== "resuelta");
+  const critical = open.filter((i) => i.estado === "abierta").length;
+  const inProgress = open.filter((i) => i.estado === "en_proceso").length;
+
+  const iconFor = (tipo: Incidencia["tipo"]) =>
+    tipo === "casillero_cerrado" ? Boxes : tipo === "producto_dañado" ? Package : tipo === "cobro_fallido" ? CreditCard : tipo === "direccion_incorrecta" ? MapPin : Users;
+
   return (
-    <PageShell eyebrow="Incidencias" title="Excepciones con dueño y acción." description="La vista prioriza casos que afectan retiro, producto o cobro. Cada fila debe poder cerrarse.">
-      <Card className="shadow-sm"><CardHeader><CardTitle>Abiertas</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} /></CardContent></Card>
+    <PageShell
+      eyebrow="Incidencias"
+      title="Excepciones con dueño y acción."
+      description="Cada caso afecta retiro, producto o cobro. Resuélvelos para no bloquear la experiencia del cliente."
+      actions={<Button asChild variant="outline"><Link href="/operador">Volver a hoy</Link></Button>}
+    >
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Abiertas" value={critical} icon={AlertTriangle} delta={critical ? "atender ya" : "sin críticas"} deltaTone={critical ? "down" : "up"} />
+        <KpiCard label="En proceso" value={inProgress} icon={Clock} helper="Con seguimiento" />
+        <KpiCard label="Total activas" value={open.length} icon={Boxes} helper="Pendientes de cierre" />
+      </div>
+
+      <section className="mt-md">
+        {open.length ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {open.map((incident) => {
+              const Icon = iconFor(incident.tipo);
+              const critical = incident.estado === "abierta";
+              return (
+                <article
+                  key={incident.id}
+                  className={cn(
+                    "flex flex-col rounded-[16px] border bg-[var(--paper-raised)] p-4 shadow-[var(--shadow-sm)]",
+                    critical ? "border-[var(--danger)]/30" : "border-[var(--warn)]/30"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={cn("flex h-9 w-9 items-center justify-center rounded-[10px]", critical ? "bg-[var(--danger-bg)] text-[var(--danger)]" : "bg-[var(--warn-bg)] text-[var(--warn)]")}>
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    <StatusPill tone={critical ? "danger" : "warning"} label={incident.estado.replaceAll("_", " ")} />
+                  </div>
+                  <p className="mt-3 font-sans text-[0.9375rem] font-semibold capitalize text-[var(--ink)]">{incident.tipo.replaceAll("_", " ")}</p>
+                  <p className="mt-1 flex-1 font-sans text-sm leading-5 text-[var(--ink-soft)]">{incident.descripcion}</p>
+                  <div className="mt-3 flex items-center justify-between border-t border-[var(--line)] pt-3 font-sans text-xs text-[var(--ink-faint)]">
+                    <span>{clientName(clientes, incident.cliente_id)}</span>
+                    <span>{hubName(hubs, incident.hub_id)}</span>
+                  </div>
+                  <Button type="button" size="sm" className="mt-3 w-full" onClick={() => resolveIncident(incident.id)}>
+                    <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Marcar resuelta
+                  </Button>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] py-16 text-center shadow-[var(--shadow-sm)]">
+            <CheckCircle2 className="h-10 w-10 text-[var(--ok)]" aria-hidden />
+            <p className="font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">Sin incidencias abiertas</p>
+            <p className="font-sans text-sm text-[var(--ink-soft)]">Toda la red opera sin bloqueos.</p>
+          </div>
+        )}
+      </section>
     </PageShell>
   );
 }
-
 function CatalogAdmin() {
   const { productos } = useTahonaStore();
   const columns: Array<DataTableColumn<Producto>> = [
