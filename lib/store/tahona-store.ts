@@ -30,6 +30,7 @@ type TahonaState = {
   removeFromCart: (productId: string) => void;
   setCartQuantity: (productId: string, quantity: number) => void;
   markDelivery: (id: string, estado: EntregaEstado) => void;
+  loadLocker: (casilleroId: string, deliveryId: string) => void;
   pauseSubscription: (id: string, weeks: number) => void;
   reactivateSubscription: (id: string) => void;
   updateWeeklyOrder: (
@@ -96,6 +97,20 @@ export const useTahonaStore = create<TahonaState>((set) => ({
                 : casillero
             )
           : state.casilleros
+    })),
+  // Operador de piso: carga el pedido en un casillero y lo deja listo para retiro.
+  loadLocker: (casilleroId, deliveryId) =>
+    set((state) => ({
+      casilleros: state.casilleros.map((casillero) =>
+        casillero.id === casilleroId
+          ? { ...casillero, estado: "cargado", pedido_actual: deliveryId }
+          : casillero
+      ),
+      entregas: state.entregas.map((entrega) =>
+        entrega.id === deliveryId
+          ? { ...entrega, estado: "listo", casillero_id: casilleroId }
+          : entrega
+      )
     })),
   pauseSubscription: (id, weeks) =>
     set((state) => ({
