@@ -602,18 +602,80 @@ function LockerView({ mode }: { mode: "carga" | "casilleros" }) {
 }
 function OrdersView({ extra }: { extra: boolean }) {
   const { entregas, clientes, hubs, productos } = useTahonaStore();
-  const rows = extra ? entregas.filter((item) => item.estado === "no_entregado" || item.estado === "incidencia").slice(0, 30) : entregas.filter((item) => item.fecha === today);
+  const [filter, setFilter] = useState<"todos" | Entrega["estado"]>("todos");
+
+  const base = extra
+    ? entregas.filter((item) => item.estado === "no_entregado" || item.estado === "incidencia").slice(0, 60)
+    : entregas.filter((item) => item.fecha === today);
+
+  const counts = {
+    listo: base.filter((r) => r.estado === "listo").length,
+    en_preparacion: base.filter((r) => r.estado === "en_preparacion").length,
+    entregado: base.filter((r) => r.estado === "entregado").length,
+    incidencia: base.filter((r) => r.estado === "incidencia" || r.estado === "no_entregado").length
+  };
+  const revenue = base.reduce((sum, row) => sum + entregaTotal(productos, row), 0);
+  const rows = filter === "todos" ? base : base.filter((r) => r.estado === filter);
+
+  const filters: Array<{ key: "todos" | Entrega["estado"]; label: string }> = [
+    { key: "todos", label: `Todos · ${base.length}` },
+    { key: "listo", label: `Listos · ${counts.listo}` },
+    { key: "en_preparacion", label: `En preparación · ${counts.en_preparacion}` },
+    { key: "entregado", label: `Entregados · ${counts.entregado}` }
+  ];
+
   const columns: Array<DataTableColumn<Entrega>> = [
     { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
     { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
     { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
     { key: "pedido", header: "Pedido", render: (row) => row.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ") },
     { key: "total", header: "Total", align: "right", render: (row) => formatCurrency(entregaTotal(productos, row)) },
-    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={deliveryTone(row.estado)} label={row.estado.replaceAll("_", " ")} /> }
+    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={deliveryTone(row.estado)} label={row.estado.replaceAll("_", " ")} /> },
+    { key: "accion", header: "", align: "right", render: (row) => <Button asChild size="sm" variant="outline"><Link href={`/operador/entrega/${row.id}`}>Abrir</Link></Button> }
   ];
+
   return (
-    <PageShell eyebrow={extra ? "Pedidos extra" : "Pedidos"} title={extra ? "Pedidos fuera de flujo regular." : "Pedidos programados y trazables."} description="Listado operativo con cliente, hub, estado y monto para resolver sin cambiar de contexto.">
-      <Card className="shadow-sm"><CardHeader><CardTitle>{extra ? "Excepciones" : "Pedidos de hoy"}</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.id} selectable /></CardContent></Card>
+    <PageShell
+      eyebrow={extra ? "Pedidos extra" : "Pedidos"}
+      title={extra ? "Pedidos fuera de flujo regular." : "Pedidos del día, trazables y accionables."}
+      description="Cliente, hub, estado y monto en una sola lista. Filtra por estado para trabajar por lotes."
+    >
+      <div className="grid gap-sm md:grid-cols-4">
+        <KpiCard label="Pedidos" value={base.length} icon={Package} helper={extra ? "Excepciones" : "Hoy"} />
+        <KpiCard label="Listos para retiro" value={counts.listo} icon={CheckCircle2} deltaTone="up" />
+        <KpiCard label="En preparación" value={counts.en_preparacion} icon={Clock} />
+        <KpiCard label="Monto del día" value={revenue} formatter={formatCurrency} icon={AlertTriangle} helper={`${counts.incidencia} con incidencia`} />
+      </div>
+
+      <Card className="mt-md shadow-sm">
+        <CardHeader className="flex-row items-center justify-between gap-sm">
+          <CardTitle>{extra ? "Excepciones" : "Pedidos de hoy"}</CardTitle>
+          <div className="flex flex-wrap gap-1.5">
+            {filters.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  "h-8 rounded-full px-3 font-sans text-xs font-semibold transition-colors",
+                  filter === f.key ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            rows={rows}
+            columns={columns}
+            getRowId={(row) => row.id}
+            selectable
+            emptyState={<p className="py-6 text-center font-sans text-sm text-[var(--ink-faint)]">Sin pedidos en este estado.</p>}
+          />
+        </CardContent>
+      </Card>
     </PageShell>
   );
 }
