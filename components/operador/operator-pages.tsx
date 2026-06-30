@@ -600,6 +600,7 @@ function LockerView({ mode }: { mode: "carga" | "casilleros" }) {
     </PageShell>
   );
 }
+
 function OrdersView({ extra }: { extra: boolean }) {
   const { entregas, clientes, hubs, productos } = useTahonaStore();
   const [filter, setFilter] = useState<"todos" | Entrega["estado"]>("todos");
@@ -610,7 +611,6 @@ function OrdersView({ extra }: { extra: boolean }) {
 
   const counts = {
     listo: base.filter((r) => r.estado === "listo").length,
-    en_preparacion: base.filter((r) => r.estado === "en_preparacion").length,
     entregado: base.filter((r) => r.estado === "entregado").length,
     incidencia: base.filter((r) => r.estado === "incidencia" || r.estado === "no_entregado").length
   };
@@ -620,8 +620,8 @@ function OrdersView({ extra }: { extra: boolean }) {
   const filters: Array<{ key: "todos" | Entrega["estado"]; label: string }> = [
     { key: "todos", label: `Todos · ${base.length}` },
     { key: "listo", label: `Listos · ${counts.listo}` },
-    { key: "en_preparacion", label: `En preparación · ${counts.en_preparacion}` },
-    { key: "entregado", label: `Entregados · ${counts.entregado}` }
+    { key: "entregado", label: `Entregados · ${counts.entregado}` },
+    { key: "incidencia", label: `Incidencias · ${counts.incidencia}` }
   ];
 
   const columns: Array<DataTableColumn<Entrega>> = [
@@ -643,7 +643,7 @@ function OrdersView({ extra }: { extra: boolean }) {
       <div className="grid gap-sm md:grid-cols-4">
         <KpiCard label="Pedidos" value={base.length} icon={Package} helper={extra ? "Excepciones" : "Hoy"} />
         <KpiCard label="Listos para retiro" value={counts.listo} icon={CheckCircle2} deltaTone="up" />
-        <KpiCard label="En preparación" value={counts.en_preparacion} icon={Clock} />
+        <KpiCard label="Entregados" value={counts.entregado} icon={Clock} />
         <KpiCard label="Monto del día" value={revenue} formatter={formatCurrency} icon={AlertTriangle} helper={`${counts.incidencia} con incidencia`} />
       </div>
 
@@ -679,6 +679,7 @@ function OrdersView({ extra }: { extra: boolean }) {
     </PageShell>
   );
 }
+
 function DeliveryDetail({ id }: { id?: string }) {
   const { entregas, clientes, hubs, productos, markDelivery } = useTahonaStore();
   const entrega = entregas.find((item) => item.id === id) ?? entregas[0];
