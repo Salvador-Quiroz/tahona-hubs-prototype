@@ -42,6 +42,33 @@ import { useTahonaStore } from "@/lib/store/tahona-store";
 import type { Casillero, Cobro, Entrega, Hub, Incidencia, Producto, Suscripcion } from "@/lib/mock-data";
 import { cn, formatCurrency, shortDate } from "@/lib/utils";
 
+type Activacion = {
+  deliveryId: string;
+  cliente: string;
+  hub: string;
+  lockerNumero: number;
+  photo: string | null;
+  at: string;
+  courier: string;
+};
+
+function readActivations(): Activacion[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(window.localStorage.getItem("tahona:activaciones") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveActivation(a: Activacion) {
+  if (typeof window === "undefined") return;
+  const list = [a, ...readActivations()].slice(0, 40);
+  window.localStorage.setItem("tahona:activaciones", JSON.stringify(list));
+}
+
+
+
 type OperatorView =
   | "hoy"
   | "produccion"
@@ -510,100 +537,10 @@ function ProductionView({ weekly }: { weekly: boolean }) {
   );
 }
 
+
 function LockerView({ mode }: { mode: "carga" | "casilleros" }) {
-  const { casilleros, hubs, entregas, clientes } = useTahonaStore();
-  const active = casilleros.filter((item) => item.estado !== "vacio");
-  const incidents = casilleros.filter((item) => item.estado === "incidencia");
-  const loaded = casilleros.filter((item) => item.estado === "cargado");
-  const pending = mode === "carga" ? entregas.filter((e) => e.estado === "listo").length : 0;
-
-  const legend = [
-    { label: "Cargado", cls: "bg-[var(--brand)] text-white" },
-    { label: "Retirado", cls: "bg-[var(--ok)] text-white" },
-    { label: "Incidencia", cls: "bg-[var(--danger)] text-white" },
-    { label: "Vacío", cls: "bg-[var(--paper-sunken)] text-[var(--ink-faint)] border border-[var(--line)]" }
-  ];
-
-  const tileTone = (estado: Casillero["estado"]) =>
-    estado === "incidencia"
-      ? "bg-[var(--danger)] text-white"
-      : estado === "cargado"
-      ? "bg-[var(--brand)] text-white"
-      : estado === "retirado"
-      ? "bg-[var(--ok)] text-white"
-      : "bg-[var(--paper-sunken)] text-[var(--ink-faint)] border border-[var(--line)]";
-
-  return (
-    <PageShell
-      eyebrow={mode === "carga" ? "Carga de casilleros" : "Estado de red"}
-      title={mode === "carga" ? "Asignación de pedidos a casilleros." : "Mapa operativo de casilleros."}
-      description="Capacidad física por hub: cada locker tiene estado, pedido y acción. El color solo señala estado real."
-      actions={
-        mode === "carga" ? (
-          <Button asChild><Link href="/operador/pedidos">Ver pedidos listos</Link></Button>
-        ) : (
-          <Button asChild variant="outline"><Link href="/operador/incidencias">Incidencias</Link></Button>
-        )
-      }
-    >
-      <div className="grid gap-sm md:grid-cols-4">
-        {mode === "carga" ? <KpiCard label="Listos por cargar" value={pending} icon={Boxes} helper="Pedidos esperando casillero" /> : null}
-        <KpiCard label="Casilleros cargados" value={loaded.length} icon={Boxes} helper="Con pan dentro ahora" />
-        <KpiCard label="Activos" value={active.length} icon={Package} helper="Cargados, retirados o incidencia" />
-        <KpiCard label="Incidencias" value={incidents.length} icon={AlertTriangle} delta={incidents.length ? "resolver" : "sin bloqueo"} deltaTone={incidents.length ? "down" : "up"} />
-        {mode !== "carga" ? <KpiCard label="Hubs" value={hubs.length} icon={MapPin} helper="Red operativa" /> : null}
-      </div>
-
-      {/* Leyenda */}
-      <div className="mt-md flex flex-wrap items-center gap-4 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
-        <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Leyenda</span>
-        {legend.map((l) => (
-          <span key={l.label} className="flex items-center gap-2 font-sans text-sm text-[var(--ink-soft)]">
-            <span className={cn("flex h-5 w-5 items-center justify-center rounded-[6px] text-[10px] font-semibold", l.cls)} aria-hidden />
-            {l.label}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-md grid gap-md lg:grid-cols-3">
-        {hubs.map((hub) => {
-          const hubLockers = casilleros.filter((locker) => locker.hub_id === hub.id);
-          const hubLoaded = hubLockers.filter((l) => l.estado === "cargado").length;
-          return (
-            <article key={hub.id} className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
-              <div className="mb-4 flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">{hub.colonia}</p>
-                  <h3 className="mt-1 font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">{hub.nombre}</h3>
-                </div>
-                <span className="font-mono text-sm text-[var(--ink-faint)]">{hubLoaded}/{hub.casilleros_total}</span>
-              </div>
-              <div className="grid grid-cols-6 gap-2">
-                {hubLockers.map((locker) => {
-                  const entrega = locker.pedido_actual ? entregas.find((item) => item.id === locker.pedido_actual) : null;
-                  const initials = entrega ? clientName(clientes, entrega.cliente_id).split(" ").map((p) => p[0]).slice(0, 2).join("") : "";
-                  return (
-                    <Link
-                      key={locker.id}
-                      href={entrega ? `/operador/entregas/${entrega.id}` : "/operador/casilleros"}
-                      className={cn(
-                        "flex aspect-square flex-col items-center justify-center rounded-[10px] text-xs font-semibold transition-transform hover:scale-105",
-                        tileTone(locker.estado)
-                      )}
-                      title={entrega ? `${clientName(clientes, entrega.cliente_id)} · ${locker.estado}` : `Casillero ${locker.numero} · ${locker.estado}`}
-                    >
-                      <span className="font-mono text-[0.9375rem] leading-none">{locker.numero}</span>
-                      {initials ? <span className="mt-0.5 text-[9px] font-medium opacity-80">{initials}</span> : null}
-                    </Link>
-                  );
-                })}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </PageShell>
-  );
+  if (mode === "casilleros") return <LockerNetworkMap />;
+  return <CourierLoadConsole />;
 }
 
 function OrdersView({ extra }: { extra: boolean }) {
@@ -684,6 +621,366 @@ function OrdersView({ extra }: { extra: boolean }) {
     </PageShell>
   );
 }
+
+function CourierLoadConsole() {
+  const { casilleros, hubs, entregas, clientes, productos, loadLocker } = useTahonaStore();
+
+  const [hubId, setHubId] = useState<string>(hubs[0]?.id ?? "");
+  const [courier, setCourier] = useState("Operador de piso");
+  const [activaciones, setActivaciones] = useState<Activacion[]>([]);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    setActivaciones(readActivations());
+    const c = window.localStorage.getItem("tahona:courier");
+    const h = window.localStorage.getItem("tahona:courier-hub");
+    if (c) setCourier(c);
+    if (h && hubs.some((x) => x.id === h)) setHubId(h);
+  }, [hubs]);
+
+  const hub = hubs.find((h) => h.id === hubId) ?? hubs[0];
+
+  // Pendientes de cargar: pedidos del hub que aún no están listos ni entregados.
+  const pending = entregas.filter(
+    (e) => e.hub_id === hubId && e.estado !== "listo" && e.estado !== "entregado"
+  );
+  // Casilleros disponibles del hub.
+  const freeLockers = casilleros
+    .filter((c) => c.hub_id === hubId && c.estado === "vacio")
+    .sort((a, b) => a.numero - b.numero);
+  const loadedToday = casilleros.filter((c) => c.hub_id === hubId && c.estado === "cargado").length;
+
+  function flash(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2600);
+  }
+
+  function activate(deliveryId: string, lockerId: string, photo: string | null) {
+    const locker = casilleros.find((c) => c.id === lockerId);
+    const delivery = entregas.find((e) => e.id === deliveryId);
+    if (!locker || !delivery) return;
+    loadLocker(lockerId, deliveryId);
+    const record: Activacion = {
+      deliveryId,
+      cliente: clientName(clientes, delivery.cliente_id),
+      hub: hub?.nombre ?? "",
+      lockerNumero: locker.numero,
+      photo,
+      at: new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
+      courier
+    };
+    saveActivation(record);
+    setActivaciones((prev) => [record, ...prev].slice(0, 40));
+    flash(`Notificación enviada a ${record.cliente} · casillero #${locker.numero}`);
+  }
+
+  return (
+    <PageShell
+      eyebrow="Operador de piso · Carga"
+      title="Carga el pan y activa el casillero."
+      description="Asigna cada pedido a un casillero, toma la foto de evidencia y notifica al cliente que su pan está listo."
+    >
+      {/* Perfil del operador de piso */}
+      <div className="flex flex-col gap-4 rounded-[18px] border border-[var(--line)] bg-[#111827] p-5 text-white md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand)] font-mono text-lg font-semibold">
+            {courier.charAt(0)}
+          </span>
+          <div>
+            <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white/55">Sesión de piso</p>
+            <input
+              value={courier}
+              onChange={(e) => {
+                setCourier(e.target.value);
+                window.localStorage.setItem("tahona:courier", e.target.value);
+              }}
+              className="w-full max-w-[220px] border-0 border-b border-transparent bg-transparent font-serif text-[1.25rem] font-medium text-white outline-none focus:border-white/40"
+              aria-label="Nombre del operador"
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-white/55" htmlFor="courier-hub">
+            Hub asignado
+          </label>
+          <select
+            id="courier-hub"
+            value={hubId}
+            onChange={(e) => {
+              setHubId(e.target.value);
+              window.localStorage.setItem("tahona:courier-hub", e.target.value);
+            }}
+            className="h-11 rounded-[12px] border border-white/15 bg-white/[0.06] px-3 font-sans text-sm font-semibold text-white outline-none"
+          >
+            {hubs.map((h) => (
+              <option key={h.id} value={h.id} className="text-[var(--ink)]">
+                {h.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-md grid gap-sm md:grid-cols-3">
+        <KpiCard label="Pendientes de cargar" value={pending.length} icon={Package} helper={hub?.nombre} />
+        <KpiCard label="Casilleros libres" value={freeLockers.length} icon={Boxes} deltaTone={freeLockers.length ? "up" : "down"} delta={freeLockers.length ? "disponibles" : "sin espacio"} />
+        <KpiCard label="Cargados hoy" value={loadedToday} icon={CheckCircle2} />
+      </div>
+
+      <div className="mt-md grid gap-md lg:grid-cols-[1.3fr_0.7fr]">
+        {/* Cola de carga */}
+        <section>
+          <h2 className="mb-3 font-serif text-[1.25rem] font-medium text-[var(--ink)]">Cola de carga · {hub?.nombre}</h2>
+          {pending.length ? (
+            <div className="grid gap-3">
+              {pending.map((delivery) => (
+                <LoadCard
+                  key={delivery.id}
+                  delivery={delivery}
+                  productos={productos}
+                  clienteNombre={clientName(clientes, delivery.cliente_id)}
+                  freeLockers={freeLockers}
+                  onActivate={(lockerId, photo) => activate(delivery.id, lockerId, photo)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] py-16 text-center shadow-[var(--shadow-sm)]">
+              <CheckCircle2 className="h-10 w-10 text-[var(--ok)]" aria-hidden />
+              <p className="font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">Todo cargado en {hub?.nombre}</p>
+              <p className="font-sans text-sm text-[var(--ink-soft)]">No hay pedidos pendientes de casillero.</p>
+            </div>
+          )}
+        </section>
+
+        {/* Feed de activaciones / notificaciones */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 font-serif text-[1.25rem] font-medium text-[var(--ink)]">
+            <Bell className="h-5 w-5 text-[var(--brand)]" aria-hidden /> Notificaciones enviadas
+          </h2>
+          <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-3 shadow-[var(--shadow-sm)]">
+            {activaciones.length ? (
+              <div className="grid gap-2">
+                {activaciones.map((a, i) => (
+                  <div key={`${a.deliveryId}-${i}`} className="flex items-center gap-3 rounded-[12px] border border-[var(--line)] bg-[var(--paper)] p-2.5">
+                    <span className="h-12 w-12 shrink-0 overflow-hidden rounded-[8px] bg-[var(--paper-sunken)]">
+                      {a.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={a.photo} alt={`Casillero ${a.lockerNumero}`} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-[var(--ink-faint)]"><Package className="h-5 w-5" aria-hidden /></span>
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-sans text-sm font-semibold text-[var(--ink)]">{a.cliente}</p>
+                      <p className="font-sans text-xs text-[var(--ink-soft)]">Casillero #{a.lockerNumero} · {a.at}</p>
+                    </div>
+                    <StatusPill tone="success" label="Notificado" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-10 text-center font-sans text-sm text-[var(--ink-faint)]">
+                Aún no envías notificaciones. Carga un pedido para avisar al cliente.
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Toast */}
+      {toast ? (
+        <div className="fixed bottom-6 left-1/2 z-50 flex w-[calc(100%-32px)] max-w-md -translate-x-1/2 items-center gap-2.5 rounded-[14px] border border-[var(--ok)]/30 bg-[var(--ink)] px-4 py-3 text-white shadow-[var(--shadow-lg)]">
+          <Bell className="h-5 w-5 shrink-0 text-[var(--accent)]" aria-hidden />
+          <p className="font-sans text-sm font-medium">{toast}</p>
+        </div>
+      ) : null}
+    </PageShell>
+  );
+}
+
+function LockerNetworkMap() {
+  const { casilleros, hubs, entregas, clientes } = useTahonaStore();
+  const active = casilleros.filter((item) => item.estado !== "vacio");
+  const incidents = casilleros.filter((item) => item.estado === "incidencia");
+  return (
+    <PageShell
+      eyebrow="Estado de red"
+      title="Mapa operativo de casilleros."
+      description="Vista de capacidad física: cada locker tiene estado y pedido. El color solo señala riesgo."
+      actions={<Button asChild><Link href="/operador/carga">Ir a carga</Link></Button>}
+    >
+      <div className="grid gap-sm md:grid-cols-3">
+        <KpiCard label="Casilleros activos" value={active.length} icon={Boxes} helper="Cargados, retirados o en incidencia" />
+        <KpiCard label="Incidencias" value={incidents.length} icon={AlertTriangle} delta={incidents.length ? "resolver" : "sin bloqueo"} deltaTone={incidents.length ? "down" : "up"} />
+        <KpiCard label="Hubs" value={hubs.length} icon={MapPin} helper="Red operativa" />
+      </div>
+      <div className="mt-md grid gap-md lg:grid-cols-3">
+        {hubs.map((hub) => {
+          const hubLockers = casilleros.filter((locker) => locker.hub_id === hub.id);
+          return (
+            <Card key={hub.id} className="shadow-sm">
+              <CardHeader><CardTitle>{hub.nombre}</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-6 gap-2">
+                  {hubLockers.map((locker) => {
+                    const entrega = locker.pedido_actual ? entregas.find((item) => item.id === locker.pedido_actual) : null;
+                    const tone =
+                      locker.estado === "incidencia"
+                        ? "bg-[var(--danger)] text-white"
+                        : locker.estado === "cargado"
+                        ? "bg-[var(--brand)] text-white"
+                        : locker.estado === "retirado"
+                        ? "bg-[var(--ok)] text-white"
+                        : "bg-[var(--paper-sunken)] text-[var(--ink-faint)]";
+                    return (
+                      <Link
+                        key={locker.id}
+                        href={entrega ? `/operador/entrega/${entrega.id}` : "/operador/carga"}
+                        className={cn("flex aspect-square items-center justify-center rounded-md text-xs font-semibold", tone)}
+                        title={entrega ? clientName(clientes, entrega.cliente_id) : locker.estado}
+                      >
+                        {locker.numero}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </PageShell>
+  );
+}
+
+function LoadCard({
+  delivery,
+  productos,
+  clienteNombre,
+  freeLockers,
+  onActivate
+}: {
+  delivery: Entrega;
+  productos: Producto[];
+  clienteNombre: string;
+  freeLockers: Casillero[];
+  onActivate: (lockerId: string, photo: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [lockerId, setLockerId] = useState<string>(delivery.casillero_id || freeLockers[0]?.id || "");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const lockerOptions = freeLockers.length
+    ? freeLockers
+    : []; // si no hay libres, el select queda vacío y se bloquea la acción
+  const canActivate = Boolean(lockerId);
+
+  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(String(reader.result));
+    reader.readAsDataURL(file);
+  }
+
+  return (
+    <article className="overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 p-4 text-left"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand-tint)] text-[var(--brand)]">
+          <Package className="h-5 w-5" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{clienteNombre}</p>
+          <p className="truncate font-sans text-xs text-[var(--ink-soft)]">
+            {delivery.slot} · {delivery.productos.reduce((s, p) => s + p.cantidad, 0)} piezas
+          </p>
+        </div>
+        <StatusPill tone="warning" label="Por cargar" />
+      </button>
+
+      {open ? (
+        <div className="border-t border-[var(--line)] p-4">
+          {/* Contenido del pedido */}
+          <p className="mb-3 font-sans text-xs font-semibold uppercase tracking-[0.06em] text-[var(--ink-faint)]">Contenido</p>
+          <div className="mb-4 grid gap-1.5">
+            {delivery.productos.map((item) => (
+              <div key={item.producto_id} className="flex justify-between font-sans text-sm text-[var(--ink-soft)]">
+                <span>{item.cantidad}x {productName(productos, item.producto_id)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* 1 · Casillero */}
+          <p className="mb-2 font-sans text-sm font-semibold text-[var(--ink)]">1 · Asignar casillero</p>
+          {lockerOptions.length ? (
+            <select
+              value={lockerId}
+              onChange={(e) => setLockerId(e.target.value)}
+              className="h-11 w-full rounded-[12px] border border-[var(--line)] bg-[var(--paper)] px-3 font-sans text-sm font-medium text-[var(--ink)] outline-none focus:border-[var(--brand)]"
+            >
+              {lockerOptions.map((l) => (
+                <option key={l.id} value={l.id}>Casillero #{l.numero}</option>
+              ))}
+            </select>
+          ) : (
+            <p className="rounded-[12px] border border-[var(--danger)]/25 bg-[var(--danger-bg)] px-3 py-2.5 font-sans text-sm text-[var(--danger)]">
+              No hay casilleros libres en este hub.
+            </p>
+          )}
+
+          {/* 2 · Foto de evidencia */}
+          <p className="mb-2 mt-4 font-sans text-sm font-semibold text-[var(--ink)]">2 · Foto del pan en el casillero</p>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPhoto} className="hidden" />
+          {photo ? (
+            <div className="relative overflow-hidden rounded-[12px] border border-[var(--line)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo} alt="Evidencia" className="h-44 w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setPhoto(null)}
+                aria-label="Quitar foto"
+                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-[12px] border border-dashed border-[var(--line-strong)] bg-[var(--paper-sunken)] font-sans text-sm font-medium text-[var(--ink-soft)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)]"
+            >
+              <Camera className="h-6 w-6" aria-hidden />
+              Tomar / subir foto
+            </button>
+          )}
+
+          {/* 3 · Activar + notificar */}
+          <Button
+            type="button"
+            size="lg"
+            className="mt-4 w-full"
+            disabled={!canActivate}
+            onClick={() => onActivate(lockerId, photo)}
+          >
+            <Bell className="mr-1 h-4 w-4" aria-hidden />
+            Activar casillero y notificar al cliente
+          </Button>
+          <p className="mt-2 text-center font-sans text-xs text-[var(--ink-faint)]">
+            El cliente recibe aviso de que su pan está listo en el casillero asignado.
+          </p>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 
 function DeliveryDetail({ id }: { id?: string }) {
   const { entregas, clientes, hubs, productos, markDelivery } = useTahonaStore();
