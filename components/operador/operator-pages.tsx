@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -22,7 +21,13 @@ import {
   Bell, 
   Clock, 
   QrCode,
-  Wheat
+  Wheat,
+  Camera, 
+  Bell, 
+  CheckCircle2, 
+  User, 
+  Check, 
+  X
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
