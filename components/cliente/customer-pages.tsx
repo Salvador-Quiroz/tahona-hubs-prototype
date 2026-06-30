@@ -2872,7 +2872,7 @@ export function AccountPage({ view, entregaId }: { view: string; entregaId?: str
         {view === "editar" ? <EditSubscription subscription={data.subscription} productos={data.productos} /> : null}
         {view === "pausar" ? <PauseSubscription subscription={data.subscription} /> : null}
         {view === "pagos" ? <PaymentsPanel charges={data.charges} /> : null}
-        {view === "perfil" ? <ProfilePanel /> : null}
+        {view === "perfil" ? <ProfilePanel data={data}/> : null}
       </Container>
     </main>
   );
@@ -3411,31 +3411,172 @@ function PauseSubscription({ subscription }: { subscription: Suscripcion }) {
 }
 
 function PaymentsPanel({ charges }: { charges: Cobro[] }) {
+  const retryCharge = useTahonaStore((s) => s.retryCharge);
+  const failed = charges.find((c) => c.estado === "fallido" || c.estado === "pendiente");
+
+  const toneFor = (estado: Cobro["estado"]) =>
+    estado === "cobrado" ? "success" : estado === "fallido" ? "danger" : "warning";
+
   return (
-    <div className="grid gap-xs">
-      {charges.map((charge) => (
-        <Card key={charge.id} className=""><CardContent className="grid gap-sm p-sm md:grid-cols-[1fr_auto_auto] md:items-center"><div><p className="font-semibold">{shortDate(charge.fecha)}</p><p className="text-sm text-muted-foreground">{charge.metodo}</p></div><StatusPill tone={charge.estado === "cobrado" ? "success" : charge.estado === "fallido" ? "danger" : "warning"} label={charge.estado} /><p className="font-mono font-semibold">{formatCurrency(charge.monto)}</p></CardContent></Card>
-      ))}
+    <div className="grid gap-md lg:grid-cols-[1fr_360px]">
+      <section className="space-y-5">
+        {failed ? (
+          <div className="flex flex-col justify-between gap-3 rounded-[16px] border border-[var(--danger)]/25 bg-[var(--danger-bg)] p-4 md:flex-row md:items-center">
+            <div className="flex gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--danger)]" aria-hidden />
+              <div>
+                <p className="font-sans font-semibold text-[var(--danger)]">
+                  {failed.estado === "fallido" ? "Pago no procesado" : "Cobro pendiente"}
+                </p>
+                <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">
+                  {formatCurrency(failed.monto)} · {failed.metodo}. Reintenta para mantener tu retiro activo.
+                </p>
+              </div>
+            </div>
+            <Button type="button" variant="outline" className="bg-[var(--paper-raised)]" onClick={() => retryCharge(failed.id)}>
+              <RotateCw className="mr-1 h-4 w-4" aria-hidden /> Reintentar cobro
+            </Button>
+          </div>
+        ) : null}
+
+        <div>
+          <h2 className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Historial de cobros</h2>
+          <div className="mt-3 overflow-hidden rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)]">
+            {charges.map((charge, i) => (
+              <div
+                key={charge.id}
+                className={cn(
+                  "flex items-center gap-4 p-4",
+                  i > 0 && "border-t border-[var(--line)]"
+                )}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--paper-sunken)] text-[var(--ink-soft)]">
+                  <CreditCard className="h-5 w-5" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{shortDate(charge.fecha)}</p>
+                  <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">{charge.metodo}</p>
+                </div>
+                <StatusPill tone={toneFor(charge.estado)} label={charge.estado} />
+                <p className="w-24 text-right font-mono text-[0.9375rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                  {formatCurrency(charge.monto)}
+                </p>
+                <button
+                  type="button"
+                  aria-label="Descargar recibo"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--ink-faint)] transition-colors hover:bg-[var(--paper-sunken)] hover:text-[var(--ink)]"
+                >
+                  <Download className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            ))}
+            {!charges.length ? (
+              <p className="p-6 text-center font-sans text-sm text-[var(--ink-faint)]">Aún no tienes cobros registrados.</p>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+      <aside className="h-fit space-y-4 lg:sticky lg:top-24">
+        <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <h2 className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Método de pago</h2>
+          <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--paper-sunken)] p-4">
+            <span className="flex h-10 w-14 items-center justify-center rounded-[8px] bg-[var(--brand)] font-mono text-xs font-semibold text-white">VISA</span>
+            <div className="flex-1">
+              <p className="font-mono text-sm font-medium text-[var(--ink)]">•••• 4242</p>
+              <p className="font-sans text-xs text-[var(--ink-faint)]">Exp. 08/28</p>
+            </div>
+            <ShieldCheck className="h-5 w-5 text-[var(--ok)]" aria-hidden />
+          </div>
+          <Button type="button" variant="outline" className="mt-3 w-full">
+            Cambiar tarjeta
+          </Button>
+        </div>
+        <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-sunken)] p-5">
+          <p className="flex items-center gap-2 font-sans text-sm font-semibold text-[var(--ink)]">
+            <Clock className="h-4 w-4 text-[var(--brand)]" aria-hidden /> Próximo cobro
+          </p>
+          <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">
+            Cada viernes antes de tu retiro. Sin cargos sorpresa.
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }
+function ProfilePanel({ data }: { data: AccountData }) {
+  const cliente = data.client;
+  const [form, setForm] = useState({
+    nombre: cliente.nombre ?? "",
+    telefono: cliente.telefono ?? "",
+    email: cliente.email ?? ""
+  });
+  const [saved, setSaved] = useState(false);
+  const set = (key: keyof typeof form, value: string) => {
+    setSaved(false);
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
-function ProfilePanel() {
   return (
-    <Card className="max-w-3xl">
-      <CardHeader><CardTitle>Datos personales</CardTitle></CardHeader>
-      <CardContent className="grid gap-sm md:grid-cols-2">
-        <Field label="Nombre" defaultValue="Mariana" />
-        <Field label="Apellido" defaultValue="Soto" />
-        <Field label="Correo" defaultValue="mariana@correo.com" />
-        <Field label="Telefono" defaultValue="55 3200 7800" />
-        <Field label="Hub principal" defaultValue="Hub Polanco" />
-        <Field label="Colonia" defaultValue="Polanco" />
-      </CardContent>
-    </Card>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div>
+        <h1 className="font-serif text-display font-medium text-[var(--ink)]">Mi perfil</h1>
+        <p className="mt-2 font-sans text-[0.9375rem] text-[var(--ink-soft)]">
+          Tus datos de contacto y hub de retiro preferido.
+        </p>
+      </div>
+
+      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
+          <Field label="Teléfono" type="tel" inputMode="tel" value={form.telefono} onChange={(e) => set("telefono", e.target.value)} />
+          <div className="sm:col-span-2">
+            <Field label="Correo" type="email" inputMode="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+          </div>
+        </div>
+        <div className="mt-5 flex items-center gap-3">
+          <Button
+            type="button"
+            onClick={() => {
+              setSaved(true);
+              window.setTimeout(() => setSaved(false), 2500);
+            }}
+          >
+            {saved ? (
+              <>
+                <Check className="mr-1 h-4 w-4" aria-hidden /> Guardado
+              </>
+            ) : (
+              "Guardar cambios"
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+        <h2 className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Hub de retiro</h2>
+        <div className="mt-4 flex items-center gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--paper-sunken)] p-4">
+          <MapPin className="h-5 w-5 shrink-0 text-[var(--brand)]" aria-hidden />
+          <div className="flex-1">
+            <p className="font-serif text-[1rem] font-medium text-[var(--ink)]">{data.hub.nombre}</p>
+            <p className="font-sans text-sm text-[var(--ink-soft)]">{data.hub.direccion}</p>
+          </div>
+        </div>
+        <Button asChild variant="outline" className="mt-3 w-full">
+          <Link href="/hubs">Cambiar hub</Link>
+        </Button>
+      </div>
+
+      <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-sunken)] p-5">
+        <h2 className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Sesión</h2>
+        <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">Cierra tu sesión en este dispositivo.</p>
+        <Button asChild variant="outline" className="mt-3">
+          <Link href="/login">Cerrar sesión</Link>
+        </Button>
+      </div>
+    </div>
   );
 }
-
 export function SupportPage() {
   return (
     <main className="storefront-shell py-lg">
