@@ -2870,7 +2870,7 @@ export function AccountPage({ view, entregaId }: { view: string; entregaId?: str
         {view === "entrega" ? <DeliveryDetail entrega={delivery} productos={data.productos} hub={getHub(data.hubs, delivery.hub_id)} /> : null}
         {view === "suscripcion" ? <SubscriptionPanelV2 subscription={data.subscription} productos={data.productos} charges={data.charges} /> : null}
         {view === "editar" ? <EditSubscription subscription={data.subscription} productos={data.productos} /> : null}
-        {view === "pausar" ? <PauseSubscription /> : null}
+        {view === "pausar" ? <PauseSubscription subscription={data.subscription} /> : null}
         {view === "pagos" ? <PaymentsPanel charges={data.charges} /> : null}
         {view === "perfil" ? <ProfilePanel /> : null}
       </Container>
@@ -3206,28 +3206,207 @@ function SubscriptionPanelV2({
 }
 
 function EditSubscription({ subscription, productos }: { subscription: Suscripcion; productos: Producto[] }) {
+  const updateWeeklyOrder = useTahonaStore((s) => s.updateWeeklyOrder);
+
+  const seed: Record<string, number> = {};
+  subscription.productos.forEach((item) => {
+    seed[item.producto_id] = item.cantidad;
+  });
+  const [draft, setDraft] = useState<Record<string, number>>(seed);
+  const [saved, setSaved] = useState(false);
+
+  const setQty = (id: string, qty: number) => {
+    setSaved(false);
+    setDraft((prev) => {
+      const next = { ...prev };
+      if (qty <= 0) delete next[id];
+      else next[id] = qty;
+      return next;
+    });
+  };
+
+  const lines = Object.entries(draft).filter(([, q]) => q > 0);
+  const count = lines.reduce((sum, [, q]) => sum + q, 0);
+  const total = lines.reduce((sum, [id, q]) => {
+    const p = productos.find((x) => x.id === id);
+    return sum + (p ? p.precio_mxn * q : 0);
+  }, 0);
+
+  const dirty = JSON.stringify(draft) !== JSON.stringify(seed);
+
+  const save = () => {
+    updateWeeklyOrder(
+      subscription.id,
+      lines.map(([producto_id, cantidad]) => ({ producto_id, cantidad }))
+    );
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 2500);
+  };
+
   return (
-    <Card className="">
-      <CardHeader><CardTitle>Editar bolsa semanal</CardTitle></CardHeader>
-      <CardContent className="grid gap-xs md:grid-cols-2">
-        {productos.slice(0, 8).map((product) => {
-          const current = subscription.productos.find((item) => item.producto_id === product.id)?.cantidad ?? 0;
-          return <ProductLine key={product.id} product={product} quantity={current} action={<Button variant="outline" size="sm">Ajustar</Button>} />;
-        })}
-      </CardContent>
-    </Card>
+    <div className="grid gap-md lg:grid-cols-[1fr_360px]">
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <Link href="/cuenta/suscripcion" className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-[var(--ink-soft)] hover:text-[var(--brand)]">
+            <ArrowLeft className="h-4 w-4" aria-hidden /> Suscripción
+          </Link>
+        </div>
+        <h1 className="font-serif text-display font-medium text-[var(--ink)]">Editar tu bolsa de siempre</h1>
+        <p className="mt-2 font-sans text-[0.9375rem] text-[var(--ink-soft)]">
+          Ajusta cantidades de tu pedido recurrente. Los cambios aplican desde el próximo corte.
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {productos.map((product) => {
+            const qty = draft[product.id] ?? 0;
+            const active = qty > 0;
+            return (
+              <div
+                key={product.id}
+                className={cn(
+                  "flex items-center gap-3 rounded-[16px] border bg-[var(--paper-raised)] p-3 transition-colors",
+                  active ? "border-[var(--brand)]" : "border-[var(--line)]"
+                )}
+              >
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[12px] bg-[var(--paper-sunken)]">
+                  <Image src={product.imagen_url} alt={product.nombre} fill sizes="64px" className="object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-1 font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{product.nombre}</p>
+                  <p className="mt-0.5 font-mono text-[0.8125rem] text-[var(--ink-faint)]">{formatCurrency(product.precio_mxn)}</p>
+                </div>
+                {active ? (
+                  <div className="flex items-center rounded-full bg-[var(--paper-sunken)]">
+                    <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Quitar" className="flex h-8 w-8 items-center justify-center text-[var(--ink-soft)]">
+                      <Minus className="h-4 w-4" aria-hidden />
+                    </button>
+                    <span className="min-w-7 text-center font-mono text-sm font-medium [font-variant-numeric:tabular-nums]">{qty}</span>
+                    <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Agregar" className="flex h-8 w-8 items-center justify-center text-[var(--brand)]">
+                      <Plus className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                ) : (
+                  <Button type="button" size="sm" variant="outline" onClick={() => setQty(product.id, 1)}>
+                    Agregar
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <aside className="h-fit lg:sticky lg:top-24">
+        <div className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+          <h2 className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Tu bolsa semanal</h2>
+          <p className="mt-1 font-sans text-sm text-[var(--ink-soft)]">{count} {count === 1 ? "pieza" : "piezas"}</p>
+          <div className="my-4 h-px bg-[var(--line)]" />
+          <div className="flex items-baseline justify-between">
+            <span className="font-serif text-[1.25rem] font-medium text-[var(--ink)]">Total recurrente</span>
+            <span className="font-mono text-[1.25rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">{formatCurrency(total)}</span>
+          </div>
+          <Button type="button" size="lg" className="mt-5 w-full" onClick={save} disabled={!dirty || count === 0}>
+            {saved ? (
+              <>
+                <Check className="mr-1 h-4 w-4" aria-hidden /> Guardado
+              </>
+            ) : (
+              "Guardar cambios"
+            )}
+          </Button>
+          {count === 0 ? (
+            <p className="mt-2 text-center font-sans text-xs text-[var(--danger)]">Tu bolsa no puede quedar vacía.</p>
+          ) : (
+            <p className="mt-3 font-sans text-xs leading-5 text-[var(--ink-faint)]">
+              Se cobra cada viernes antes de tu retiro. Puedes editar de nuevo cuando quieras.
+            </p>
+          )}
+        </div>
+      </aside>
+    </div>
   );
 }
 
-function PauseSubscription() {
+function PauseSubscription({ subscription }: { subscription: Suscripcion }) {
+  const pauseSubscription = useTahonaStore((s) => s.pauseSubscription);
+  const reactivateSubscription = useTahonaStore((s) => s.reactivateSubscription);
+  const paused = subscription.estado === "pausada";
+  const [confirm, setConfirm] = useState<number | null>(null);
+
+  if (paused) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-[18px] border border-[var(--warn)]/30 bg-[var(--warn-bg)] p-6 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--paper-raised)] text-[var(--warn)]">
+            <Clock className="h-6 w-6" aria-hidden />
+          </span>
+          <h1 className="mt-4 font-serif text-2xl font-medium text-[var(--ink)]">Tu suscripción está pausada</h1>
+          <p className="mx-auto mt-2 max-w-[44ch] font-sans text-sm text-[var(--ink-soft)]">
+            No se generan cobros ni entregas mientras esté pausada. Tu bolsa y preferencias se conservan.
+          </p>
+          <Button type="button" size="lg" className="mt-6" onClick={() => reactivateSubscription(subscription.id)}>
+            Reactivar mi suscripción
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Card className="max-w-2xl">
-      <CardHeader><CardTitle>Pausar suscripcion</CardTitle></CardHeader>
-      <CardContent className="space-y-sm">
-        {[1, 2, 4].map((weeks) => <Button key={weeks} variant="outline" className="w-full justify-between">Pausar {weeks} semana{weeks > 1 ? "s" : ""}<ChevronRight className="h-4 w-4" /></Button>)}
-        <p className="text-sm text-muted-foreground">La pausa no cancela tu cuenta ni elimina tu configuracion.</p>
-      </CardContent>
-    </Card>
+    <div className="mx-auto max-w-2xl">
+      <h1 className="font-serif text-display font-medium text-[var(--ink)]">Pausar suscripción</h1>
+      <p className="mt-2 font-sans text-[0.9375rem] text-[var(--ink-soft)]">
+        Mejor una pausa que cancelar. Tu cuenta, historial y bolsa se conservan; vuelves cuando quieras.
+      </p>
+
+      <div className="mt-6 grid gap-3">
+        {[
+          { weeks: 1, label: "1 semana", hint: "Saltas la próxima entrega." },
+          { weeks: 2, label: "2 semanas", hint: "Un respiro corto." },
+          { weeks: 4, label: "4 semanas", hint: "Te vas de viaje, sin perder tu lugar." }
+        ].map((option) => (
+          <button
+            key={option.weeks}
+            type="button"
+            onClick={() => setConfirm(option.weeks)}
+            className={cn(
+              "flex items-center justify-between rounded-[16px] border bg-[var(--paper-raised)] px-5 py-4 text-left transition-colors",
+              confirm === option.weeks ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : "border-[var(--line)] hover:border-[var(--brand)]"
+            )}
+          >
+            <div>
+              <p className="font-serif text-[1.0625rem] font-medium text-[var(--ink)]">Pausar {option.label}</p>
+              <p className="mt-0.5 font-sans text-sm text-[var(--ink-soft)]">{option.hint}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-[var(--ink-faint)]" aria-hidden />
+          </button>
+        ))}
+      </div>
+
+      {confirm ? (
+        <div className="mt-5 rounded-[16px] border border-[var(--line)] bg-[var(--paper-sunken)] p-5">
+          <p className="font-sans text-sm text-[var(--ink-soft)]">
+            Pausarás tu suscripción <strong className="text-[var(--ink)]">{confirm} semana{confirm > 1 ? "s" : ""}</strong>. Podrás reactivarla
+            antes si cambias de opinión.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" className="flex-1" onClick={() => pauseSubscription(subscription.id, confirm)}>
+              Confirmar pausa
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <p className="mt-6 text-center font-sans text-sm text-[var(--ink-faint)]">
+        ¿Solo esta semana?{" "}
+        <Link href="/cuenta/suscripcion" className="font-semibold text-[var(--brand)] hover:underline">
+          Mejor salta una entrega
+        </Link>
+      </p>
+    </div>
   );
 }
 
