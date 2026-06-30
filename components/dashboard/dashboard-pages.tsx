@@ -256,9 +256,17 @@ function metricTooltip(value: unknown, name: unknown) {
 function SummaryPage() {
   const metrics = useExecutiveMetrics();
   const { incidencias, cobros, clientes, hubs } = useTahonaStore();
+  const series = growthSeries();
+  const lastMonth = series[series.length - 1];
+  const prevMonth = series[series.length - 2];
+  const momRevenue = prevMonth ? (lastMonth.ingresos - prevMonth.ingresos) / prevMonth.ingresos : 0;
+
+  const openIncidents = incidencias.filter((item) => item.estado !== "resuelta");
+  const failedCharges = cobros.filter((item) => item.estado !== "cobrado");
+
   const riskRows = [
-    ...incidencias.filter((item) => item.estado !== "resuelta").slice(0, 5).map((item) => ({ type: "Incidencia", owner: hubName(hubs, item.hub_id), amount: "-", status: item.estado, date: item.fecha })),
-    ...cobros.filter((item) => item.estado !== "cobrado").slice(0, 5).map((item) => ({ type: "Cobro", owner: clientName(clientes, item.cliente_id), amount: formatCurrency(item.monto), status: item.estado, date: item.fecha }))
+    ...openIncidents.slice(0, 5).map((item) => ({ type: "Incidencia", owner: hubName(hubs, item.hub_id), amount: "—", status: item.estado, date: item.fecha })),
+    ...failedCharges.slice(0, 5).map((item) => ({ type: "Cobro", owner: clientName(clientes, item.cliente_id), amount: formatCurrency(item.monto), status: item.estado, date: item.fecha }))
   ];
   const columns: Array<DataTableColumn<(typeof riskRows)[number]>> = [
     { key: "type", header: "Riesgo", render: (row) => row.type },
@@ -272,53 +280,75 @@ function SummaryPage() {
     <PageShell
       eyebrow="Resumen ejecutivo"
       title="Recurrencia, capacidad y riesgo en una sola lectura."
-      description="Vista para dirección: crecimiento, ingresos, retención y operación se leen con contexto y no como decoración."
+      description="Vista para dirección: crecimiento, ingresos, retención y operación se leen con contexto."
     >
-      <div className="space-y-sm">
-        <Card className="shadow-sm">
-          <CardContent className="p-md">
-            <div className="flex flex-col justify-between gap-md md:flex-row md:items-start">
-              <div>
-                <p className="text-caption font-semibold uppercase text-primary">Ingresos recurrentes (MRR)</p>
-                <p className="mt-sm font-mono text-5xl font-semibold leading-none text-foreground">{formatCurrency(metrics.revenue)}</p>
-                <div className="mt-sm flex flex-wrap items-center gap-xs">
-                  <StatusPill tone="success" label="+14.2% vs mes" />
-                  <span className="text-sm text-muted-foreground">Target: margen bruto &gt;60%</span>
-                </div>
-              </div>
-              <div className="h-28 min-w-[260px] flex-1 rounded-md bg-info-bg p-xs">
-                <svg viewBox="0 0 320 120" className="h-full w-full" role="img" aria-label="Tendencia de ingresos recurrentes">
-                  <defs>
-                    <linearGradient id="mrrSparkFill" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="var(--brand)" stopOpacity="0.02" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M8 96 C48 88 72 78 104 66 C136 54 160 38 196 28 C232 18 262 12 312 8 L312 112 L8 112 Z" fill="url(#mrrSparkFill)" />
-                  <path d="M8 96 C48 88 72 78 104 66 C136 54 160 38 196 28 C232 18 262 12 312 8" fill="none" stroke="var(--brand)" strokeWidth="3" strokeLinecap="round" />
-                </svg>
+      {/* ── Hero de mando ─────────────────────────────────────────────── */}
+      <section className="overflow-hidden rounded-[20px] border border-[var(--line)] bg-[#111827] text-white shadow-[var(--shadow-md)]">
+        <div className="grid gap-6 p-6 lg:grid-cols-[1fr_1.2fr] lg:p-8">
+          <div className="flex flex-col justify-between gap-6">
+            <div>
+              <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-white/55">Ingreso recurrente (MRR)</p>
+              <p className="mt-3 font-mono text-[clamp(2.5rem,5vw,3.75rem)] font-semibold leading-none">{formatCurrency(metrics.revenue)}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--ok)]/15 px-2.5 py-1 font-sans text-sm font-semibold text-[var(--ok)]">
+                  <TrendingUp className="h-4 w-4" aria-hidden /> +{Math.round(momRevenue * 1000) / 10}% MoM
+                </span>
+                <span className="font-sans text-sm text-white/55">Margen bruto {Math.round(lastMonth.margen * 100)}%</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <div className="grid gap-sm md:grid-cols-3">
-          <KpiCard label="Clientes activos" value={metrics.activeClients} helper={`${metrics.pausedClients} pausados`} target="200 piloto" icon={Users} delta="+6.0%" deltaTone="up" />
-          <KpiCard label="Retención" value={metrics.retention} formatter={formatPercent} helper="Activos / no cancelados" icon={TrendingUp} target=">85%" />
-          <KpiCard label="Valor recurrente" value={metrics.revenue} formatter={formatCurrency} helper={`${formatCurrency(metrics.riskRevenue)} en riesgo`} icon={Banknote} target="cobranza sana" />
+            <div className="grid grid-cols-3 gap-4 border-t border-white/10 pt-5">
+              <div>
+                <p className="font-mono text-2xl font-semibold [font-variant-numeric:tabular-nums]">{metrics.activeClients}</p>
+                <p className="font-sans text-xs text-white/55">clientes activos</p>
+              </div>
+              <div>
+                <p className="font-mono text-2xl font-semibold [font-variant-numeric:tabular-nums]">{Math.round(metrics.retention * 100)}%</p>
+                <p className="font-sans text-xs text-white/55">retención</p>
+              </div>
+              <div>
+                <p className="font-mono text-2xl font-semibold text-[var(--accent)] [font-variant-numeric:tabular-nums]">{formatCurrency(metrics.riskRevenue)}</p>
+                <p className="font-sans text-xs text-white/55">en riesgo</p>
+              </div>
+            </div>
+          </div>
+          <div className="min-w-0 rounded-[16px] bg-white/[0.04] p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-white/50">Ingresos · 8 meses</p>
+              <span className="font-mono text-xs text-white/40">Nov — Jun</span>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id="execMrr" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,.4)", fontSize: 11 }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "#1f2937", border: "none", borderRadius: 12, color: "#fff" }}
+                  formatter={(value: unknown) => [formatCurrency(Number(value)), "Ingresos"]}
+                />
+                <Area dataKey="ingresos" stroke="var(--accent)" strokeWidth={3} fill="url(#execMrr)" animationDuration={520} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
-      {false ? (
-      <div className="hidden">
+      </section>
+
+      {/* ── KPIs ──────────────────────────────────────────────────────── */}
+      <div className="mt-md grid gap-sm md:grid-cols-4">
         <KpiCard label="Clientes activos" value={metrics.activeClients} helper={`${metrics.pausedClients} pausados`} target="200 piloto" icon={Users} delta="+6.0%" deltaTone="up" />
-        <KpiCard label="Ingresos cobrados" value={metrics.revenue} formatter={formatCurrency} helper="Cobros históricos mock" icon={Banknote} delta="+14.2%" deltaTone="up" />
         <KpiCard label="Retención" value={metrics.retention} formatter={formatPercent} helper="Activos / no cancelados" icon={TrendingUp} target=">85%" />
-        <KpiCard label="Riesgo activo" value={metrics.operationalRisk} helper={`${formatCurrency(metrics.riskRevenue)} en pagos no cobrados`} icon={AlertTriangle} deltaTone={metrics.operationalRisk ? "down" : "up"} delta={metrics.operationalRisk ? "vigilar" : "estable"} />
+        <KpiCard label="Ocupación de red" value={metrics.occupation} formatter={formatPercent} helper="Casilleros usados" icon={Boxes} />
+        <KpiCard label="Riesgo operativo" value={metrics.operationalRisk} helper={`${formatCurrency(metrics.riskRevenue)} en cobros`} icon={AlertTriangle} delta={metrics.operationalRisk ? "vigilar" : "estable"} deltaTone={metrics.operationalRisk ? "down" : "up"} />
       </div>
-      ) : null}
+
+      {/* ── Crecimiento + Riesgos ─────────────────────────────────────── */}
       <div className="mt-md grid items-start gap-md xl:grid-cols-[minmax(560px,1.15fr)_minmax(420px,0.85fr)]">
         <ChartCard eyebrow="Crecimiento" title="Ingresos, clientes y margen bruto" action={<Badge variant="info">8 meses</Badge>}>
           <ResponsiveContainer width="100%" height={330}>
-            <ComposedChart data={growthSeries()}>
+            <ComposedChart data={series}>
               <CartesianGrid stroke={GRID} vertical={false} />
               <XAxis dataKey="mes" tickLine={false} axisLine={false} />
               <YAxis yAxisId="left" tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
@@ -331,16 +361,24 @@ function SummaryPage() {
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
+
         <Card className="min-w-0 shadow-sm">
-          <CardHeader><CardTitle>Riesgos que bloquean escala</CardTitle></CardHeader>
-          <CardContent><DataTable rows={riskRows} columns={columns} getRowId={(row) => `${row.type}-${row.owner}-${row.date}`} /></CardContent>
+          <CardHeader className="flex-row items-center justify-between gap-sm">
+            <CardTitle>Riesgos que bloquean escala</CardTitle>
+            <span className="rounded-full bg-[var(--danger-bg)] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--danger)]">
+              {openIncidents.length + failedCharges.length}
+            </span>
+          </CardHeader>
+          <CardContent>
+            <DataTable rows={riskRows} columns={columns} getRowId={(row) => `${row.type}-${row.owner}-${row.date}`} />
+          </CardContent>
         </Card>
       </div>
+
       <RetentionHeatmap />
     </PageShell>
   );
 }
-
 function GrowthPage() {
   const data = growthSeries();
   return (
