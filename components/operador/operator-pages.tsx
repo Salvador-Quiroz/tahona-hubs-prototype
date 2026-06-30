@@ -423,30 +423,84 @@ function HubCapacity({ hubs, casilleros }: { hubs: Hub[]; casilleros: Casillero[
 function ProductionView({ weekly }: { weekly: boolean }) {
   const { entregas, productos, hubs } = useTahonaStore();
   const relevant = weekly ? entregas.slice(0, 126) : entregas.filter((item) => item.fecha === today);
-  const rows = productos.map((product) => {
-    const units = relevant.flatMap((delivery) => delivery.productos).filter((item) => item.producto_id === product.id).reduce((sum, item) => sum + item.cantidad, 0);
-    return { product, units, revenue: units * product.precio_mxn };
-  }).filter((row) => row.units > 0).sort((a, b) => b.units - a.units);
-  const columns: Array<DataTableColumn<(typeof rows)[number]>> = [
-    { key: "sku", header: "Producto", render: (row) => <div><p className="font-semibold">{row.product.nombre}</p><p className="text-xs text-muted-foreground">{row.product.categoria}</p></div> },
-    { key: "units", header: "Unidades", align: "right", render: (row) => row.units },
-    { key: "revenue", header: "Venta", align: "right", render: (row) => formatCurrency(row.revenue) },
-    { key: "time", header: "Horneado", align: "right", render: (row) => `${row.product.tiempo_horneado_min} min` }
-  ];
+  const rows = productos
+    .map((product) => {
+      const units = relevant
+        .flatMap((delivery) => delivery.productos)
+        .filter((item) => item.producto_id === product.id)
+        .reduce((sum, item) => sum + item.cantidad, 0);
+      return { product, units, revenue: units * product.precio_mxn, minutes: units * product.tiempo_horneado_min };
+    })
+    .filter((row) => row.units > 0)
+    .sort((a, b) => b.units - a.units);
+
+  const totalUnits = rows.reduce((sum, row) => sum + row.units, 0);
+  const totalMinutes = rows.reduce((sum, row) => sum + row.minutes, 0);
+  const maxUnits = Math.max(1, ...rows.map((r) => r.units));
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const completed = rows.filter((r) => done[r.product.id]).length;
 
   return (
     <PageShell
       eyebrow={weekly ? "Producción semanal" : "Producción diaria"}
       title={weekly ? "Plan de producción por demanda acumulada." : "Producción requerida para los pedidos de hoy."}
-      description="La cocina necesita volumen, tiempo y prioridad, no tarjetas decorativas. Esta vista ordena demanda por SKU y capacidad."
+      description="Volumen por SKU, tiempo de horno y prioridad. Marca cada lote conforme sale del horno."
       actions={<Button variant="outline"><Download className="h-4 w-4" /> Exportar plan</Button>}
     >
-      <div className="grid gap-sm md:grid-cols-3">
-        <KpiCard label="SKUs activos" value={rows.length} icon={Wheat} helper="Con demanda confirmada" />
-        <KpiCard label="Unidades" value={rows.reduce((sum, row) => sum + row.units, 0)} icon={Package} helper={weekly ? "Semana móvil" : "Hoy"} />
+      <div className="grid gap-sm md:grid-cols-4">
+        <KpiCard label="SKUs en plan" value={rows.length} icon={Wheat} helper={`${completed} lotes completados`} />
+        <KpiCard label="Unidades totales" value={totalUnits} icon={Package} helper={weekly ? "Semana móvil" : "Hoy"} />
+        <KpiCard label="Tiempo de horno" value={Math.round(totalMinutes / 60)} formatter={(v) => `${v} h`} icon={Timer} helper="Estimado acumulado" />
         <KpiCard label="Hubs destino" value={hubs.length} icon={MapPin} helper="Carga distribuida" />
       </div>
-      <Card className="mt-md shadow-sm"><CardHeader><CardTitle>Plan por SKU</CardTitle></CardHeader><CardContent><DataTable rows={rows} columns={columns} getRowId={(row) => row.product.id} /></CardContent></Card>
+
+      <section className="mt-md rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-sans text-[1.125rem] font-semibold text-[var(--ink)]">Tablero de horneado</h2>
+          <span className="font-mono text-sm text-[var(--ink-faint)]">{completed}/{rows.length} lotes</span>
+        </div>
+        <div className="space-y-2.5">
+          {rows.map((row, i) => {
+            const isDone = done[row.product.id];
+            const share = Math.round((row.units / maxUnits) * 100);
+            return (
+              <div
+                key={row.product.id}
+                className={cn(
+                  "flex flex-wrap items-center gap-4 rounded-[14px] border p-3.5 transition-colors",
+                  isDone ? "border-[var(--ok)]/30 bg-[var(--ok-bg)]" : "border-[var(--line)] bg-[var(--paper-raised)]"
+                )}
+              >
+                <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-sm font-semibold", i < 3 && !isDone ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-sunken)] text-[var(--ink-soft)]")}>
+                  {i + 1}
+                </span>
+                <div className="min-w-[160px] flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className={cn("font-sans text-[0.9375rem] font-semibold text-[var(--ink)]", isDone && "line-through opacity-60")}>{row.product.nombre}</p>
+                    <span className="font-mono text-sm font-semibold text-[var(--ink)] [font-variant-numeric:tabular-nums]">{row.units} u</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                    <div className="h-full rounded-full bg-[var(--brand)] transition-all duration-base" style={{ width: `${share}%` }} />
+                  </div>
+                  <div className="mt-1.5 flex gap-3 font-sans text-xs text-[var(--ink-soft)]">
+                    <span>{row.product.categoria}</span>
+                    <span className="flex items-center gap-1"><Timer className="h-3 w-3" aria-hidden /> {row.product.tiempo_horneado_min} min/lote</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isDone ? "outline" : "default"}
+                  onClick={() => setDone((prev) => ({ ...prev, [row.product.id]: !prev[row.product.id] }))}
+                >
+                  {isDone ? "Deshacer" : <><CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Listo</>}
+                </Button>
+              </div>
+            );
+          })}
+          {!rows.length ? <p className="py-10 text-center font-sans text-sm text-[var(--ink-faint)]">Sin demanda para este periodo.</p> : null}
+        </div>
+      </section>
     </PageShell>
   );
 }
@@ -455,45 +509,97 @@ function LockerView({ mode }: { mode: "carga" | "casilleros" }) {
   const { casilleros, hubs, entregas, clientes } = useTahonaStore();
   const active = casilleros.filter((item) => item.estado !== "vacio");
   const incidents = casilleros.filter((item) => item.estado === "incidencia");
+  const loaded = casilleros.filter((item) => item.estado === "cargado");
+  const pending = mode === "carga" ? entregas.filter((e) => e.estado === "listo").length : 0;
+
+  const legend = [
+    { label: "Cargado", cls: "bg-[var(--brand)] text-white" },
+    { label: "Retirado", cls: "bg-[var(--ok)] text-white" },
+    { label: "Incidencia", cls: "bg-[var(--danger)] text-white" },
+    { label: "Vacío", cls: "bg-[var(--paper-sunken)] text-[var(--ink-faint)] border border-[var(--line)]" }
+  ];
+
+  const tileTone = (estado: Casillero["estado"]) =>
+    estado === "incidencia"
+      ? "bg-[var(--danger)] text-white"
+      : estado === "cargado"
+      ? "bg-[var(--brand)] text-white"
+      : estado === "retirado"
+      ? "bg-[var(--ok)] text-white"
+      : "bg-[var(--paper-sunken)] text-[var(--ink-faint)] border border-[var(--line)]";
+
   return (
     <PageShell
       eyebrow={mode === "carga" ? "Carga de casilleros" : "Estado de red"}
       title={mode === "carga" ? "Asignación de pedidos a casilleros." : "Mapa operativo de casilleros."}
-      description="Vista de capacidad física: cada locker tiene estado, pedido y acción. El color solo señala riesgo."
-      actions={<Button asChild><Link href="/operador/pedidos">Ver pedidos</Link></Button>}
+      description="Capacidad física por hub: cada locker tiene estado, pedido y acción. El color solo señala estado real."
+      actions={
+        mode === "carga" ? (
+          <Button asChild><Link href="/operador/pedidos">Ver pedidos listos</Link></Button>
+        ) : (
+          <Button asChild variant="outline"><Link href="/operador/incidencias">Incidencias</Link></Button>
+        )
+      }
     >
-      <div className="grid gap-sm md:grid-cols-3">
-        <KpiCard label="Casilleros activos" value={active.length} icon={Boxes} helper="Cargados, retirados o en incidencia" />
+      <div className="grid gap-sm md:grid-cols-4">
+        {mode === "carga" ? <KpiCard label="Listos por cargar" value={pending} icon={Boxes} helper="Pedidos esperando casillero" /> : null}
+        <KpiCard label="Casilleros cargados" value={loaded.length} icon={Boxes} helper="Con pan dentro ahora" />
+        <KpiCard label="Activos" value={active.length} icon={Package} helper="Cargados, retirados o incidencia" />
         <KpiCard label="Incidencias" value={incidents.length} icon={AlertTriangle} delta={incidents.length ? "resolver" : "sin bloqueo"} deltaTone={incidents.length ? "down" : "up"} />
-        <KpiCard label="Hubs" value={hubs.length} icon={MapPin} helper="Red operativa" />
+        {mode !== "carga" ? <KpiCard label="Hubs" value={hubs.length} icon={MapPin} helper="Red operativa" /> : null}
       </div>
+
+      {/* Leyenda */}
+      <div className="mt-md flex flex-wrap items-center gap-4 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3">
+        <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]">Leyenda</span>
+        {legend.map((l) => (
+          <span key={l.label} className="flex items-center gap-2 font-sans text-sm text-[var(--ink-soft)]">
+            <span className={cn("flex h-5 w-5 items-center justify-center rounded-[6px] text-[10px] font-semibold", l.cls)} aria-hidden />
+            {l.label}
+          </span>
+        ))}
+      </div>
+
       <div className="mt-md grid gap-md lg:grid-cols-3">
         {hubs.map((hub) => {
           const hubLockers = casilleros.filter((locker) => locker.hub_id === hub.id);
+          const hubLoaded = hubLockers.filter((l) => l.estado === "cargado").length;
           return (
-            <Card key={hub.id} className="shadow-sm">
-              <CardHeader><CardTitle>{hub.nombre}</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-6 gap-2">
-                  {hubLockers.map((locker) => {
-                    const entrega = locker.pedido_actual ? entregas.find((item) => item.id === locker.pedido_actual) : null;
-                    const tone = locker.estado === "incidencia" ? "bg-danger text-white" : locker.estado === "cargado" ? "bg-primary text-white" : locker.estado === "retirado" ? "bg-success text-white" : "bg-muted text-muted-foreground";
-                    return (
-                      <Link key={locker.id} href={entrega ? `/operador/entregas/${entrega.id}` : "/operador/casilleros"} className={cn("flex aspect-square items-center justify-center rounded-md text-xs font-semibold", tone)} title={entrega ? clientName(clientes, entrega.cliente_id) : locker.estado}>
-                        {locker.numero}
-                      </Link>
-                    );
-                  })}
+            <article key={hub.id} className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+              <div className="mb-4 flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">{hub.colonia}</p>
+                  <h3 className="mt-1 font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">{hub.nombre}</h3>
                 </div>
-              </CardContent>
-            </Card>
+                <span className="font-mono text-sm text-[var(--ink-faint)]">{hubLoaded}/{hub.casilleros_total}</span>
+              </div>
+              <div className="grid grid-cols-6 gap-2">
+                {hubLockers.map((locker) => {
+                  const entrega = locker.pedido_actual ? entregas.find((item) => item.id === locker.pedido_actual) : null;
+                  const initials = entrega ? clientName(clientes, entrega.cliente_id).split(" ").map((p) => p[0]).slice(0, 2).join("") : "";
+                  return (
+                    <Link
+                      key={locker.id}
+                      href={entrega ? `/operador/entregas/${entrega.id}` : "/operador/casilleros"}
+                      className={cn(
+                        "flex aspect-square flex-col items-center justify-center rounded-[10px] text-xs font-semibold transition-transform hover:scale-105",
+                        tileTone(locker.estado)
+                      )}
+                      title={entrega ? `${clientName(clientes, entrega.cliente_id)} · ${locker.estado}` : `Casillero ${locker.numero} · ${locker.estado}`}
+                    >
+                      <span className="font-mono text-[0.9375rem] leading-none">{locker.numero}</span>
+                      {initials ? <span className="mt-0.5 text-[9px] font-medium opacity-80">{initials}</span> : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            </article>
           );
         })}
       </div>
     </PageShell>
   );
 }
-
 function OrdersView({ extra }: { extra: boolean }) {
   const { entregas, clientes, hubs, productos } = useTahonaStore();
   const rows = extra ? entregas.filter((item) => item.estado === "no_entregado" || item.estado === "incidencia").slice(0, 30) : entregas.filter((item) => item.fecha === today);
