@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -18,6 +18,10 @@ import {
   ShieldCheck,
   Timer,
   Users,
+  ArrowRight, 
+  Bell, 
+  Clock, 
+  QrCode,
   Wheat
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -109,6 +113,15 @@ function PageShell({
   );
 }
 
+function useShiftClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+  return now;
+}
+
 function clientName(clientes: ReturnType<typeof useTahonaStore.getState>["clientes"], id: string) {
   const client = clientes.find((item) => item.id === id);
   return client ? `${client.nombre} ${client.apellido}` : id;
@@ -139,68 +152,232 @@ function chargeTone(status: Cobro["estado"]) {
 }
 
 function TodayOperations() {
-  const { entregas, incidencias, cobros, casilleros, hubs, clientes, productos } = useTahonaStore();
+  const { entregas, incidencias, cobros, casilleros, hubs, clientes, productos, markDelivery } = useTahonaStore();
+  const now = useShiftClock();
+  const [filter, setFilter] = useState<"todos" | "listo" | "incidencia">("todos");
+
   const todayDeliveries = entregas.filter((item) => item.fecha === today);
   const ready = todayDeliveries.filter((item) => item.estado === "listo").length;
+  const delivered = todayDeliveries.filter((item) => item.estado === "entregado").length;
   const incidents = incidencias.filter((item) => item.estado !== "resuelta");
   const failedCharges = cobros.filter((item) => item.estado === "fallido");
   const failedAmount = failedCharges.reduce((sum, item) => sum + item.monto, 0);
   const occupied = casilleros.filter((item) => item.estado === "cargado" || item.estado === "incidencia").length;
   const totalLockers = hubs.reduce((sum, hub) => sum + hub.casilleros_total, 0);
+  const progress = todayDeliveries.length ? Math.round((delivered / todayDeliveries.length) * 100) : 0;
 
-  const columns: Array<DataTableColumn<Entrega>> = [
-    { key: "slot", header: "Slot", render: (row) => <span className="font-mono font-semibold">{row.slot}</span> },
-    { key: "cliente", header: "Cliente", render: (row) => clientName(clientes, row.cliente_id) },
-    { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
-    { key: "productos", header: "Pedido", render: (row) => row.productos.map((item) => `${item.cantidad}x ${productName(productos, item.producto_id)}`).join(", ") },
-    { key: "estado", header: "Estado", render: (row) => <StatusPill tone={deliveryTone(row.estado)} label={row.estado.replaceAll("_", " ")} /> },
-    { key: "accion", header: "", align: "right", render: (row) => <Button asChild size="sm" variant="outline"><Link href={`/operador/entregas/${row.id}`}>Abrir</Link></Button> }
+  const queue = todayDeliveries
+    .filter((d) => (filter === "todos" ? true : d.estado === filter))
+    .sort((a, b) => {
+      const rank = (e: Entrega["estado"]) => (e === "incidencia" ? 0 : e === "listo" ? 1 : e === "no_entregado" ? 2 : 3);
+      return rank(a.estado) - rank(b.estado) || a.slot.localeCompare(b.slot);
+    });
+
+  const lockerOf = (id: string) => {
+    const c = casilleros.find((x) => x.pedido_actual === id);
+    return c ? `#${c.numero}` : "—";
+  };
+
+  const filters: Array<{ key: typeof filter; label: string; count: number }> = [
+    { key: "todos", label: "Todos", count: todayDeliveries.length },
+    { key: "listo", label: "Listos", count: ready },
+    { key: "incidencia", label: "Incidencias", count: todayDeliveries.filter((d) => d.estado === "incidencia").length }
   ];
 
   return (
-    <PageShell
-      eyebrow="Operación diaria"
-      title="Control de retiros, carga y excepciones."
-      description="Vista de piso para saber qué mover ahora: pedidos listos, casilleros ocupados, incidencias y cobros que bloquean experiencia."
-    >
-      <div className="grid gap-sm md:grid-cols-4">
-        <KpiCard label="Pedidos de hoy" value={todayDeliveries.length} helper={`${ready} listos para retirar`} icon={ClipboardList} />
-        <KpiCard label="Casilleros activos" value={occupied} helper={`${totalLockers - occupied} disponibles en red`} target={`${totalLockers} totales`} icon={Boxes} />
-        <KpiCard label="Incidencias abiertas" value={incidents.length} delta={incidents.length > 0 ? "requiere acción" : "sin riesgo"} deltaTone={incidents.length > 0 ? "down" : "up"} icon={AlertTriangle} />
-        <KpiCard label="Cobros fallidos" value={failedCharges.length} helper={`${formatCurrency(failedAmount)} bloquean acceso`} icon={CreditCard} />
+    <main className="min-h-screen bg-transparent px-4 py-6 text-[var(--ink)] lg:px-6">
+      <div className="mx-auto max-w-[1540px]">
+        {/* ── Barra de turno (live) ─────────────────────────────────────── */}
+        <header className="mb-6 overflow-hidden rounded-[18px] border border-[var(--line)] bg-[#111827] text-white shadow-[var(--shadow-md)]">
+          <div className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--ok)] opacity-60" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-[var(--ok)]" />
+              </span>
+              <div>
+                <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-white/60">Turno en vivo · Operación</p>
+                <h1 className="mt-1 font-sans text-[1.75rem] font-semibold leading-none">
+                  {now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </h1>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <p className="font-mono text-2xl font-semibold [font-variant-numeric:tabular-nums]">{ready}</p>
+                <p className="font-sans text-xs text-white/60">listos ahora</p>
+              </div>
+              <div>
+                <p className="font-mono text-2xl font-semibold text-[var(--accent)] [font-variant-numeric:tabular-nums]">{incidents.length}</p>
+                <p className="font-sans text-xs text-white/60">incidencias</p>
+              </div>
+              <div>
+                <p className="font-mono text-2xl font-semibold [font-variant-numeric:tabular-nums]">{progress}%</p>
+                <p className="font-sans text-xs text-white/60">del día completado</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+                <Link href="/operador/incidencias"><Bell className="mr-1 h-4 w-4" aria-hidden /> Incidencias</Link>
+              </Button>
+              <Button asChild className="bg-[var(--brand)] hover:bg-[var(--brand-press)]">
+                <Link href="/operador/carga"><QrCode className="mr-1 h-4 w-4" aria-hidden /> Abrir carga</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="h-1.5 w-full bg-white/10">
+            <div className="h-full bg-[var(--ok)] transition-all duration-base" style={{ width: `${progress}%` }} />
+          </div>
+        </header>
+
+        <div className="grid gap-sm md:grid-cols-4">
+          <KpiCard label="Pedidos de hoy" value={todayDeliveries.length} helper={`${delivered} entregados · ${ready} listos`} icon={ClipboardList} />
+          <KpiCard label="Casilleros activos" value={occupied} helper={`${totalLockers - occupied} libres en red`} target={`${totalLockers}`} icon={Boxes} />
+          <KpiCard label="Incidencias abiertas" value={incidents.length} delta={incidents.length > 0 ? "requiere acción" : "sin riesgo"} deltaTone={incidents.length > 0 ? "down" : "up"} icon={AlertTriangle} />
+          <KpiCard label="Cobros fallidos" value={failedCharges.length} helper={`${formatCurrency(failedAmount)} bloquean acceso`} icon={CreditCard} />
+        </div>
+
+        <div className="mt-md grid gap-md xl:grid-cols-[1.35fr_0.65fr]">
+          {/* ── Cola de retiros como tarjetas accionables ───────────────── */}
+          <section className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-sans text-[1.125rem] font-semibold text-[var(--ink)]">Cola de retiros de hoy</h2>
+              <div className="flex gap-1.5">
+                {filters.map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setFilter(f.key)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-sm font-medium transition-colors",
+                      filter === f.key ? "bg-[var(--brand)] text-white" : "bg-[var(--paper-sunken)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+                    )}
+                  >
+                    {f.label}
+                    <span className={cn("font-mono text-xs", filter === f.key ? "text-white/80" : "text-[var(--ink-faint)]")}>{f.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {queue.slice(0, 16).map((d) => {
+                const blocked = d.estado === "incidencia" || d.estado === "no_entregado";
+                const done = d.estado === "entregado";
+                return (
+                  <div
+                    key={d.id}
+                    className={cn(
+                      "flex flex-wrap items-center gap-3 rounded-[14px] border p-3.5 transition-colors",
+                      blocked ? "border-[var(--danger)]/25 bg-[var(--danger-bg)]" : done ? "border-[var(--line)] bg-[var(--paper-sunken)] opacity-70" : "border-[var(--line)] bg-[var(--paper-raised)] hover:border-[var(--brand)]"
+                    )}
+                  >
+                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[10px] bg-[var(--ink)] text-white">
+                      <span className="font-mono text-[0.625rem] uppercase leading-none text-white/55">slot</span>
+                      <span className="font-mono text-sm font-semibold leading-tight">{d.slot.split("-")[0] ?? d.slot}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-sans text-[0.9375rem] font-semibold text-[var(--ink)]">{clientName(clientes, d.cliente_id)}</p>
+                      <p className="truncate font-sans text-[0.8125rem] text-[var(--ink-soft)]">
+                        {hubName(hubs, d.hub_id)} · Casillero {lockerOf(d.id)} · {d.productos.reduce((s, p) => s + p.cantidad, 0)} piezas
+                      </p>
+                    </div>
+                    <StatusPill tone={deliveryTone(d.estado)} label={d.estado.replaceAll("_", " ")} />
+                    <div className="flex gap-1.5">
+                      {d.estado === "listo" ? (
+                        <>
+                          <Button type="button" size="sm" onClick={() => markDelivery(d.id, "entregado")}>
+                            <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Entregado
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => markDelivery(d.id, "incidencia")}>
+                            Incidencia
+                          </Button>
+                        </>
+                      ) : (
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/operador/entregas/${d.id}`}>
+                            Abrir <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {!queue.length ? (
+                <p className="py-10 text-center font-sans text-sm text-[var(--ink-faint)]">No hay pedidos en este filtro.</p>
+              ) : null}
+            </div>
+          </section>
+
+          <RiskQueue incidents={incidents} charges={failedCharges} clientes={clientes} />
+        </div>
+
+        <HubCapacity hubs={hubs} casilleros={casilleros} />
       </div>
-      <div className="mt-md grid gap-md xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="shadow-sm">
-          <CardHeader><CardTitle>Cola de retiros de hoy</CardTitle></CardHeader>
-          <CardContent><DataTable rows={todayDeliveries.slice(0, 14)} columns={columns} getRowId={(row) => row.id} /></CardContent>
-        </Card>
-        <RiskQueue incidents={incidents} charges={failedCharges} />
-      </div>
-      <HubCapacity hubs={hubs} casilleros={casilleros} />
-    </PageShell>
+    </main>
   );
 }
+function RiskQueue({
+  incidents,
+  charges,
+  clientes
+}: {
+  incidents: Incidencia[];
+  charges: Cobro[];
+  clientes: ReturnType<typeof useTahonaStore.getState>["clientes"];
+}) {
+  const resolveIncident = useTahonaStore((s) => s.resolveIncident);
+  const retryCharge = useTahonaStore((s) => s.retryCharge);
+  const empty = incidents.length === 0 && charges.length === 0;
 
-function RiskQueue({ incidents, charges }: { incidents: Incidencia[]; charges: Cobro[] }) {
   return (
-    <Card className="shadow-sm">
-      <CardHeader><CardTitle>Prioridades</CardTitle></CardHeader>
-      <CardContent className="space-y-xs">
-        {incidents.slice(0, 5).map((incident) => (
-          <div key={incident.id} className="rounded-md border border-danger/20 bg-danger-bg p-sm">
-            <div className="flex items-center justify-between gap-sm"><StatusPill tone="danger" label={incident.estado.replaceAll("_", " ")} /><span className="text-xs text-muted-foreground">{shortDate(incident.fecha)}</span></div>
-            <p className="mt-2 text-sm leading-6">{incident.descripcion}</p>
-            <Button asChild size="sm" variant="outline" className="mt-sm bg-card"><Link href="/operador/incidencias">Resolver</Link></Button>
-          </div>
-        ))}
-        {charges.slice(0, 2).map((charge) => (
-          <div key={charge.id} className="rounded-md border border-warning/30 bg-warning-bg p-sm">
-            <p className="text-sm font-semibold">Cobro fallido · {formatCurrency(charge.monto)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{charge.reintentos} reintentos · {shortDate(charge.fecha)}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <section className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-sans text-[1.125rem] font-semibold text-[var(--ink)]">Prioridades</h2>
+        {!empty ? (
+          <span className="rounded-full bg-[var(--danger-bg)] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--danger)]">
+            {incidents.length + charges.length}
+          </span>
+        ) : null}
+      </div>
+
+      {empty ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+          <CheckCircle2 className="h-8 w-8 text-[var(--ok)]" aria-hidden />
+          <p className="font-sans text-sm font-medium text-[var(--ink)]">Todo en orden</p>
+          <p className="font-sans text-xs text-[var(--ink-soft)]">Sin incidencias ni cobros bloqueando retiros.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {incidents.slice(0, 5).map((incident) => (
+            <div key={incident.id} className="rounded-[14px] border border-[var(--danger)]/20 bg-[var(--danger-bg)] p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <StatusPill tone="danger" label={incident.tipo.replaceAll("_", " ")} />
+                <span className="font-mono text-xs text-[var(--ink-faint)]">{shortDate(incident.fecha)}</span>
+              </div>
+              <p className="mt-2 font-sans text-sm leading-5 text-[var(--ink)]">{incident.descripcion}</p>
+              <p className="mt-1 font-sans text-xs text-[var(--ink-soft)]">{clientName(clientes, incident.cliente_id)}</p>
+              <Button type="button" size="sm" variant="outline" className="mt-2.5 bg-[var(--paper-raised)]" onClick={() => resolveIncident(incident.id)}>
+                <CheckCircle2 className="mr-1 h-4 w-4" aria-hidden /> Marcar resuelta
+              </Button>
+            </div>
+          ))}
+          {charges.slice(0, 3).map((charge) => (
+            <div key={charge.id} className="rounded-[14px] border border-[var(--warn)]/30 bg-[var(--warn-bg)] p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-sans text-sm font-semibold text-[var(--ink)]">Cobro fallido · {formatCurrency(charge.monto)}</p>
+                <span className="font-mono text-xs text-[var(--ink-faint)]">{charge.reintentos} reint.</span>
+              </div>
+              <p className="mt-1 font-sans text-xs text-[var(--ink-soft)]">{clientName(clientes, charge.cliente_id)} · {charge.metodo}</p>
+              <Button type="button" size="sm" variant="outline" className="mt-2.5 bg-[var(--paper-raised)]" onClick={() => retryCharge(charge.id)}>
+                <RefreshCw className="mr-1 h-4 w-4" aria-hidden /> Reintentar cobro
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -212,22 +389,37 @@ function HubCapacity({ hubs, casilleros }: { hubs: Hub[]; casilleros: Casillero[
         const loaded = hubLockers.filter((item) => item.estado === "cargado").length;
         const issues = hubLockers.filter((item) => item.estado === "incidencia").length;
         const occupation = Math.round((loaded / hub.casilleros_total) * 100);
+        const tone = occupation >= 85 ? "var(--danger)" : occupation >= 60 ? "var(--warn)" : "var(--ok)";
         return (
-          <Card key={hub.id} className="">
-            <CardContent className="p-md">
-              <div className="flex items-start justify-between gap-sm">
-                <div><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3></div>
-                {issues > 0 ? <StatusPill tone="danger" label={`${issues} alerta`} /> : <StatusPill tone="success" label="estable" />}
+          <article key={hub.id} className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">{hub.colonia}</p>
+                <h3 className="mt-1 font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">{hub.nombre}</h3>
               </div>
-              <div className="mt-sm"><div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Cargados</span><span>{loaded}/{hub.casilleros_total}</span></div><ProgressBar value={occupation} /></div>
-            </CardContent>
-          </Card>
+              {issues > 0 ? <StatusPill tone="danger" label={`${issues} alerta${issues > 1 ? "s" : ""}`} /> : <StatusPill tone="success" label="estable" />}
+            </div>
+            <div className="mt-4">
+              <div className="mb-2 flex justify-between font-sans text-xs text-[var(--ink-soft)]">
+                <span>Casilleros cargados</span>
+                <span className="font-mono font-medium text-[var(--ink)]">{loaded}/{hub.casilleros_total}</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                <div className="h-full rounded-full transition-all duration-base" style={{ width: `${occupation}%`, background: tone }} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-3">
+              <span className="font-sans text-xs text-[var(--ink-faint)]">{hub.clientes_activos} clientes activos</span>
+              <Link href="/operador/casilleros" className="inline-flex items-center gap-1 font-sans text-xs font-semibold text-[var(--brand)] hover:underline">
+                Ver red <ArrowRight className="h-3 w-3" aria-hidden />
+              </Link>
+            </div>
+          </article>
         );
       })}
     </div>
   );
 }
-
 function ProductionView({ weekly }: { weekly: boolean }) {
   const { entregas, productos, hubs } = useTahonaStore();
   const relevant = weekly ? entregas.slice(0, 126) : entregas.filter((item) => item.fecha === today);
