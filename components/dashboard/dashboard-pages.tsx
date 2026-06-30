@@ -411,29 +411,51 @@ function OperationsPage() {
   const { entregas, incidencias, hubs, casilleros } = useTahonaStore();
   const todayDeliveries = entregas.filter((item) => item.fecha === today);
   const onTime = entregas.filter((item) => item.estado === "entregado" || item.estado === "listo").length / entregas.length;
+  const occupation = hubs.reduce((sum, hub) => sum + hub.casilleros_ocupados_actual / hub.casilleros_total, 0) / hubs.length;
   const openIncidents = incidencias.filter((item) => item.estado !== "resuelta");
+  const delivered = entregas.filter((item) => item.estado === "entregado").length;
+
   const columns: Array<DataTableColumn<Incidencia>> = [
-    { key: "tipo", header: "Tipo", render: (row) => row.tipo.replaceAll("_", " ") },
+    { key: "tipo", header: "Tipo", render: (row) => <span className="capitalize">{row.tipo.replaceAll("_", " ")}</span> },
     { key: "hub", header: "Hub", render: (row) => hubName(hubs, row.hub_id) },
     { key: "fecha", header: "Fecha", render: (row) => shortDate(row.fecha) },
     { key: "estado", header: "Estado", render: (row) => <StatusPill tone={row.estado === "abierta" ? "danger" : "warning"} label={row.estado.replaceAll("_", " ")} /> }
   ];
+
   return (
-    <PageShell eyebrow="Operación" title="Capacidad, entregas y excepciones de red." description="Dirección necesita saber si la operación puede escalar antes de vender más.">
+    <PageShell
+      eyebrow="Operación"
+      title="Capacidad, entregas y excepciones de red."
+      description="Dirección necesita saber si la operación puede escalar antes de vender más."
+    >
       <div className="grid gap-sm md:grid-cols-4">
-        <KpiCard label="Entregas hoy" value={todayDeliveries.length} icon={Package} helper="Pedidos programados" />
-        <KpiCard label="On-time proxy" value={onTime} formatter={formatPercent} icon={ShieldCheck} target=">94%" />
-        <KpiCard label="Ocupación" value={hubs.reduce((sum, hub) => sum + hub.casilleros_ocupados_actual / hub.casilleros_total, 0) / hubs.length} formatter={formatPercent} icon={Boxes} />
-        <KpiCard label="Incidencias abiertas" value={openIncidents.length} icon={AlertTriangle} />
+        <KpiCard label="Entregas hoy" value={todayDeliveries.length} icon={Package} helper={`${delivered} entregadas en total`} />
+        <KpiCard label="On-time proxy" value={onTime} formatter={formatPercent} icon={ShieldCheck} target=">94%" delta={onTime >= 0.94 ? "en meta" : "vigilar"} deltaTone={onTime >= 0.94 ? "up" : "down"} />
+        <KpiCard label="Ocupación de red" value={occupation} formatter={formatPercent} icon={Boxes} helper="Casilleros usados" />
+        <KpiCard label="Incidencias abiertas" value={openIncidents.length} icon={AlertTriangle} delta={openIncidents.length ? "atender" : "estable"} deltaTone={openIncidents.length ? "down" : "up"} />
       </div>
       <div className="mt-md grid gap-md xl:grid-cols-[0.9fr_1.1fr]">
         <HubCapacityTable hubs={hubs} />
-        <Card className="shadow-sm"><CardHeader><CardTitle>Incidencias abiertas</CardTitle></CardHeader><CardContent><DataTable rows={openIncidents} columns={columns} getRowId={(row) => row.id} /></CardContent></Card>
+        <Card className="shadow-sm">
+          <CardHeader className="flex-row items-center justify-between gap-sm">
+            <CardTitle>Incidencias abiertas</CardTitle>
+            {openIncidents.length ? (
+              <span className="rounded-full bg-[var(--danger-bg)] px-2.5 py-1 font-mono text-xs font-semibold text-[var(--danger)]">{openIncidents.length}</span>
+            ) : null}
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              rows={openIncidents}
+              columns={columns}
+              getRowId={(row) => row.id}
+              emptyState={<p className="py-6 text-center font-sans text-sm text-[var(--ink-faint)]">Sin incidencias abiertas. Red estable.</p>}
+            />
+          </CardContent>
+        </Card>
       </div>
     </PageShell>
   );
 }
-
 function CustomersPage() {
   const { clientes, cobros } = useTahonaStore();
   const columns: Array<DataTableColumn<Cliente>> = [
@@ -489,8 +511,13 @@ function ProductsPage() {
 
 function HubsPage() {
   const { hubs, casilleros } = useTahonaStore();
+
   return (
-    <PageShell eyebrow="Hubs" title="Capacidad territorial y ocupación de red." description="Expansión responsable: ver clientes activos, casilleros y presión por hub.">
+    <PageShell
+      eyebrow="Hubs"
+      title="Capacidad territorial y ocupación de red."
+      description="Expansión responsable: clientes activos, casilleros y presión por hub."
+    >
       <div className="grid gap-md xl:grid-cols-[1fr_0.95fr]">
         <HubMap hubs={hubs} />
         <HubCapacityTable hubs={hubs} />
@@ -498,13 +525,37 @@ function HubsPage() {
       <div className="mt-md grid gap-sm md:grid-cols-3">
         {hubs.map((hub) => {
           const issues = casilleros.filter((item) => item.hub_id === hub.id && item.estado === "incidencia").length;
-          return <Card key={hub.id} className="shadow-sm"><CardContent className="p-md"><p className="text-caption font-semibold uppercase text-primary">{hub.colonia}</p><h3 className="mt-1 text-h3 font-semibold">{hub.nombre}</h3><p className="mt-2 text-sm text-muted-foreground">{hub.gerente} · {hub.clientes_activos} clientes</p><div className="mt-sm"><ProgressBar value={(hub.casilleros_ocupados_actual / hub.casilleros_total) * 100} /></div><div className="mt-sm">{issues ? <StatusPill tone="danger" label={`${issues} incidencias`} /> : <StatusPill tone="success" label="estable" />}</div></CardContent></Card>;
+          const occupation = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+          const tone = occupation >= 85 ? "var(--danger)" : occupation >= 60 ? "var(--warn)" : "var(--ok)";
+          return (
+            <article key={hub.id} className="rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] p-5 shadow-[var(--shadow-sm)]">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--brand)]">{hub.colonia}</p>
+                  <h3 className="mt-1 font-sans text-[1.0625rem] font-semibold text-[var(--ink)]">{hub.nombre}</h3>
+                </div>
+                {issues ? <StatusPill tone="danger" label={`${issues} incid.`} /> : <StatusPill tone="success" label="estable" />}
+              </div>
+              <p className="mt-2 flex items-center gap-1.5 font-sans text-sm text-[var(--ink-soft)]">
+                <Users className="h-4 w-4 text-[var(--ink-faint)]" aria-hidden /> {hub.gerente} · {hub.clientes_activos} clientes
+              </p>
+              <div className="mt-4">
+                <div className="mb-1.5 flex justify-between font-sans text-xs text-[var(--ink-soft)]">
+                  <span>Ocupación</span>
+                  <span className="font-mono font-medium text-[var(--ink)]">{occupation}%</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-[var(--paper-sunken)]">
+                  <div className="h-full rounded-full transition-all duration-base" style={{ width: `${occupation}%`, background: tone }} />
+                </div>
+                <p className="mt-1.5 font-mono text-xs text-[var(--ink-faint)]">{hub.casilleros_ocupados_actual}/{hub.casilleros_total} casilleros</p>
+              </div>
+            </article>
+          );
         })}
       </div>
     </PageShell>
   );
 }
-
 function ProjectionsPage() {
   const scenarios = [
     { scenario: "Base", hubs: 3, clientes: 230, revenue: 498000, setupCost: 0, risk: "Bajo" },
