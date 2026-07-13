@@ -49,6 +49,8 @@ import { Input } from "@/components/ui/input";
 import { ProductCard as CatalogProductCard } from "@/components/ui/product-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { StickyCTA } from "@/components/ui/sticky-cta";
+import { PaymentStep } from "@/components/cliente/payment-step";
+import { ConfirmationPass } from "@/components/cliente/confirmation-pass";
 import { Textarea } from "@/components/ui/textarea";
 import { HubMap } from "@/components/shared/hub-map";
 import { ProgressBar } from "@/components/shared/progress";
@@ -2099,37 +2101,6 @@ function AccountStep({
     </div>
   );
 }
-function CheckoutPaymentFields({ total }: { total: number }) {
-  return (
-    <div className="mt-md grid gap-sm">
-      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-        <LockKeyhole className="h-4 w-4 text-success" aria-hidden />
-        Pago seguro - Visa - Mastercard - Stripe
-      </div>
-      <Card className="">
-        <CardContent className="grid gap-sm p-md md:grid-cols-2">
-          <Field label="Numero de tarjeta" inputMode="numeric" placeholder="4242 4242 4242 4242" required className="md:col-span-2" />
-          <Field label="Vencimiento" inputMode="numeric" placeholder="MM/AA" required />
-          <Field label="CVV" inputMode="numeric" placeholder="123" required />
-        </CardContent>
-      </Card>
-      <div className="rounded-lg border border-info/20 bg-info-bg p-sm text-sm leading-6 text-info">
-        Se cobra {formatCurrency(total)} cada viernes antes de tu retiro. Cancela, salta o pausa cuando quieras.
-      </div>
-      <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-sm">
-        <AccordionItem value="coupon">
-          <AccordionTrigger>Tienes un codigo o facturacion?</AccordionTrigger>
-          <AccordionContent>
-            <div className="grid gap-xs md:grid-cols-2">
-              <Field label="Cupon" placeholder="TAHONA10" />
-              <Field label="RFC" placeholder="Opcional" />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
-  );
-}
 
 type CheckoutData = {
   dia?: string;
@@ -2139,6 +2110,7 @@ type CheckoutData = {
   email?: string;
   nota?: string;
   verified?: boolean;
+  pagado?: boolean;
 };
 
 function useCheckout(): [CheckoutData, (patch: Partial<CheckoutData>) => void] {
@@ -2425,11 +2397,13 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
     if (typeof window !== "undefined") window.localStorage.setItem("tahona:hub", id);
   }
 
-  const canContinue =
+const canContinue =
     step === "horarios"
       ? Boolean(checkout.dia && checkout.hora)
       : step === "direccion"
       ? Boolean(checkout.verified && (checkout.nombre ?? "").trim())
+      : step === "pago"
+      ? Boolean(checkout.pagado)
       : true;
 
   const ContinueButton = ({ full }: { full?: boolean }) =>
@@ -2544,26 +2518,10 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
           ) : null}
 
           {step === "direccion" ? <AccountStep checkout={checkout} update={updateCheckout} /> : null}
-          {step === "pago" ? <CheckoutPaymentFields total={total} /> : null}
+          {step === "pago" ? <PaymentStep total={total} nextHref={copy.next} update={updateCheckout} /> : null}
 
-          {step === "confirmacion" ? (
-            <div className="mt-md space-y-4">
-              <div className="flex items-center gap-3 rounded-[16px] border border-[var(--ok)]/30 bg-[var(--ok-bg)] px-5 py-4">
-                <Check className="h-6 w-6 text-[var(--ok)]" aria-hidden />
-                <div>
-                  <p className="font-serif text-[1.125rem] font-medium text-[var(--ink)]">Pedido confirmado</p>
-                  <p className="font-sans text-sm text-[var(--ink-soft)]">
-                    {selectedHub.nombre} · {checkout.dia ?? "Viernes"} · {checkout.hora ?? selectedHub.slots_horarios[0]}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-[16px] border border-[var(--line)] bg-[var(--paper-raised)] px-5 py-4">
-                <QrCode className="h-6 w-6 text-[var(--brand)]" aria-hidden />
-                <p className="font-sans text-sm text-[var(--ink-soft)]">
-                  Tu pase de retiro estará disponible en tu cuenta cuando el casillero se cargue.
-                </p>
-              </div>
-            </div>
+         {step === "confirmacion" ? (
+            <ConfirmationPass hub={selectedHub} dia={checkout.dia} hora={checkout.hora} items={items} total={total} />
           ) : null}
         </section>
 
@@ -2612,7 +2570,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
         </aside>
       </Container>
 
-      {step !== "confirmacion" ? (
+     {step !== "confirmacion" && step !== "pago" ? (
         <StickyCTA
           label="Pedido Tahona"
           helper={canContinue ? "Listo para continuar" : "Completa este paso"}
