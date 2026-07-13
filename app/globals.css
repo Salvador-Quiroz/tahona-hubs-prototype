@@ -471,12 +471,7 @@
   }
 }
 
-/* Seguro anti-pantalla-en-blanco: si Framer deja algo en opacity:0 inline y no lo anima, lo mostramos. */
-[style*="opacity:0"],
-[style*="opacity: 0"] {
-  opacity: 1 !important;
-  transform: none !important;
-}
+
 
 @media (prefers-reduced-motion: reduce) {
   .enter-soft,
