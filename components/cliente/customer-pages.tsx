@@ -3554,27 +3554,3 @@ export function SupportPage() {
   );
 }
 
-export function AuthPage({ mode }: { mode: "login" | "registro" }) {
-  const isLogin = mode === "login";
-  return (
-    <main className="storefront-shell grid min-h-[calc(100svh-80px)] lg:grid-cols-[0.95fr_1.05fr]">
-      <section className="relative hidden overflow-hidden bg-foreground text-white lg:block">
-        <Image src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=82&w=2000&auto=format&fit=crop" alt="Pan Tahona" fill sizes="50vw" className="object-cover opacity-72" />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-transparent" />
-        <div className="absolute bottom-xl left-xl max-w-lg"><p className="eyebrow-mark text-caption font-semibold uppercase text-secondary">Tahona</p><h1 className="mt-2 font-display text-display font-semibold">Tu pan semanal, listo para retirar.</h1></div>
-      </section>
-      <section className="flex items-center justify-center p-md">
-        <Card className="w-full max-w-md shadow-md">
-          <CardHeader><CardTitle>{isLogin ? "Entrar a mi cuenta" : "Crear cuenta"}</CardTitle></CardHeader>
-          <CardContent className="space-y-sm">
-            {!isLogin ? <Field label="Nombre" placeholder="Mariana Soto" /> : null}
-            <Field label="Correo" type="email" placeholder="nombre@correo.com" />
-            <Field label="Contrasena" type="password" placeholder="********" />
-            <Button asChild className="w-full"><Link href="/cuenta">{isLogin ? "Entrar" : "Crear cuenta"}</Link></Button>
-            <Button asChild variant="ghost" className="w-full"><Link href={isLogin ? "/registro" : "/login"}>{isLogin ? "Crear cuenta" : "Ya tengo cuenta"}</Link></Button>
-          </CardContent>
-        </Card>
-      </section>
-    </main>
-  );
-}
