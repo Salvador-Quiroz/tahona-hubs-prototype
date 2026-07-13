@@ -928,7 +928,8 @@ function CatalogoExactPage() {
   const [toast, setToast] = useState("");
   const countdown = useWeeklyCutoffCountdown();
   const hub = useSelectedHub();
-
+  const [clientNow, setClientNow] = useState<Date | null>(null);
+  useEffect(() => setClientNow(new Date()), []);
   const cliente = clientes.find((c) => c.id === currentClientId);
   const suscripcion = suscripciones.find((s) => s.cliente_id === currentClientId);
   const isSubscriber = Boolean(suscripcion && suscripcion.estado !== "cancelada");
@@ -946,16 +947,21 @@ function CatalogoExactPage() {
     .map((item) => ({ product: productos.find((p) => p.id === item.producto_id), cantidad: item.cantidad }))
     .filter((x): x is { product: Producto; cantidad: number } => Boolean(x.product));
 
-  const especiales = productos.filter((p) => p.categoria === "Especiales");
-  const weekIndex = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
-  const especial = especiales.length
-    ? especiales[weekIndex % especiales.length]
-    : productos[weekIndex % productos.length];
+ const especiales = productos.filter((p) => p.categoria === "Especiales");
+  const weekIndex = clientNow ? Math.floor(clientNow.getTime() / (7 * 24 * 3600 * 1000)) : null;
+  const especial =
+    weekIndex === null
+      ? null
+      : especiales.length
+      ? especiales[weekIndex % especiales.length]
+      : productos[weekIndex % productos.length];
 
   const dayNames = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  const today = dayNames[new Date().getDay()];
-  const recienHoy = productos.filter((p) => (p.disponibilidad as string[]).includes(today)).slice(0, 8);
-
+  const today = clientNow ? dayNames[clientNow.getDay()] : null;
+  const recienHoy = today
+    ? productos.filter((p) => (p.disponibilidad as string[]).includes(today)).slice(0, 8)
+    : [];
+  
   function flash(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 2000);
