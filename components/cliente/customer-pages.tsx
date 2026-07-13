@@ -372,9 +372,11 @@ function BoardingPass({ entrega, hub, productos }: { entrega: Entrega; hub: Hub;
 export function LandingPage() {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const hero = productos[0];
+  const secondary = productos[3] ?? productos[1];
   const featured = productos.slice(0, 4);
   const showcase = productos.slice(0, 4);
   const countdown = useWeeklyCutoffCountdown();
+  const reduceMotion = useReducedMotion();
 
   const marquee = [
     "Hogazas de masa madre",
@@ -400,7 +402,7 @@ export function LandingPage() {
         <motion.div
           className="pointer-events-none absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full opacity-30 blur-[90px]"
           style={{ background: "radial-gradient(circle, var(--accent), transparent 70%)" }}
-          animate={{ y: [0, 18, 0] }}
+          animate={reduceMotion ? undefined : { y: [0, 18, 0] }}
           transition={{ duration: 9, ease: "easeInOut", repeat: Infinity }}
           aria-hidden
         />
@@ -487,18 +489,52 @@ export function LandingPage() {
               </motion.div>
             ))}
           </motion.div>
+           {/* Fotografía — móvil (antes no existía: el hero móvil era solo texto) */}
+          <div className="relative lg:hidden">
+            <div className="grid grid-cols-[1.6fr_1fr] gap-3">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[18px] border border-white/20 shadow-[0_20px_50px_rgba(8,18,60,.45)]">
+                <Image
+                  src={hero.imagen_url}
+                  alt={hero.nombre}
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 0px, 62vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/45 via-transparent to-transparent" aria-hidden />
+                <div className="absolute bottom-2.5 left-2.5 rounded-full bg-[var(--accent)] px-2.5 py-1 font-mono text-[0.8125rem] font-medium text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                  {formatCurrency(hero.precio_mxn)}
+                </div>
+              </div>
+              <div className="relative overflow-hidden rounded-[18px] border border-white/20 shadow-[0_20px_50px_rgba(8,18,60,.45)]">
+                <Image
+                  src={secondary.imagen_url}
+                  alt={secondary.nombre}
+                  fill
+                  sizes="(min-width: 1024px) 0px, 34vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/45 via-transparent to-transparent" aria-hidden />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-white/20 bg-[rgba(16,26,46,.62)] px-4 py-2.5 backdrop-blur-md">
+              <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[var(--accent)]" aria-hidden />
+              <p className="font-sans text-[0.6875rem] uppercase tracking-[0.1em] text-white/70">El corte cierra en</p>
+              <p className="ml-auto font-mono text-[1rem] font-medium text-white [font-variant-numeric:tabular-nums]">
+                {countdown}
+              </p>
+            </div>
+          </div>
 
-          {/* Foto */}
+          {/* Fotografía — desktop, composición editorial en capas */}
           <div className="relative hidden lg:block">
-            <motion.div
-              className="absolute -right-5 -top-5 -z-10 h-28 w-28 rounded-[22px] bg-[var(--accent)]"
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 7, ease: "easeInOut", repeat: Infinity }}
+            <div
+              className="absolute -right-6 top-10 -z-10 h-44 w-24 rotate-6 rounded-[18px] bg-[var(--accent)]"
               aria-hidden
             />
             <motion.div
-              className="relative aspect-[4/5] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(8,18,60,.5)]"
-              animate={{ y: [0, -14, 0] }}
+              className="relative ml-auto aspect-[3/4] w-[86%] overflow-hidden rounded-[24px] border border-white/20 shadow-[0_30px_80px_rgba(8,18,60,.5)]"
+              animate={reduceMotion ? undefined : { y: [0, -12, 0] }}
               transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
             >
               <Image
@@ -509,26 +545,55 @@ export function LandingPage() {
                 sizes="(max-width: 1024px) 0px, 540px"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/45 via-transparent to-transparent" aria-hidden />
+              <div
+                className="absolute inset-0 opacity-[0.18] mix-blend-overlay"
+                style={{
+                  backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+                  backgroundSize: "3px 3px"
+                }}
+                aria-hidden
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2470]/50 via-transparent to-transparent" aria-hidden />
               <div className="absolute bottom-5 left-5 rounded-[14px] bg-white/95 px-4 py-3 shadow-[var(--shadow-lg)] backdrop-blur-sm">
                 <p className="font-sans text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[var(--brand)]">
                   Recién horneado
                 </p>
                 <p className="mt-0.5 font-serif text-[1.05rem] font-medium text-[var(--ink)]">{hero.nombre}</p>
               </div>
-              <div className="absolute right-4 top-4 rounded-full bg-[var(--accent)] px-3 py-1.5 font-mono text-sm font-medium text-[var(--ink)] shadow-[0_8px_22px_rgba(0,0,0,.2)]">
+              <div className="absolute right-4 top-4 rounded-full bg-[var(--accent)] px-3 py-1.5 font-mono text-sm font-medium text-[var(--ink)] shadow-[0_8px_22px_rgba(0,0,0,.2)] [font-variant-numeric:tabular-nums]">
                 {formatCurrency(hero.precio_mxn)}
               </div>
             </motion.div>
 
-            {/* Chip de cuenta regresiva — flotante a la altura del título */}
+            <motion.div
+              className="absolute -left-2 bottom-10 aspect-square w-[42%] -rotate-3 overflow-hidden rounded-[20px] border-4 border-[var(--paper)] shadow-[0_24px_60px_rgba(8,18,60,.55)]"
+              animate={reduceMotion ? undefined : { y: [0, 8, 0] }}
+              transition={{ duration: 10, ease: "easeInOut", repeat: Infinity }}
+            >
+              <Image
+                src={secondary.imagen_url}
+                alt={secondary.nombre}
+                fill
+                sizes="(max-width: 1024px) 0px, 260px"
+                className="object-cover"
+              />
+              <div
+                className="absolute inset-0 opacity-[0.18] mix-blend-overlay"
+                style={{
+                  backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+                  backgroundSize: "3px 3px"
+                }}
+                aria-hidden
+              />
+            </motion.div>
+
             <motion.div
               className="absolute -left-10 top-6 z-10 flex items-center gap-3 rounded-2xl border border-white/20 bg-[rgba(16,26,46,.62)] px-4 py-3 shadow-[0_18px_40px_rgba(8,18,60,.4)] backdrop-blur-md"
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: easeOutSoft, delay: 0.4 }}
             >
-              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[var(--accent)]" />
+              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[var(--accent)]" aria-hidden />
               <div className="min-w-0">
                 <p className="font-sans text-[0.625rem] uppercase tracking-[0.1em] text-white/70">El corte cierra en</p>
                 <p className="mt-0.5 font-mono text-[1.2rem] font-medium text-white [font-variant-numeric:tabular-nums]">
@@ -536,7 +601,7 @@ export function LandingPage() {
                 </p>
               </div>
             </motion.div>
-          </div>
+          </div>          
         </Container>
       </section>
 
