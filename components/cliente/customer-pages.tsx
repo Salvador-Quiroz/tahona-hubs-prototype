@@ -50,7 +50,6 @@ import { ProductCard as CatalogProductCard } from "@/components/ui/product-card"
 import { StatusPill } from "@/components/ui/status-pill";
 import { StickyCTA } from "@/components/ui/sticky-cta";
 import { Toast, useToast } from "@/components/ui/toast";
-import { CartBar } from "@/components/ui/cart-bar";
 import { PaymentStep } from "@/components/cliente/payment-step";
 import { ConfirmationPass } from "@/components/cliente/confirmation-pass";
 import { Textarea } from "@/components/ui/textarea";
@@ -1044,7 +1043,9 @@ function CatalogoExactPage() {
   return (
     <main className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <div className="mx-auto w-full max-w-[1240px] px-4 pb-28 pt-10 md:px-6 lg:pb-16">
-        <section className="grid gap-6 pb-7 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+        <div className="min-w-0">
+        <section className="grid gap-6 pb-7 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
           <div>
             {hub ? (
               <p className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-tint)] px-3 py-1 font-sans text-[0.75rem] font-semibold text-[var(--brand)]">
@@ -1113,8 +1114,8 @@ function CatalogoExactPage() {
           />
         ) : null}
 
-        <section className="mt-8 sticky top-[calc(64px+env(safe-area-inset-top))] z-20 -mx-4 border-y border-[var(--line)] bg-[rgba(251,248,243,.86)] px-4 py-4 backdrop-blur-[12px] md:-mx-6 md:px-6">
-          <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4">
+        <section className="mt-8 sticky top-[calc(64px+env(safe-area-inset-top))] z-20 -mx-4 border-y border-[var(--line)] bg-[rgba(251,248,243,.86)] px-4 py-4 backdrop-blur-[12px] md:-mx-6 md:px-6 lg:mx-0 lg:rounded-[14px] lg:border lg:px-4">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
               {categories.map((item) => {
                 const active = item === category;
@@ -1141,8 +1142,8 @@ function CatalogoExactPage() {
           </div>
         </section>
 
-        <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mt-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((product) => (
               <TahonaCatalogCard
                 key={product.id}
@@ -1154,15 +1155,18 @@ function CatalogoExactPage() {
             ))}
             {!filtered.length ? <CatalogEmptyState onReset={() => setCategory("Todo")} /> : null}
           </div>
-          <CatalogBag
-            items={cartItems}
-            count={cartCount}
-            total={cartTotal}
-            onIncrement={(product) => handleAdd(product)}
-            onDecrement={(product) => removeFromCart(product.id)}
-            onRemove={(product) => setCartQuantity(product.id, 0)}
-          />
         </section>
+        </div>
+
+        <CatalogBag
+          items={cartItems}
+          count={cartCount}
+          total={cartTotal}
+          onIncrement={(product) => handleAdd(product)}
+          onDecrement={(product) => removeFromCart(product.id)}
+          onRemove={(product) => setCartQuantity(product.id, 0)}
+        />
+        </div>
       </div>
 
       <MobileCatalogBar count={cartCount} total={cartTotal} onOpen={() => setSheetOpen(true)} />
@@ -1181,10 +1185,7 @@ function CatalogoExactPage() {
           onRemove={(product) => setCartQuantity(product.id, 0)}
         />
       </BottomSheet>
-      <AnimatePresence>
-        <CartBar />
-        <Toast message={toast} raised />
-      </AnimatePresence>
+      <Toast message={toast} raised />
     </main>
   );
 }
