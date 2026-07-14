@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -94,6 +94,10 @@ function TahonaWordmark({ compact = false, inverse = false }: { compact?: boolea
 
 export function ClienteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isFirstLoad = useRef(true);
+  useEffect(() => {
+    isFirstLoad.current = false;
+  }, []);
   const collapsed = useCollapsedHeader();
   const reduceMotion = useReducedMotion();
 
@@ -195,17 +199,14 @@ export function ClienteShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={reduceMotion ? false : { opacity: 0, y: 14, scale: 0.992 }}
-          animate={reduceMotion ? {} : { opacity: 1, y: 0, scale: 1 }}
-          exit={reduceMotion ? {} : { opacity: 0, y: -8, scale: 0.996 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <motion.div
+        key={pathname}
+        initial={reduceMotion || isFirstLoad.current ? false : { opacity: 0, y: 14, scale: 0.992 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {children}
+      </motion.div>
 
       <ClienteFooter />
 
