@@ -50,6 +50,7 @@ import { ProductCard as CatalogProductCard } from "@/components/ui/product-card"
 import { StatusPill } from "@/components/ui/status-pill";
 import { StickyCTA } from "@/components/ui/sticky-cta";
 import { Toast, useToast } from "@/components/ui/toast";
+import { CartBar } from "@/components/ui/cart-bar";
 import { PaymentStep } from "@/components/cliente/payment-step";
 import { ConfirmationPass } from "@/components/cliente/confirmation-pass";
 import { Textarea } from "@/components/ui/textarea";
@@ -1181,7 +1182,8 @@ function CatalogoExactPage() {
         />
       </BottomSheet>
       <AnimatePresence>
-        <Toast message={toast} />
+        <CartBar />
+        <Toast message={toast} raised />
       </AnimatePresence>
     </main>
   );
@@ -1191,22 +1193,22 @@ function useSelectedHub() {
   const hubs = useTahonaStore((s) => s.hubs);
   const clientes = useTahonaStore((s) => s.clientes);
   const currentClientId = useTahonaStore((s) => s.currentClientId);
-  const fallback = clientes.find((c) => c.id === currentClientId)?.hub_asignado_id ?? hubs[0]?.id ?? "";
-  const [hubId, setHubId] = useState(fallback);
+  const selectedHubId = useTahonaStore((s) => s.selectedHubId);
+  const setSelectedHub = useTahonaStore((s) => s.setSelectedHub);
 
+  // Hidratación única desde localStorage (idempotente; corre donde sea que se use primero)
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const read = () => {
+    if (selectedHubId) return;
+    try {
       const v = window.localStorage.getItem("tahona:hub");
-      if (v && hubs.some((h) => h.id === v)) setHubId(v);
-    };
-    read();
-    window.addEventListener("storage", read);
-    return () => window.removeEventListener("storage", read);
-  }, [hubs]);
+      if (v && hubs.some((h) => h.id === v)) setSelectedHub(v);
+    } catch {}
+  }, [selectedHubId, hubs, setSelectedHub]);
 
-  return hubs.find((h) => h.id === hubId) ?? hubs[0];
+  const fallback = clientes.find((c) => c.id === currentClientId)?.hub_asignado_id ?? hubs[0]?.id ?? "";
+  return hubs.find((h) => h.id === (selectedHubId ?? fallback)) ?? hubs[0];
 }
+
 
 function CatalogRail({
   icon: Icon,
@@ -2414,11 +2416,10 @@ export function BagPage() {
 export function SubscriptionStepPage({ step }: { step: Step }) {
   const { productos, hubs, cart, addToCart, removeFromCart } = useTahonaStore();
   const copy = stepCopy[step];
-  const baseHub = useSelectedHub();
+  const selectedHub = useSelectedHub();
+  const selectedHubId = selectedHub?.id ?? "";
+  const setSelectedHub = useTahonaStore((s) => s.setSelectedHub);
   const [checkout, updateCheckout] = useCheckout();
-  const [selectedHubId, setSelectedHubId] = useState<string>(baseHub?.id ?? hubs[0]?.id ?? "");
-
-  const selectedHub = hubs.find((h) => h.id === selectedHubId) ?? baseHub ?? hubs[0];
   const pickupDays = ["Viernes", "Sábado", "Domingo"];
 
   const items = productos
@@ -2426,10 +2427,7 @@ export function SubscriptionStepPage({ step }: { step: Step }) {
     .filter((item) => item.quantity > 0);
   const total = items.reduce((sum, item) => sum + item.product.precio_mxn * item.quantity, 0);
 
-  function chooseHub(id: string) {
-    setSelectedHubId(id);
-    if (typeof window !== "undefined") window.localStorage.setItem("tahona:hub", id);
-  }
+  const chooseHub = setSelectedHub;
 
 const canContinue =
     step === "horarios"
