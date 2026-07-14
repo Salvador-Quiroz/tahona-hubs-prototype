@@ -25,6 +25,8 @@ type TahonaState = {
   cobros: Cobro[];
   incidencias: Incidencia[];
   currentClientId: string;
+  selectedHubId: string | null;
+  setSelectedHub: (id: string) => void;
   cart: Record<string, number>;
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
@@ -55,6 +57,13 @@ function cobroAfterRetry(cobro: Cobro): Cobro {
 export const useTahonaStore = create<TahonaState>((set) => ({
   ...data,
   currentClientId: "cl-001",
+  selectedHubId: null,
+  setSelectedHub: (id) => {
+    try {
+      window.localStorage.setItem("tahona:hub", id);
+    } catch {}
+    set({ selectedHubId: id });
+  },
   cart: {},
   addToCart: (productId) =>
     set((state) => ({
