@@ -231,21 +231,22 @@ function HubSwitcher() {
     clientes.find((c) => c.id === currentClientId)?.hub_asignado_id ?? hubs[0]?.id ?? "";
 
   const [open, setOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string>(defaultHubId);
+  const selectedHubId = useTahonaStore((s) => s.selectedHubId);
+  const setSelectedHub = useTahonaStore((s) => s.setSelectedHub);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? window.localStorage.getItem("tahona:hub") : null;
-    if (stored && hubs.some((h) => h.id === stored)) {
-      setSelectedId(stored);
-    }
-  }, [hubs]);
+    if (selectedHubId) return;
+    try {
+      const stored = window.localStorage.getItem("tahona:hub");
+      if (stored && hubs.some((h) => h.id === stored)) setSelectedHub(stored);
+    } catch {}
+  }, [selectedHubId, hubs, setSelectedHub]);
 
-  const selected = hubs.find((h) => h.id === selectedId) ?? hubs[0];
+  const selected = hubs.find((h) => h.id === (selectedHubId ?? defaultHubId)) ?? hubs[0];
   if (!selected) return null;
 
   const choose = (id: string) => {
-    setSelectedId(id);
-    if (typeof window !== "undefined") window.localStorage.setItem("tahona:hub", id);
+    setSelectedHub(id);
     setOpen(false);
   };
 
