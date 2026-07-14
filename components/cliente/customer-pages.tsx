@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -10,6 +10,7 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   CreditCard,
@@ -1230,6 +1231,36 @@ function CatalogRail({
   onAdd: (product: Producto) => void;
   onRemove: (product: Producto) => void;
 }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateEdges = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 8);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    updateEdges();
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateEdges, { passive: true });
+    const ro = new ResizeObserver(updateEdges);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateEdges);
+      ro.disconnect();
+    };
+  }, [updateEdges, products.length]);
+
+  function nudge(dir: 1 | -1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: "smooth" });
+  }
+
   return (
     <section className="mt-8">
       <div className="mb-3 flex items-end justify-between gap-4">
@@ -1242,19 +1273,62 @@ function CatalogRail({
             {subtitle ? <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">{subtitle}</p> : null}
           </div>
         </div>
-        {action}
+        <div className="flex shrink-0 items-center gap-2">
+          {action}
+          {canLeft || canRight ? (
+            <div className="hidden items-center gap-1.5 lg:flex">
+              <button
+                type="button"
+                onClick={() => nudge(-1)}
+                disabled={!canLeft}
+                aria-label={`Retroceder en ${title}`}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] shadow-[var(--shadow-sm)] transition-all duration-fast hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:pointer-events-none disabled:opacity-35"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => nudge(1)}
+                disabled={!canRight}
+                aria-label={`Avanzar en ${title}`}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--paper-raised)] text-[var(--ink)] shadow-[var(--shadow-sm)] transition-all duration-fast hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:pointer-events-none disabled:opacity-35"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
-      <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {products.map((product) => (
-          <div key={product.id} className="w-[230px] shrink-0 sm:w-[250px]">
-            <TahonaCatalogCard
-              product={product}
-              quantity={cart[product.id] ?? 0}
-              onAdd={() => onAdd(product)}
-              onRemove={() => onRemove(product)}
-            />
-          </div>
-        ))}
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 lg:mx-0 lg:scroll-px-0 lg:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {products.map((product) => (
+            <div key={product.id} className="w-[230px] shrink-0 snap-start sm:w-[250px]">
+              <TahonaCatalogCard
+                product={product}
+                quantity={cart[product.id] ?? 0}
+                onAdd={() => onAdd(product)}
+                onRemove={() => onRemove(product)}
+              />
+            </div>
+          ))}
+        </div>
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 -left-px hidden w-14 bg-gradient-to-r from-[var(--paper)] to-transparent transition-opacity duration-base lg:block",
+            canLeft ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 -right-px hidden w-14 bg-gradient-to-l from-[var(--paper)] to-transparent transition-opacity duration-base lg:block",
+            canRight ? "opacity-100" : "opacity-0"
+          )}
+        />
       </div>
     </section>
   );
@@ -1393,7 +1467,7 @@ function useCountUp(value: number) {
 }
 
 function availabilityTone(days: number) {
-  return days >= 4 ? "Disponible" : "Pocas piezas";
+  return days >= 3 ? "Disponible" : "Pocas piezas";
 }
 
 function TahonaCatalogCard({
@@ -1409,14 +1483,14 @@ function TahonaCatalogCard({
 }) {
   const reduceMotion = useReducedMotion();
   const freshToday = product.disponibilidad.includes("viernes");
+  const lowStock = availabilityTone(product.disponibilidad.length) !== "Disponible";
 
   return (
     <motion.article
       initial={false}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={reduceMotion ? undefined : { y: -4, boxShadow: "var(--shadow-md)" }}
+      whileHover={reduceMotion ? undefined : { y: -4, boxShadow: "var(--shadow-lg)" }}
       transition={{ duration: 0.24, ease: easeOutSoft }}
-      className="group overflow-hidden rounded-[18px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)]"
+      className="group overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--paper-raised)] shadow-[var(--shadow-sm)] transition-colors duration-base hover:border-[var(--brand)]/25"
     >
       <div className="skeleton-shimmer relative aspect-[4/5] overflow-hidden">
         <Image
@@ -1424,92 +1498,86 @@ function TahonaCatalogCard({
           alt={product.nombre}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 292px"
-          className="object-cover transition-transform duration-base ease-out-soft group-hover:scale-[1.04]"
+          className="object-cover transition-transform duration-slow ease-out-soft group-hover:scale-[1.05]"
         />
-        <div className="absolute left-3 top-3 rounded-full border border-white/50 bg-white/85 px-2.5 py-1 font-sans text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)] backdrop-blur-[8px]">
+        {/* Scrim inferior: legibilidad de precio y control sin ensuciar la foto */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[rgba(20,16,12,.55)] via-[rgba(20,16,12,.14)] to-transparent"
+          aria-hidden
+        />
+        <span className="absolute left-3 top-3 rounded-full bg-[rgba(28,24,21,.5)] px-2.5 py-1 font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white backdrop-blur-[6px]">
           {product.categoria}
-        </div>
-        {freshToday ? (
-          <span
-            className="absolute right-3.5 top-3.5 h-2 w-2 rounded-full bg-[var(--accent)] shadow-[0_0_0_4px_rgba(255,207,90,.25)]"
-            aria-label="Recien horneado"
-          />
-        ) : null}
-      </div>
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="line-clamp-2 font-sans text-[1.0625rem] font-semibold leading-[1.25] text-[var(--ink)]">
-              {product.nombre}
-            </h2>
-            <p className="mt-1 line-clamp-1 font-sans text-[0.875rem] font-normal leading-[1.5] text-[var(--ink-soft)]">
-              {product.descripcion_corta}
-            </p>
-          </div>
-          <span
-            className={cn(
-              "hidden shrink-0 rounded-full px-2 py-1 font-sans text-[0.75rem] font-semibold sm:inline-flex",
-              availabilityTone(product.disponibilidad.length) === "Disponible"
-                ? "bg-[var(--ok-bg)] text-[var(--ok)]"
-                : "bg-[var(--warn-bg)] text-[var(--warn)]"
-            )}
-          >
-            {availabilityTone(product.disponibilidad.length)}
+        </span>
+        {lowStock ? (
+          <span className="absolute right-3 top-3 rounded-full bg-[var(--accent)] px-2.5 py-1 font-sans text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-[var(--ink)] shadow-[var(--shadow-sm)]">
+            Pocas piezas
           </span>
-        </div>
-        <div className="mt-[14px] flex items-center justify-between">
-          <p className="font-mono text-[1.125rem] font-medium text-[var(--ink)] transition-colors group-hover:text-[var(--brand)] [font-variant-numeric:tabular-nums]">
-            {formatCurrency(product.precio_mxn)}
-          </p>
-          <motion.div
-            layout
-            animate={{ width: quantity > 0 ? 112 : 40 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className={cn(
-              "flex h-10 items-center overflow-hidden rounded-full",
-              quantity > 0 ? "bg-[var(--brand-tint)] text-[var(--brand)]" : "bg-[var(--brand)] text-white"
-            )}
-          >
-            {quantity > 0 ? (
-              <>
-                <motion.button
-                  type="button"
-                  className="flex h-10 w-8 shrink-0 items-center justify-center"
-                  whileTap={{ scale: 0.92 }}
-                  transition={springPress}
-                  onClick={onRemove}
-                  aria-label="Quitar pieza"
-                >
-                  <Minus className="h-4 w-4" aria-hidden />
-                </motion.button>
-                <span className="flex h-10 min-w-12 flex-1 items-center justify-center font-mono text-sm font-medium [font-variant-numeric:tabular-nums]">
-                  {quantity}
-                </span>
-                <motion.button
-                  type="button"
-                  className="flex h-10 w-8 shrink-0 items-center justify-center"
-                  whileTap={{ scale: 0.92 }}
-                  transition={springPress}
-                  onClick={onAdd}
-                  aria-label="Agregar pieza"
-                >
-                  <Plus className="h-[18px] w-[18px]" aria-hidden />
-                </motion.button>
-              </>
-            ) : (
+        ) : freshToday ? (
+          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--ink)] backdrop-blur-[6px]">
+            <Flame className="h-3 w-3 text-[var(--warn)]" aria-hidden />
+            Hoy
+          </span>
+        ) : null}
+        <p className="absolute bottom-3 left-3.5 font-mono text-[1.3125rem] font-semibold leading-none text-white drop-shadow-[0_1px_10px_rgba(0,0,0,.4)] [font-variant-numeric:tabular-nums]">
+          {formatCurrency(product.precio_mxn)}
+        </p>
+        {/* Control de cantidad sobre la foto (patrón Uber Eats) */}
+        <motion.div
+          layout
+          animate={{ width: quantity > 0 ? 116 : 40 }}
+          transition={{ duration: 0.24, ease: easeOutSoft }}
+          className={cn(
+            "absolute bottom-3 right-3 flex h-10 items-center overflow-hidden rounded-full shadow-[0_6px_20px_rgba(0,0,0,.25)]",
+            quantity > 0 ? "bg-white text-[var(--brand)]" : "bg-[var(--brand)] text-white"
+          )}
+        >
+          {quantity > 0 ? (
+            <>
               <motion.button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[var(--brand-press)]"
+                className="flex h-10 w-9 shrink-0 items-center justify-center"
+                whileTap={{ scale: 0.92 }}
+                transition={springPress}
+                onClick={onRemove}
+                aria-label="Quitar pieza"
+              >
+                <Minus className="h-4 w-4" aria-hidden />
+              </motion.button>
+              <span className="flex h-10 min-w-[38px] flex-1 items-center justify-center font-mono text-sm font-semibold text-[var(--ink)] [font-variant-numeric:tabular-nums]">
+                {quantity}
+              </span>
+              <motion.button
+                type="button"
+                className="flex h-10 w-9 shrink-0 items-center justify-center"
                 whileTap={{ scale: 0.92 }}
                 transition={springPress}
                 onClick={onAdd}
-                aria-label={`Agregar ${product.nombre}`}
+                aria-label="Agregar pieza"
               >
                 <Plus className="h-[18px] w-[18px]" aria-hidden />
               </motion.button>
-            )}
-          </motion.div>
-        </div>
+            </>
+          ) : (
+            <motion.button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-fast hover:bg-[var(--brand-press)]"
+              whileTap={{ scale: 0.92 }}
+              transition={springPress}
+              onClick={onAdd}
+              aria-label={`Agregar ${product.nombre}`}
+            >
+              <Plus className="h-[18px] w-[18px]" aria-hidden />
+            </motion.button>
+          )}
+        </motion.div>
+      </div>
+      <div className="px-4 pb-4 pt-3">
+        <h3 className="line-clamp-2 min-h-[2.5em] font-sans text-[1rem] font-semibold leading-[1.25] text-[var(--ink)]">
+          {product.nombre}
+        </h3>
+        <p className="mt-1 line-clamp-1 font-sans text-[0.8125rem] leading-[1.5] text-[var(--ink-soft)]">
+          {product.descripcion_corta}
+        </p>
       </div>
     </motion.article>
   );
