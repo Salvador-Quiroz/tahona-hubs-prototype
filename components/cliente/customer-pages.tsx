@@ -49,6 +49,7 @@ import { Input } from "@/components/ui/input";
 import { ProductCard as CatalogProductCard } from "@/components/ui/product-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { StickyCTA } from "@/components/ui/sticky-cta";
+import { Toast, useToast } from "@/components/ui/toast";
 import { PaymentStep } from "@/components/cliente/payment-step";
 import { ConfirmationPass } from "@/components/cliente/confirmation-pass";
 import { Textarea } from "@/components/ui/textarea";
@@ -737,7 +738,7 @@ export function LandingPage() {
 
             <div className="mt-md grid gap-3">
               {hubs.map((hub, i) => {
-                const occupation = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+                const libres = hub.casilleros_total - hub.casilleros_ocupados_actual;
                 return (
                   <motion.div
                     key={hub.id}
@@ -754,10 +755,10 @@ export function LandingPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-mono text-[0.9375rem] font-medium [font-variant-numeric:tabular-nums]">
-                        {occupation}%
+                        {libres}
                       </p>
                       <p className="mt-px font-sans text-[0.6875rem] uppercase tracking-[0.06em] text-[var(--ink-faint)]">
-                        ocupación
+                        casilleros libres
                       </p>
                     </div>
                   </motion.div>
@@ -990,7 +991,7 @@ function CatalogoExactPage() {
     useTahonaStore();
   const [category, setCategory] = useState("Todo");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const { toast, showToast } = useToast();
   const countdown = useWeeklyCutoffCountdown();
   const hub = useSelectedHub();
   const [clientNow, setClientNow] = useState<Date | null>(null);
@@ -1027,10 +1028,7 @@ function CatalogoExactPage() {
     ? productos.filter((p) => (p.disponibilidad as string[]).includes(today)).slice(0, 8)
     : [];
   
-  function flash(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2000);
-  }
+  const flash = showToast;
   function handleAdd(product: Producto) {
     addToCart(product.id);
     flash(`${product.nombre} agregado a tu bolsa`);
@@ -1183,17 +1181,7 @@ function CatalogoExactPage() {
         />
       </BottomSheet>
       <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
-          >
-            {toast}
-          </motion.div>
-        ) : null}
+        <Toast message={toast} />
       </AnimatePresence>
     </main>
   );
@@ -1710,12 +1698,9 @@ export function ProductDetailPage({ slug }: { slug: string }) {
     .slice(0, 6);
   const qty = cart[product.id] ?? 0;
   const freshToday = product.disponibilidad.includes("viernes");
-  const [toast, setToast] = useState("");
+  const { toast, showToast } = useToast();
 
-  function flash(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2000);
-  }
+  const flash = showToast;
   function add() {
     addToCart(product.id);
     flash(`${product.nombre} agregado a tu bolsa`);
@@ -1919,17 +1904,7 @@ export function ProductDetailPage({ slug }: { slug: string }) {
       </div>
 
       <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
-          >
-            {toast}
-          </motion.div>
-        ) : null}
+        <Toast message={toast} raised />
       </AnimatePresence>
     </main>
   );
@@ -1967,7 +1942,8 @@ export function ComoFuncionaPage() {
 }
 
 function HubCard({ hub }: { hub: Hub }) {
-  const occupation = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+  const libres = hub.casilleros_total - hub.casilleros_ocupados_actual;
+  const disponibilidad = Math.round((libres / hub.casilleros_total) * 100);
   return (
     <Link href={`/hubs/${hub.slug}`} className="group block overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
@@ -1983,8 +1959,8 @@ function HubCard({ hub }: { hub: Hub }) {
         </div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{hub.direccion}</p>
         <div className="mt-sm">
-          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Ocupacion</span><span>{occupation}%</span></div>
-          <ProgressBar value={occupation} />
+          <div className="mb-2 flex justify-between text-xs text-muted-foreground"><span>Casilleros libres</span><span>{libres} de {hub.casilleros_total}</span></div>
+          <ProgressBar value={disponibilidad} />
         </div>
       </div>
     </Link>
@@ -2011,7 +1987,7 @@ export function HubsPage() {
 export function HubDetailPage({ slug }: { slug: string }) {
   const { hubs } = useTahonaStore();
   const hub = hubs.find((item) => item.slug === slug) ?? hubs[0];
-  const occupation = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+  const libres = hub.casilleros_total - hub.casilleros_ocupados_actual;
 
   return (
     <main className="storefront-shell py-lg">
@@ -2025,7 +2001,7 @@ export function HubDetailPage({ slug }: { slug: string }) {
           <p className="mt-sm text-body-l text-muted-foreground">{hub.direccion}</p>
           <div className="mt-md grid gap-xs md:grid-cols-3">
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros</p><p className="mt-1 text-h2 font-semibold">{hub.casilleros_total}</p></CardContent></Card>
-            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Ocupacion</p><p className="mt-1 text-h2 font-semibold">{occupation}%</p></CardContent></Card>
+            <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Casilleros libres</p><p className="mt-1 text-h2 font-semibold">{libres}</p></CardContent></Card>
             <Card className=""><CardContent className="p-sm"><p className="text-xs text-muted-foreground">Clientes</p><p className="mt-1 text-h2 font-semibold">{hub.clientes_activos}</p></CardContent></Card>
           </div>
           <Card className="mt-md">
@@ -2207,12 +2183,9 @@ export function BagPage() {
   const { productos, cart, addToCart, removeFromCart, setCartQuantity } = useTahonaStore();
   const hub = useSelectedHub();
   const countdown = useWeeklyCutoffCountdown();
-  const [toast, setToast] = useState("");
+  const { toast, showToast } = useToast();
 
-  function flash(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2000);
-  }
+  const flash = showToast;
 
   const items = productos
     .map((product) => ({ product, qty: cart[product.id] ?? 0 }))
@@ -2432,17 +2405,7 @@ export function BagPage() {
       ) : null}
 
       <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
-          >
-            {toast}
-          </motion.div>
-        ) : null}
+        <Toast message={toast} raised />
       </AnimatePresence>
     </main>
   );
@@ -2518,7 +2481,7 @@ const canContinue =
                 <div className="grid gap-3">
                   {hubs.map((hub) => {
                     const active = hub.id === selectedHubId;
-                    const ocupacion = Math.round((hub.casilleros_ocupados_actual / hub.casilleros_total) * 100);
+                    const libres = hub.casilleros_total - hub.casilleros_ocupados_actual;
                     return (
                       <button
                         key={hub.id}
@@ -2534,7 +2497,7 @@ const canContinue =
                           <p className="font-serif text-[1.0625rem] font-medium text-[var(--ink)]">{hub.nombre}</p>
                           <p className="font-sans text-[0.8125rem] text-[var(--ink-soft)]">{hub.direccion}</p>
                         </div>
-                        <span className="font-mono text-xs text-[var(--ink-faint)]">{ocupacion}% ocup.</span>
+                        <span className="font-mono text-xs text-[var(--ink-faint)]">{libres} libres</span>
                         {active ? <Check className="h-5 w-5 shrink-0 text-[var(--brand)]" aria-hidden /> : null}
                       </button>
                     );
@@ -2693,13 +2656,10 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
   const weeklyTotal = subscriptionTotal(data.productos, data.subscription);
   const countdown = useWeeklyCutoffCountdown();
   const [skipped, setSkipped] = useState(false);
-  const [toast, setToast] = useState("");
+  const { toast, showToast } = useToast();
   const paused = data.subscription.estado === "pausada";
 
-  function flash(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2200);
-  }
+  const flash = showToast;
 
   const estadoTone = delivery.estado === "incidencia" ? "danger" : delivery.estado === "listo" ? "success" : "info";
   const estadoLabel =
@@ -2868,17 +2828,7 @@ function AccountSummary({ data, delivery }: { data: AccountData; delivery: Entre
       </div>
 
       <AnimatePresence>
-        {toast ? (
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 18 }}
-            transition={{ duration: 0.24, ease: easeOutSoft }}
-            className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-1/2 z-50 w-[calc(100%-32px)] max-w-sm -translate-x-1/2 rounded-[14px] border border-[var(--line)] bg-[var(--paper-raised)] px-4 py-3 text-center font-sans text-sm font-medium text-[var(--ink)] shadow-[var(--shadow-lg)] lg:bottom-6"
-          >
-            {toast}
-          </motion.div>
-        ) : null}
+        <Toast message={toast} />
       </AnimatePresence>
     </div>
   );
